@@ -31,7 +31,7 @@
   .card p { font-size:16px; line-height:1.4; margin:0 0 8px; }
   button { font:700 14px/1 system-ui, sans-serif; border-radius:10px; padding:10px 12px; border:1px solid #3c4632; background:transparent; color:#f3ecd9; }
   .x { position:absolute; top:8px; right:8px; width:32px; height:32px; border-radius:8px; border:1px solid #3c4632; background:#10160e; color:#f3ecd9; font:600 20px/1 system-ui, sans-serif; }
-  .play { margin-top:8px; background:#e2b45a; color:#14210f; border-color:#e2b45a; }
+  .play { margin-top:8px; background:#e2b45a; color:#14210f; border-color:#e2b45a; } .card{max-height:78vh;overflow:auto} dl{margin:0} .row{display:flex;gap:8px;padding:5px 0;border-bottom:1px solid #2c3626;font:14px/1.3 system-ui,sans-serif} .row b{width:92px;flex:none;color:#cbbfa2;font-weight:600} .shot{width:100%;border-radius:8px;margin-top:10px;display:block} .cap{margin:4px 0 0;color:#cbbfa2;font:12px/1.35 system-ui,sans-serif} .scene{position:absolute;left:8px;top:46px;background:rgba(12,16,11,.72);color:#f3ecd9;font:11px/1 system-ui,sans-serif;padding:4px 6px;border-radius:6px}
   .story { align-items:stretch; padding:0; background:#0c100b; }
   .film { width:100%; height:100%; max-width:none; border:0; border-radius:0; background:#0c100b; padding:0; display:flex; flex-direction:column; }
   .still { width:100%; height:42vh; object-fit:cover; border-radius:0; margin:0; }
@@ -67,11 +67,11 @@
   <div class="hint">Pinch on a place to zoom there</div>
 </div>
 <div class="timeline"><div class="tlabel">Same land for every year. Persia is on the right. Israel is the gold speck by the sea.</div></div>
-<div class="sheet" id="sheet"><div class="card"><button class="x" type="button" onclick="closeZ()" aria-label="Close">×</button><div class="kicker" id="kicker"></div><h3 id="zt"></h3><p id="zb"></p><button class="play" id="play" type="button" onclick="openStory()" hidden>Play story</button></div></div>
+<div class="sheet" id="sheet"><div class="card"><button class="x" type="button" onclick="closeZ()" aria-label="Close">×</button><div class="kicker" id="kicker"></div><h3 id="zt"></h3><dl id="facts"></dl><div id="pics"></div><button class="play" id="play" type="button" onclick="openStory()" hidden>Play story</button></div></div>
 <div class="sheet story" id="story">
   <div class="card film">
     <button class="x" type="button" onclick="closeStory()" aria-label="Close">×</button>
-    <img class="still" id="still" alt="Story picture" src="images/ridge.jpg">
+    <img class="still" id="still" alt="Story picture" src="images/ridge.jpg"><div class="scene">Scene, not a photograph</div>
     <div class="kicker">Israel · about 1207 BC · Rex</div>
     <div class="reel" id="reel"><div class="reel-inner" id="reel-inner"></div></div>
     <div class="controls"><button class="nav" type="button" onclick="skip(-10)">-10s</button><button class="nav exit" id="pp" type="button" onclick="togglePlay()">Pause</button><button class="nav" type="button" onclick="skip(10)">+10s</button></div>
@@ -81,13 +81,22 @@
 </div>
 <script>
 const Z = {
-  egypt: ['Egypt','Population about 2 to 4 million in Egypt proper. A modern guess, not a census. Egyptians along the Nile. Gods: Amun, Ra, Osiris. Canaanite cities under them are not Egyptians and keep Baal, El and Asherah.'],
-  hatti: ['Hatti','Population in the core maybe around 1 million, empire larger. Very uncertain. Hittites in central Anatolia, plus Luwians, Hurrians and Syrian vassals with their own gods. This empire is about to break.'],
-  assyria: ['Assyria','Population a few hundred thousand in the core around Assur. No reliable count. Akkadian-speaking. National god Ashur. Close to the Babylonians as a people, not the same state.'],
-  babylon: ['Babylon','Population roughly under 1 million. Uncertain. Babylonians ruled by Kassite kings, who adopted Marduk. The kings did not replace the people.'],
-  elam: ['Elam','Population: no good count. Smaller than Babylon, a few hundred thousand at most. Elamites, not Persians. God Inshushinak at Susa. No Persia yet.'],
-  israel: ['Israel','Population a few tens of thousands in the hills, if that. Not a state. Named on Merneptah\'s stone. Highland cult, close to Canaanite religion, with Yahweh in it. Not later Judaism.']
+  egypt: {name:'Egypt', rows:[['Year','1207 BC'],['Place','Nile valley, and vassal cities in Canaan'],['Who rules','Merneptah, king of Egypt'],['People','Egyptians. Canaanites in the vassal cities'],['Population','About 2 to 4 million in Egypt proper. A modern guess'],['Worship','Amun, Ra, Osiris. Vassal cities keep Baal, El, Asherah']], pics:[]},
+  hatti: {name:'Hatti', rows:[['Year','1207 BC'],['Place','Central Anatolia, and northern Syria'],['Who rules','Suppiluliuma II, the Hittite king'],['People','Hittites, plus Luwians, Hurrians, Syrian vassals'],['Population','Core maybe around 1 million. Very uncertain'],['Worship','Storm god, sun goddess of Arinna. Vassals keep their own gods']], pics:[]},
+  assyria: {name:'Assyria', rows:[['Year','1207 BC'],['Place','Around Assur, on the middle Tigris'],['Who rules','The Assyrian king at Assur'],['People','Assyrians, Akkadian-speaking'],['Population','A few hundred thousand in the core. No reliable count'],['Worship','Ashur, plus the shared Mesopotamian gods']], pics:[]},
+  babylon: {name:'Babylon', rows:[['Year','1207 BC'],['Place','Southern Mesopotamia, around Babylon'],['Who rules','A Kassite king'],['People','Babylonians. The kings did not replace them'],['Population','Roughly under 1 million. Uncertain'],['Worship','Marduk, adopted by the Kassite kings']], pics:[]},
+  elam: {name:'Elam', rows:[['Year','1207 BC'],['Place','Southwest Iran, around Susa'],['Who rules','An Elamite king'],['People','Elamites. Not Persians'],['Population','No good count. Smaller than Babylon'],['Worship','Inshushinak at Susa']], pics:[]},
+  israel: {name:'Israel', rows:[['Year','1207 BC'],['Place','Hills between Shechem and Hebron'],['Who rules','No king'],['People','A people named Israel. Not a state'],['Population','A few tens of thousands, if that'],['Worship','A highland cult. Yahweh among Canaanite gods. Not later Judaism']], pics:[{src:'images/merneptah.jpg', cap:'The Merneptah Stele, Egyptian Museum, Cairo. Photograph by Onceinawhile, 2022. CC BY-SA 4.0.'}]}
 };
+function openZ(id){
+  const z = Z[id];
+  document.getElementById('kicker').textContent = '1207 BC · evidence';
+  document.getElementById('zt').textContent = z.name;
+  document.getElementById('facts').innerHTML = z.rows.map(r => '<div class="row"><b>'+r[0]+'</b><span>'+r[1]+'</span></div>').join('');
+  document.getElementById('pics').innerHTML = z.pics.map(p => '<img class="shot" alt="" src="'+p.src+'"><p class="cap">'+p.cap+'</p>').join('');
+  document.getElementById('play').hidden = id !== 'israel';
+  document.getElementById('sheet').classList.add('open');
+}
 const TALE = "Down on the coast, Egypt still holds the cities. Gaza. Ashkelon. The roads, and the grain that moves along them. A king in the Nile valley can name those cities. He can send soldiers to their gates. Up in the hills, between Shechem and Hebron, there is no gate worth naming. Stone houses sit on the ridges. Terraces cut the slope into thin green steps. Flocks move in the last light. No king. No wall a pharaoh would bother to write down. Then Merneptah, king of Egypt, has a victory stone cut. He lists the cities he claims to have crushed. Ashkelon. Gezer. Yanoam. And then one line is different. Israel is laid waste. Its seed is not. The mark beside the name is not the mark for a city. It is the mark for a people. No capital. No border a scribe could draw. But the name is already in the stone. In the hills above the Egyptian road, a people is living who will one day be called by that name in every empire that follows. Tonight they are only villages. A fire on a ridge. And a word an Egyptian chisel was not supposed to make eternal.";
 const words = TALE.split(/\s+/);
 const weights = words.map(w => w.replace(/[^A-Za-z]/g,'').length + (/[.!?]/.test(w) ? 4 : 0) + 1);
@@ -98,7 +107,6 @@ const times = weights.map(w => { const start = cursor; cursor += DURATION * w / 
 const stoneAt = words.findIndex(w => w.startsWith('Then'));
 const inner = document.getElementById('reel-inner');
 inner.innerHTML = words.map((w,i)=>`<span class="w" id="w${i}">${w}</span>`).join(' ');
-function openZ(id){ const z = Z[id]; document.getElementById('kicker').textContent = '1207 BC · zone of rule'; document.getElementById('zt').textContent = z[0]; document.getElementById('zb').textContent = z[1]; document.getElementById('play').hidden = id !== 'israel'; document.getElementById('sheet').classList.add('open'); }
 function closeZ(){ document.getElementById('sheet').classList.remove('open'); }
 function openStory(){ document.getElementById('story').classList.add('open'); const a = document.getElementById('narr'); a.currentTime = 0; a.play(); }
 function closeStory(){ document.getElementById('narr').pause(); document.getElementById('story').classList.remove('open'); }
