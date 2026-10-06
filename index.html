@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>The Long Map</title>
+<style>
+  body { margin:0; background:#0c160d; color:#f3ecd9; font-family:Georgia, serif; }
+  header { display:flex; justify-content:space-between; align-items:end; padding:10px 12px 6px; }
+  h1 { margin:0; font-size:20px; }
+  .chapter { margin:2px 0 0; color:#cbbfa2; font:12px/1.3 system-ui, sans-serif; }
+  .yearpill { font:700 12px/1 system-ui, sans-serif; background:#e2b45a; color:#14210f; border-radius:99px; padding:6px 9px; }
+  .viewport { height:58vh; max-height:620px; overflow:hidden; touch-action:none; background:#7f9cb5; margin:0 8px; border-radius:10px; position:relative; }
+  .stage { width:220%; transform-origin:0 0; will-change:transform; position:relative; }
+  img.map { width:100%; display:block; }
+  .zones { position:absolute; inset:0; width:100%; height:100%; }
+  .zones polygon { fill:rgba(226,180,90,.18); stroke:#e2b45a; stroke-width:.08; stroke-dasharray:.25 .18; cursor:pointer; }
+  .zones polygon[data-z=egypt] { fill:rgba(196,161,90,.22); stroke:#c4a15a; }
+  .zones polygon[data-z=hatti] { fill:rgba(125,154,114,.22); stroke:#7d9a72; }
+  .zones polygon[data-z=assyria] { fill:rgba(196,123,90,.22); stroke:#c47b5a; }
+  .zones polygon[data-z=babylon] { fill:rgba(110,140,170,.25); stroke:#6e8caa; }
+  .zones polygon[data-z=elam] { fill:rgba(168,120,90,.25); stroke:#a8785a; }
+  .hint { position:absolute; left:8px; bottom:8px; color:#163044; background:rgba(243,236,217,.85); font:11px/1 system-ui, sans-serif; padding:4px 6px; border-radius:6px; }
+  .timeline { padding:8px 10px 12px; }
+  .tlabel { font:11px/1.3 system-ui, sans-serif; color:#cbbfa2; }
+  .sheet { position:fixed; inset:0; background:rgba(6,10,5,.72); display:none; align-items:end; justify-content:center; padding:12px; z-index:5; }
+  .sheet.open { display:flex; }
+  .card { position:relative; width:min(560px,100%); background:#1c2418; border:1px solid #3c4632; border-radius:16px; padding:14px 40px 14px 14px; }
+  .kicker { font:700 11px/1 system-ui, sans-serif; letter-spacing:.06em; text-transform:uppercase; color:#e2b45a; }
+  .card h3 { margin:6px 0 8px; font-size:22px; }
+  .card p { font-size:16px; line-height:1.4; margin:0 0 8px; }
+  button { font:700 14px/1 system-ui, sans-serif; border-radius:10px; padding:10px 12px; border:1px solid #3c4632; background:transparent; color:#f3ecd9; }
+  .x { position:absolute; top:8px; right:8px; width:32px; height:32px; border-radius:8px; border:1px solid #3c4632; background:#10160e; color:#f3ecd9; font:600 20px/1 system-ui, sans-serif; }
+  .play { margin-top:8px; background:#e2b45a; color:#14210f; border-color:#e2b45a; }
+  .story { align-items:stretch; padding:0; background:#0c100b; }
+  .film { width:100%; height:100%; max-width:none; border:0; border-radius:0; background:#0c100b; padding:0; display:flex; flex-direction:column; }
+  .still { width:100%; height:42vh; object-fit:cover; border-radius:0; margin:0; }
+  .film .kicker { padding:12px 16px 0; }
+  .film h3 { padding:4px 16px 0; margin:0; }
+  .film p { padding:8px 16px 12px; font-size:17px; line-height:1.4; overflow:auto; }
+  .controls { display:flex; gap:8px; padding:0 16px 8px; }
+  .nav { flex:1; background:#1c2418; color:#f3ecd9; border:1px solid #3c4632; }
+  .nav.exit { background:#e2b45a; color:#14210f; border-color:#e2b45a; }
+  .count { text-align:center; color:#cbbfa2; font:12px/1 system-ui, sans-serif; padding:0 0 14px; }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>The Long Map</h1>
+    <p class="chapter">1207 BC · pinch zooms where your fingers are</p>
+  </div>
+  <div class="yearpill">1207 BC</div>
+</header>
+<div class="viewport" id="vp">
+  <div class="stage" id="stage">
+    <svg class="zones" viewBox="0 0 46 27.5" preserveAspectRatio="none">
+      <polygon data-z="egypt" points="11.80,11.40 14.80,11.70 15.00,13.20 14.20,16.50 13.20,18.80 11.60,18.60 10.80,14.50 11.20,12.20"/>
+      <polygon data-z="hatti" points="8.50,1.80 18.50,1.60 21.50,3.80 20.50,6.20 16.00,6.80 10.50,6.40 8.20,4.80"/>
+      <polygon data-z="assyria" points="23.60,5.80 27.80,6.00 28.20,8.40 25.20,8.80 23.40,7.60"/>
+      <polygon data-z="babylon" points="25.20,9.40 29.60,9.60 30.20,11.80 27.00,12.40 25.00,11.20"/>
+      <polygon data-z="elam" points="29.80,10.20 35.20,10.60 36.20,13.40 31.40,13.40 29.60,11.80"/>
+      <polygon data-z="israel" points="16.95,10.65 17.35,10.65 17.38,11.40 17.05,11.50 16.92,11.10"/>
+    </svg>
+    <img class="map" alt="Near East and Persia" src="images/land-base-1207.png">
+  </div>
+  <div class="hint">Pinch on a place to zoom there</div>
+</div>
+<div class="timeline"><div class="tlabel">Same land for every year. Persia is on the right. Israel is the gold speck by the sea.</div></div>
+<div class="sheet" id="sheet"><div class="card"><button class="x" type="button" onclick="closeZ()" aria-label="Close">×</button><div class="kicker" id="kicker"></div><h3 id="zt"></h3><p id="zb"></p><button class="play" id="play" type="button" onclick="openStory()" hidden>Play story</button></div></div>
+<div class="sheet story" id="story" onclick="if(event.target.id==='story')closeStory()">
+  <div class="card film">
+    <button class="x" type="button" onclick="closeStory()" aria-label="Close">×</button>
+    <img class="still" id="still2" alt="Victory stone" hidden src="images/stone.jpg">
+    <img class="still" id="still1" alt="Hill villages above the coast" src="images/ridge.jpg">
+    <div class="kicker">Israel · about 1207 BC</div>
+    <h3>A name cut in stone</h3>
+    <p id="storytext"></p>
+    <div class="controls"><button class="nav" type="button" onclick="step(-1)">Previous</button><button class="nav exit" type="button" onclick="closeStory()">Exit</button><button class="nav" type="button" onclick="step(1)">Next</button></div>
+    <div class="count" id="count">1/3</div>
+    <audio id="narr" preload="none"></audio>
+  </div>
+</div>
+<script>
+const Z = {
+  egypt: ['Egypt','Population about 2 to 4 million in Egypt proper. A modern guess, not a census. Egyptians along the Nile. Gods: Amun, Ra, Osiris. Canaanite cities under them are not Egyptians and keep Baal, El and Asherah.'],
+  hatti: ['Hatti','Population in the core maybe around 1 million, empire larger. Very uncertain. Hittites in central Anatolia, plus Luwians, Hurrians and Syrian vassals with their own gods. This empire is about to break.'],
+  assyria: ['Assyria','Population a few hundred thousand in the core around Assur. No reliable count. Akkadian-speaking. National god Ashur. Close to the Babylonians as a people, not the same state.'],
+  babylon: ['Babylon','Population roughly under 1 million. Uncertain. Babylonians ruled by Kassite kings, who adopted Marduk. The kings did not replace the people.'],
+  elam: ['Elam','Population: no good count. Smaller than Babylon, a few hundred thousand at most. Elamites, not Persians. God Inshushinak at Susa. No Persia yet.'],
+  israel: ['Israel','Population a few tens of thousands in the hills, if that. Not a state. Named on Merneptah\'s stone. Highland cult, close to Canaanite religion, with Yahweh in it. Not later Judaism.']
+};
+const SLIDES = [
+  {img:'still1', audio:'audio/slide-1.mp3', text:'Down on the coast, Egypt still holds the cities. Up in the hills, between Shechem and Hebron, there is no king and no wall a pharaoh would name. Stone houses. Terraces. Flocks in the last light.'},
+  {img:'still2', audio:'audio/slide-2.mp3', text:'Merneptah has a victory stone cut. One line is different. Israel is laid waste. Its seed is not. The mark beside the name is not the mark for a city. It is the mark for a people.'},
+  {img:'still2', audio:'audio/slide-3.mp3', text:'No capital. No border a scribe could draw. But the name is already in the stone. A word a chisel was not supposed to make eternal.'}
+];
+let slide = 0;
+function openZ(id){ const z = Z[id]; document.getElementById('kicker').textContent = '1207 BC · zone of rule'; document.getElementById('zt').textContent = z[0]; document.getElementById('zb').textContent = z[1]; document.getElementById('play').hidden = id !== 'israel'; document.getElementById('sheet').classList.add('open'); }
+function closeZ(){ document.getElementById('sheet').classList.remove('open'); }
+function showSlide(n){
+  slide = Math.max(0, Math.min(SLIDES.length - 1, n));
+  const s = SLIDES[slide];
+  document.getElementById('still1').hidden = s.img !== 'still1';
+  document.getElementById('still2').hidden = s.img !== 'still2';
+  document.getElementById('storytext').textContent = s.text;
+  document.getElementById('count').textContent = (slide + 1) + '/' + SLIDES.length;
+  const a = document.getElementById('narr');
+  a.pause();
+  a.src = s.audio;
+  a.play();
+}
+function step(d){ if (slide + d >= SLIDES.length) { closeStory(); return; } showSlide(slide + d); }
+function openStory(){ document.getElementById('story').classList.add('open'); showSlide(0); }
+function closeStory(){ document.getElementById('narr').pause(); document.getElementById('story').classList.remove('open'); }
+document.querySelectorAll('.zones polygon').forEach(p => p.addEventListener('click', e => { e.stopPropagation(); openZ(p.dataset.z); }));
+document.getElementById('sheet').addEventListener('click', e => { if (e.target.id === 'sheet') closeZ(); });
+const stage = document.getElementById('stage');
+const vp = document.getElementById('vp');
+let scale = 1, x = 0, y = 0;
+const pointers = new Map();
+function draw(){ stage.style.transform = `translate(${x}px, ${y}px) scale(${scale})`; }
+function zoomAt(px, py, next){
+  next = Math.min(6, Math.max(0.6, next));
+  const ratio = next / scale;
+  x = px - (px - x) * ratio;
+  y = py - (py - y) * ratio;
+  scale = next;
+  draw();
+}
+draw();
+vp.addEventListener('wheel', e => {
+  e.preventDefault();
+  const r = vp.getBoundingClientRect();
+  zoomAt(e.clientX - r.left, e.clientY - r.top, scale * (e.deltaY < 0 ? 1.12 : 0.89));
+}, {passive:false});
+vp.addEventListener('pointerdown', e => { vp.setPointerCapture(e.pointerId); pointers.set(e.pointerId, {x:e.clientX, y:e.clientY}); });
+vp.addEventListener('pointerup', e => pointers.delete(e.pointerId));
+vp.addEventListener('pointercancel', e => pointers.delete(e.pointerId));
+vp.addEventListener('pointermove', e => {
+  if (!pointers.has(e.pointerId)) return;
+  const prev = pointers.get(e.pointerId);
+  const pts = [...pointers.values()];
+  if (pointers.size === 1) {
+    x += e.clientX - prev.x; y += e.clientY - prev.y;
+    pointers.set(e.pointerId, {x:e.clientX, y:e.clientY});
+    draw();
+  } else if (pointers.size === 2) {
+    pointers.set(e.pointerId, {x:e.clientX, y:e.clientY});
+    const [a, b] = [...pointers.values()];
+    const [pa, pb] = pts;
+    const oldD = Math.hypot(pa.x - pb.x, pa.y - pb.y) || 1;
+    const newD = Math.hypot(a.x - b.x, a.y - b.y) || 1;
+    const r = vp.getBoundingClientRect();
+    zoomAt(((a.x + b.x) / 2) - r.left, ((a.y + b.y) / 2) - r.top, scale * (newD / oldD));
+  }
+});
+</script>
+</body>
+</html>
