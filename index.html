@@ -41,7 +41,7 @@
   .controls { display:flex; gap:8px; padding:0 16px 8px; }
   .nav { flex:1; background:#1c2418; color:#f3ecd9; border:1px solid #3c4632; }
   .nav.exit { background:#e2b45a; color:#14210f; border-color:#e2b45a; }
-  .count { text-align:center; color:#cbbfa2; font:12px/1 system-ui, sans-serif; padding:0 0 14px; }
+  .reel{flex:1;overflow:hidden;position:relative;margin:8px 0} .reel-inner{position:absolute;left:16px;right:16px;font-size:22px;line-height:1.45} .w{color:#8d836f} .w.on{color:#e2b45a} .time{text-align:center;color:#cbbfa2;font:12px/1 system-ui,sans-serif;padding:0 0 10px}
 </style>
 </head>
 <body>
@@ -68,17 +68,15 @@
 </div>
 <div class="timeline"><div class="tlabel">Same land for every year. Persia is on the right. Israel is the gold speck by the sea.</div></div>
 <div class="sheet" id="sheet"><div class="card"><button class="x" type="button" onclick="closeZ()" aria-label="Close">×</button><div class="kicker" id="kicker"></div><h3 id="zt"></h3><p id="zb"></p><button class="play" id="play" type="button" onclick="openStory()" hidden>Play story</button></div></div>
-<div class="sheet story" id="story" onclick="if(event.target.id==='story')closeStory()">
+<div class="sheet story" id="story">
   <div class="card film">
     <button class="x" type="button" onclick="closeStory()" aria-label="Close">×</button>
-    <img class="still" id="still2" alt="Victory stone" hidden src="images/stone.jpg">
-    <img class="still" id="still1" alt="Hill villages above the coast" src="images/ridge.jpg">
-    <div class="kicker">Israel · about 1207 BC</div>
-    <h3>A name cut in stone</h3>
-    <p id="storytext"></p>
-    <div class="controls"><button class="nav" type="button" onclick="step(-1)">Previous</button><button class="nav exit" type="button" onclick="closeStory()">Exit</button><button class="nav" type="button" onclick="step(1)">Next</button></div>
-    <div class="count" id="count">1/3</div>
-    <audio id="narr" preload="none"></audio>
+    <img class="still" id="still" alt="Story picture" src="images/ridge.jpg">
+    <div class="kicker">Israel · about 1207 BC · Rex</div>
+    <div class="reel" id="reel"><div class="reel-inner" id="reel-inner"></div></div>
+    <div class="controls"><button class="nav" type="button" onclick="skip(-10)">-10s</button><button class="nav exit" id="pp" type="button" onclick="togglePlay()">Pause</button><button class="nav" type="button" onclick="skip(10)">+10s</button></div>
+    <div class="time" id="time">0:00</div>
+    <audio id="narr" preload="auto" src="audio/israel.mp3"></audio>
   </div>
 </div>
 <script>
@@ -90,29 +88,40 @@ const Z = {
   elam: ['Elam','Population: no good count. Smaller than Babylon, a few hundred thousand at most. Elamites, not Persians. God Inshushinak at Susa. No Persia yet.'],
   israel: ['Israel','Population a few tens of thousands in the hills, if that. Not a state. Named on Merneptah\'s stone. Highland cult, close to Canaanite religion, with Yahweh in it. Not later Judaism.']
 };
-const SLIDES = [
-  {img:'still1', audio:'audio/slide-1.mp3', text:'Down on the coast, Egypt still holds the cities. Up in the hills, between Shechem and Hebron, there is no king and no wall a pharaoh would name. Stone houses. Terraces. Flocks in the last light.'},
-  {img:'still2', audio:'audio/slide-2.mp3', text:'Merneptah has a victory stone cut. One line is different. Israel is laid waste. Its seed is not. The mark beside the name is not the mark for a city. It is the mark for a people.'},
-  {img:'still2', audio:'audio/slide-3.mp3', text:'No capital. No border a scribe could draw. But the name is already in the stone. A word a chisel was not supposed to make eternal.'}
-];
-let slide = 0;
+const TALE = "Down on the coast, Egypt still holds the cities. Gaza. Ashkelon. The roads, and the grain that moves along them. A king in the Nile valley can name those cities. He can send soldiers to their gates. Up in the hills, between Shechem and Hebron, there is no gate worth naming. Stone houses sit on the ridges. Terraces cut the slope into thin green steps. Flocks move in the last light. No king. No wall a pharaoh would bother to write down. Then Merneptah, king of Egypt, has a victory stone cut. He lists the cities he claims to have crushed. Ashkelon. Gezer. Yanoam. And then one line is different. Israel is laid waste. Its seed is not. The mark beside the name is not the mark for a city. It is the mark for a people. No capital. No border a scribe could draw. But the name is already in the stone. In the hills above the Egyptian road, a people is living who will one day be called by that name in every empire that follows. Tonight they are only villages. A fire on a ridge. And a word an Egyptian chisel was not supposed to make eternal.";
+const words = TALE.split(/\s+/);
+const weights = words.map(w => w.replace(/[^A-Za-z]/g,'').length + (/[.!?]/.test(w) ? 4 : 0) + 1);
+const weightSum = weights.reduce((a,b)=>a+b,0);
+const DURATION = 66.6;
+let cursor = 0;
+const times = weights.map(w => { const start = cursor; cursor += DURATION * w / weightSum; return start; });
+const stoneAt = words.findIndex(w => w.startsWith('Then'));
+const inner = document.getElementById('reel-inner');
+inner.innerHTML = words.map((w,i)=>`<span class="w" id="w${i}">${w}</span>`).join(' ');
 function openZ(id){ const z = Z[id]; document.getElementById('kicker').textContent = '1207 BC · zone of rule'; document.getElementById('zt').textContent = z[0]; document.getElementById('zb').textContent = z[1]; document.getElementById('play').hidden = id !== 'israel'; document.getElementById('sheet').classList.add('open'); }
 function closeZ(){ document.getElementById('sheet').classList.remove('open'); }
-function showSlide(n){
-  slide = Math.max(0, Math.min(SLIDES.length - 1, n));
-  const s = SLIDES[slide];
-  document.getElementById('still1').hidden = s.img !== 'still1';
-  document.getElementById('still2').hidden = s.img !== 'still2';
-  document.getElementById('storytext').textContent = s.text;
-  document.getElementById('count').textContent = (slide + 1) + '/' + SLIDES.length;
-  const a = document.getElementById('narr');
-  a.pause();
-  a.src = s.audio;
-  a.play();
-}
-function step(d){ if (slide + d >= SLIDES.length) { closeStory(); return; } showSlide(slide + d); }
-function openStory(){ document.getElementById('story').classList.add('open'); showSlide(0); }
+function openStory(){ document.getElementById('story').classList.add('open'); const a = document.getElementById('narr'); a.currentTime = 0; a.play(); }
 function closeStory(){ document.getElementById('narr').pause(); document.getElementById('story').classList.remove('open'); }
+function togglePlay(){ const a = document.getElementById('narr'); if (a.paused) a.play(); else a.pause(); }
+function skip(s){ const a = document.getElementById('narr'); a.currentTime = Math.max(0, Math.min((a.duration||DURATION)-0.2, a.currentTime + s)); }
+const narr = document.getElementById('narr');
+narr.addEventListener('play', () => document.getElementById('pp').textContent = 'Pause');
+narr.addEventListener('pause', () => document.getElementById('pp').textContent = 'Play');
+narr.addEventListener('timeupdate', () => {
+  const t = narr.currentTime;
+  let i = 0;
+  while (i < times.length-1 && times[i+1] <= t) i++;
+  document.querySelectorAll('.w.on').forEach(el => el.classList.remove('on'));
+  const el = document.getElementById('w'+i);
+  if (el) el.classList.add('on');
+  const reel = document.getElementById('reel');
+  const top = el.offsetTop - reel.clientHeight * 0.62;
+  inner.style.transform = `translateY(${-top}px)`;
+  document.getElementById('still').src = i >= stoneAt ? 'images/stone.jpg' : 'images/ridge.jpg';
+  const m = Math.floor(t/60), s = Math.floor(t%60);
+  document.getElementById('time').textContent = m + ':' + String(s).padStart(2,'0');
+});
+
 document.querySelectorAll('.zones polygon').forEach(p => p.addEventListener('click', e => { e.stopPropagation(); openZ(p.dataset.z); }));
 document.getElementById('sheet').addEventListener('click', e => { if (e.target.id === 'sheet') closeZ(); });
 const stage = document.getElementById('stage');
