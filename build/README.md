@@ -67,6 +67,26 @@ Optional on a beat: `audio` (path to an mp3), `duration`, `pauseAfter`. Optional
 
 `donateUrl`: `null` hides the "Support this project" link in the footer. Set it to a full `https://` link to show it. No donation service has been chosen.
 
+`reportUrl`: same idea for a "Report an error" link (a form or an issue tracker). `null` hides it. None is chosen yet.
+
+## About notice and the opening book (`js/intro.js`)
+
+On the first visit a short notice says what the site is (a source-based retelling of Jewish history from the perspective of the Jewish people; every claim has a source and a label; maps and borders are approximate) and what it is not (a religious text, political advocacy about modern conflicts, or the final word). **Begin adventure** opens a book: the cover "The Long Map · History of the Jews" turns and the page grows into the map. CSS only, no images or libraries.
+
+- The choice is stored in `localStorage` as `tlm.notice.v1 = "seen"`; returning visitors go straight to the map. "About" in the header and "About this site" in the footer open the notice again.
+- With `prefers-reduced-motion: reduce` there is no book; the notice simply closes.
+
+## Cinematic mode (Play)
+
+When a narrated part runs (Play, Replay), the map viewport grows from its place in the page to the whole screen, like a small film, and shrinks back when the part ends.
+
+- Uses the Fullscreen API where it exists (requested on the Play click). iPhone Safari has no element fullscreen, so the same thing is done with a fixed full-viewport layer. Leaving browser fullscreen, Esc or × ends the film.
+- Menus, the story panel, the timeline, the legend and the progress pill fade out. Subtle letterbox bars, the year at the top, subtitles at the bottom. Each subtitle keeps its label badge and a small source line.
+- Floating controls: back, pause/play, forward, speed (0.75/1/1.25), **CC** (subtitles on/off, stored as `tlm.cc`), step count, Skip, × (exit). They hide after 3 s without input while playing and come back on any touch, mouse move or key. A tap on the picture shows them **and pauses**; objects are not opened mid-film. Keys: Space pause, ←/→ step, Esc exit.
+- All pacing rules above are unchanged; the film only changes the frame. At the end the view zooms back out to the page and lands on the new year's intro (c. 1150 BC), with menus, texts and clickable objects back.
+- With `prefers-reduced-motion: reduce` the grow/shrink and fades are instant.
+- Year intros have no narration yet, so only Play transitions use the film. Audio (`beat.audio`) plays inside the film when it exists.
+
 ## Test
 
-`build/test-fakta.js` uses Playwright and headless Chromium. It tests 393 px with touch and 1280 px: stepping through the events, opening every object, tap outside, X, chips, and console errors. Run it with `node build/test-fakta.js http://127.0.0.1:8793/ noshots` against a local `python3 -m http.server 8793`. Playwright must be installed.
+`build/test-fakta.js` uses Playwright and headless Chromium. It tests 393 px with touch and 1280 px: stepping through the events, opening every object, tap outside, X, chips, and console errors. It presets the About notice as seen. `build/test-cine.js` tests the notice, the book, cinematic mode, CC, auto-hide, tap-to-pause, the zoom-out and the reduced-motion path at 393 px (touch) and 1280 px. Run it with `node build/test-fakta.js http://127.0.0.1:8793/ noshots` against a local `python3 -m http.server 8793`. Playwright must be installed.

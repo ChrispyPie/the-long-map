@@ -6,9 +6,12 @@ const D = process.env.SHOTS || 'screens';
   const b = await chromium.launch();
   const errs = [], notes = [];
   const ok = (n, c) => notes.push((c ? 'PASS ' : 'FAIL ') + n);
+  process.on('unhandledRejection', e => { console.log(notes.join('\n')); console.log('CRASH', e.message.split('\n')[0]); process.exit(1); });
   for (const [name, vw, vh, mobile] of [['mobile',393,852,true],['desktop',1280,800,false]]) {
     const ctx = await b.newContext({viewport:{width:vw,height:vh}, deviceScaleFactor:2, isMobile:mobile, hasTouch:mobile});
     const p = await ctx.newPage();
+    // the About notice is tested in test-cine.js; here the visitor has already seen it
+    await ctx.addInitScript(() => { try { localStorage.setItem('tlm.notice.v1', 'seen'); } catch(e){} });
     p.on('console', m => { if (m.type()==='error') errs.push(name+': '+m.text()); });
     p.on('pageerror', e => errs.push(name+' pageerror: '+e.message));
     let bytes = 0; p.on('response', async r => { try { bytes += (await r.body()).length; } catch(e){} });
@@ -60,7 +63,7 @@ const D = process.env.SHOTS || 'screens';
     await p.click('.chip[data-o="jordan"]'); await p.waitForTimeout(400);
     s = await st(); ok(name+' chip Jordan -> small box: '+s.open, s.open === 'jordan');
     // tap outside closes (header)
-    await tap(vw-120, 20); await p.waitForTimeout(300);
+    await tap(40, 14); await p.waitForTimeout(300);
     s = await st(); ok(name+' tap outside closes', s.open === null);
     // river by tapping the line itself
     await p.evaluate(()=>scrollTo(0,0));

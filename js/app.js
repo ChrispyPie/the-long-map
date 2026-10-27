@@ -91,7 +91,8 @@ function cullNow(){
     if (!clash) boxes.push(r);
   }
 }
-const zoom = d3.zoom().scaleExtent([1, 40]).on('zoom', e => { K = e.transform.k; root.attr('transform', e.transform); scaleMarks(); });
+let TR = {k:1, x:0, y:0};
+const zoom = d3.zoom().scaleExtent([1, 40]).on('zoom', e => { TR = e.transform; K = e.transform.k; root.attr('transform', e.transform); scaleMarks(); });
 svg.call(zoom).on('dblclick.zoom', null);
 svg.append('defs').html('<filter id="soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="0.6"/></filter>');
 
@@ -99,7 +100,10 @@ async function getJSON(u){ if (!cache[u]) cache[u] = fetch(u).then(r => { if (!r
 
 function flyTo(c, k, ms = 900){
   const [w,h] = size(); const p = projection(c);
-  svg.transition().duration(ms).call(zoom.transform, d3.zoomIdentity.translate(w/2, h/2).scale(k).translate(-p[0], -p[1]));
+  // in the film the focus sits a little above the subtitles
+  let dy = 0;
+  if (CINE && CINE.full) dy = Math.min(h * 0.16, ($('cap').offsetHeight || 0) / 2);
+  svg.transition().duration(ms).call(zoom.transform, d3.zoomIdentity.translate(w/2, h/2 - dy).scale(k).translate(-p[0], -p[1]));
 }
 
 // ---------- object geometry ----------
@@ -320,7 +324,7 @@ $('evnext').onclick = () => showStep(step + 1);
 let PLAY = null, FXZ = [], YEAR = null;
 const shortSrc = k => { const s = SRC[k]; if (!s) return k; const m = s.t.match(/^([^,(.]+?)(?:,| et al\.| &)[^(]*\((\d{4})\)/); if (m) return m[1].trim() + (/ et al\./.test(s.t.slice(0, 40)) ? ' et al.' : '') + ' ' + m[2]; if (s.kind === 'tradition') return 'Hebrew Bible'; return s.t.split(/[.(]/)[0].trim().slice(0, 40); };
 const yfmt = (y, c) => (c ? 'c. ' : '') + fmt(Math.round(y));
-function setYear(y, approx){ YEAR = y; const t = yfmt(y, approx); $('big').textContent = t; $('pill').textContent = t; }
+function setYear(y, approx){ YEAR = y; const t = yfmt(y, approx); $('big').textContent = t; $('pill').textContent = t; $('cyear').textContent = t; }
 // ---------- Play: one virtual clock, so pause, speed and step all stay in sync ----------
 // Timing rules (see build/README.md): the caption line drives the beat. Camera first, then the
 // visual events one at a time, then the line must have finished (reading time or audio), then pauseAfter.
@@ -470,9 +474,12 @@ function seek(i){
   runBeat(i);
 }
 async function playStart(){
+  // the narrated part runs as a small film: the map grows to fill the screen first
+  const film = enterCine();
   if (MODE !== 'stop') await go(liveBefore(cur));
-  if (!STOP || !STOP.play) return;
+  if (!STOP || !STOP.play){ exitCine(); return; }
   closeObj();
+  await film; if (!CINE) return;
   Object.assign(ERA.zoneObjects, STOP.play.zoneObjects);
   if (PLAY) cancelAnimationFrame(PLAY.raf);
   PLAY = {beats: STOP.play.beats, i: 0, paused: false, clock: 0, clockOn: true, anims: [], events: []};
@@ -484,9 +491,9 @@ async function playStart(){
 }
 // phones: subtitles sit next to the map so they never cover the animation
 const NARROW = () => matchMedia('(max-width:899px)').matches;
-function placeCap(){ const c = $('cap'), vp = $('vp'); if (NARROW()){ if (c.parentNode === vp) vp.after(c); c.classList.add('below'); } else { if (c.parentNode !== vp) vp.append(c); c.classList.remove('below'); } }
+function placeCap(){ const c = $('cap'), vp = $('vp'); if (NARROW() && !CINE){ if (c.parentNode === vp) vp.after(c); c.classList.add('below'); } else { if (c.parentNode !== vp) vp.append(c); c.classList.remove('below'); } }
 addEventListener('resize', () => { if (PLAY) placeCap(); });
-function setPP(){ const p = PLAY && PLAY.paused; $('cappp').textContent = p ? '▶' : '❚❚'; $('cappp').setAttribute('aria-label', p ? 'Play' : 'Pause'); $('cap').classList.toggle('paused', !!p); }
+function setPP(){ const p = PLAY && PLAY.paused; $('cappp').textContent = p ? '▶' : '❚❚'; $('cappp').setAttribute('aria-label', p ? 'Play' : 'Pause'); $('cap').classList.toggle('paused', !!p); wake(); }
 function playPause(force){
   if (!PLAY) return;
   PLAY.paused = force === undefined ? !PLAY.paused : force;
@@ -500,19 +507,118 @@ function playStop(toEnd){
   if (!PLAY) return;
   cancelAnimationFrame(PLAY.raf); if (PLAY.audio) PLAY.audio.pause();
   PLAY = null; document.body.classList.remove('playing'); $('cap').hidden = true; $('ev').classList.remove('dim');
-  if (!toEnd){ resetMap(); YEAR = null; $('big').textContent = STOP.label; $('pill').textContent = STOP.label; drawKeys(); showStep(steps().length - 1); }
+  const out = exitCine();
+  if (!toEnd){ resetMap(); YEAR = null; $('big').textContent = STOP.label; $('pill').textContent = STOP.label; drawKeys(); out.then(() => { if (!PLAY) showStep(steps().length - 1); }); }
+  return out;
 }
 function playEnd(){
   // the transition ends on the new year's intro and stays there
-  const to = STOP.play.to; playStop(true);
+  const to = STOP.play.to;
   const k = STORY.stops.findIndex(s => s.year === to);
-  arriveSoon(k, false);
+  // zoom back out to the explore view first, then land on the new year's intro
+  playStop(true).then(() => { if (!PLAY) arriveSoon(k, false); });
 }
+// ---------- cinematic mode: the narrated part as a small film ----------
+// The map viewport grows from its place in the page to the full screen (Fullscreen API where it exists,
+// otherwise a fixed full-viewport layer, e.g. iPhone Safari), the page chrome fades, subtitles (CC) sit
+// at the bottom. When the part ends it shrinks back into the page.
+const REDUCED = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+const CINE_MS = 650, IDLE_MS = 3000;
+let CINE = null, CC = true, idleT = 0;
+try { CC = localStorage.getItem('tlm.cc') !== 'off'; } catch(e){}
+function setCC(on){
+  CC = !!on; try { localStorage.setItem('tlm.cc', CC ? 'on' : 'off'); } catch(e){}
+  document.body.classList.toggle('cc-off', !CC);
+  const b = $('capcc'); b.setAttribute('aria-pressed', String(CC)); b.setAttribute('aria-label', CC ? 'Subtitles on' : 'Subtitles off'); b.classList.toggle('on', CC);
+}
+setCC(CC);
+// keep the same picture on screen when the map viewport changes size
+function refitKeep(){
+  const vb = (svg.attr('viewBox') || '').split(/[ ,]+/).map(Number);
+  const r = svg.node().getBoundingClientRect();
+  if (vb.length < 4 || !vb[2] || !r.width){ fit(); redrawZones(); return; }
+  const s = Math.min(r.width / vb[2], r.height / vb[3]), ox = (r.width - vb[2] * s) / 2, oy = (r.height - vb[3] * s) / 2;
+  const g1 = [30, 30], g2 = [40, 36], a = projection(g1), b = projection(g2);
+  fit();
+  const a2 = projection(g1), b2 = projection(g2), q = (b2[0] - a2[0]) / (b[0] - a[0]);
+  const cx = a2[0] - q * a[0], cy = a2[1] - q * a[1], k1 = s * TR.k / q;
+  svg.interrupt(); svg.call(zoom.transform, d3.zoomIdentity.translate(ox + s * TR.x - k1 * cx, oy + s * TR.y - k1 * cy).scale(k1));
+  redrawZones(); cullLabels();
+}
+const wait = ms => new Promise(r => setTimeout(r, ms));
+function morph(vp, from, to){
+  // animate the fixed viewport between two screen rectangles
+  const ms = REDUCED() ? 0 : CINE_MS;
+  const set = q => { vp.style.left = q.left + 'px'; vp.style.top = q.top + 'px'; vp.style.width = q.width + 'px'; vp.style.height = q.height + 'px'; };
+  vp.classList.remove('cinefx'); set(from); void vp.offsetWidth;
+  if (ms) vp.classList.add('cinefx'); set(to);
+  return wait(ms + 30).then(() => vp.classList.remove('cinefx'));
+}
+function enterCine(){
+  if (CINE) return CINE.ready;
+  const vp = $('vp'), r = vp.getBoundingClientRect(), b = document.body;
+  CINE = {full: false, fsOn: false};
+  // Fullscreen API needs the user's click, so ask right away; iPhone Safari has none and keeps the fixed layer
+  const el = document.documentElement, rq = el.requestFullscreen || el.webkitRequestFullscreen;
+  if (rq && !document.fullscreenElement){ try { const p = rq.call(el); if (p && p.then) p.then(() => { if (CINE) CINE.fsOn = true; }).catch(() => {}); else CINE.fsOn = true; } catch(e){} }
+  const ph = document.createElement('div'); ph.id = 'vpph'; ph.className = 'vpph'; ph.style.height = r.height + 'px'; vp.before(ph);
+  vp.classList.add('cinefixed'); $('cyear').textContent = $('pill').textContent;
+  b.classList.add('cine'); wake();
+  placeCap();
+  const c = CINE;
+  c.ready = morph(vp, r, {left: 0, top: 0, width: innerWidth, height: innerHeight}).then(() => {
+    if (CINE !== c) return;
+    vp.style.cssText = ''; vp.classList.add('full'); c.full = true; refitKeep();
+  });
+  return c.ready;
+}
+function exitCine(){
+  if (!CINE) return Promise.resolve();
+  if (CINE.out) return CINE.out;
+  const c = CINE, vp = $('vp'), b = document.body, ph = $('vpph');
+  c.fsOn = false;
+  if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {});
+  clearTimeout(idleT); b.classList.remove('idle');
+  c.out = (c.ready || Promise.resolve()).then(() => {
+    const from = vp.getBoundingClientRect();
+    vp.classList.remove('full'); b.classList.remove('cine'); placeCap();
+    const to = ph ? ph.getBoundingClientRect() : from;
+    return morph(vp, from, {left: to.left, top: to.top, width: to.width, height: to.height});
+  }).then(() => {
+    vp.classList.remove('cinefixed'); vp.style.cssText = ''; if (ph) ph.remove();
+    CINE = null; refitKeep(); placeCap();
+  });
+  return c.out;
+}
+// controls fade after a few quiet seconds and come back on any touch or mouse move
+function wake(){
+  const b = document.body; b.classList.remove('idle'); clearTimeout(idleT);
+  if (CINE && PLAY && !PLAY.paused) idleT = setTimeout(() => { if (CINE && PLAY && !PLAY.paused && !CINE.out) b.classList.add('idle'); }, IDLE_MS);
+}
+['pointermove', 'pointerdown', 'touchstart', 'keydown'].forEach(t => addEventListener(t, () => { if (CINE) wake(); }, {passive: true}));
+// in the film a tap on the picture shows the controls and pauses (objects are not opened mid-film)
+$('vp').addEventListener('click', e => {
+  if (!CINE || e.target.closest('.crow')) return;
+  e.stopPropagation(); e.preventDefault(); wake(); if (PLAY && !PLAY.paused) playPause(true);
+}, true);
+addEventListener('keydown', e => {
+  if (!CINE || !PLAY) return;
+  if (e.key === 'Escape'){ e.preventDefault(); playStop(false); }
+  else if (e.key === ' ' && !(e.target.closest && e.target.closest('button'))){ e.preventDefault(); playPause(); }
+  else if (e.key === 'ArrowRight') $('capnext').click();
+  else if (e.key === 'ArrowLeft') $('capprev').click();
+});
+// leaving browser fullscreen (e.g. the Esc key) also ends the film
+document.addEventListener('fullscreenchange', () => {
+  if (document.fullscreenElement){ if (CINE) CINE.fsOn = true; return; }
+  if (CINE && CINE.fsOn && !CINE.out && PLAY){ CINE.fsOn = false; playStop(false); }
+});
 $('cappp').onclick = e => { e.stopPropagation(); playPause(); };
 $('capnext').onclick = e => { e.stopPropagation(); if (PLAY) seek(PLAY.i + 1 < PLAY.beats.length ? PLAY.i + 1 : PLAY.i) ; };
 $('capprev').onclick = e => { e.stopPropagation(); if (PLAY) seek(PLAY.i - 1); };
 $('capspd').onclick = e => { e.stopPropagation(); setSpeed(SPEEDS[(SPEEDS.indexOf(SPEED) + 1) % SPEEDS.length] || 1); };
 $('capx').onclick = e => { e.stopPropagation(); playStop(false); };
+$('capcc').onclick = e => { e.stopPropagation(); setCC(!CC); };
 $('capskip').onclick = e => { e.stopPropagation(); if (PLAY){ svg.interrupt(); PLAY.anims = []; PLAY.events = []; resetMap(); YEAR = STOP.year; PLAY.clockOn = false; PLAY.beats.forEach((b, j) => applyInstant(j)); playEnd(); } };
 // tapping the map pauses (tapping an object opens its box, which also pauses)
 svg.on('click.play', () => { if (PLAY && !PLAY.paused) playPause(true); });
@@ -590,10 +696,13 @@ window.__app = { openObj, closeObj, showStep, go, playStart, playPause, playStop
   get step(){ return step; }, get K(){ return K; }, get open(){ return openId; }, get mode(){ return MODE; }, get cur(){ return cur; },
   get explored(){ return [...EXPLORED]; }, get keys(){ return [...KEYSET]; },
   get play(){ return PLAY ? {i: PLAY.i, n: PLAY.beats.length, paused: PLAY.paused} : null; },
-  set speed(v){ setSpeed(v); }, projection };
+  set speed(v){ setSpeed(v); }, projection,
+  get cine(){ return CINE ? {full: !!CINE.full, fs: !!document.fullscreenElement, idle: document.body.classList.contains('idle')} : null; },
+  get cc(){ return CC; }, setCC, enterCine, exitCine, IDLE_MS };
 
 // donations: hidden until data/site.json has a donateUrl (https only)
-getJSON('data/site.json').then(c => { const u = c && c.donateUrl; if (typeof u === 'string' && /^https:\/\//.test(u)){ const a = $('donate'); a.href = u; a.hidden = false; } }).catch(() => {});
+// "Report an error" works the same way with reportUrl
+getJSON('data/site.json').then(c => { [['donateUrl', 'donate'], ['reportUrl', 'report']].forEach(([k, id]) => { const u = c && c[k]; if (typeof u === 'string' && /^https:\/\//.test(u)){ const a = $(id); a.href = u; a.hidden = false; } }); }).catch(() => {});
 (async function init(){
   const [base, story, srcs, lib] = await Promise.all([getJSON('data/base.topo.json'), getJSON(STORY_URL), getJSON('data/sources.json'), getJSON('data/objects/near-east.json')]);
   STORY = story; SRC = srcs; OBJS = lib.objects; OBJS.forEach(o => OBJ[o.id] = o);
@@ -611,4 +720,4 @@ getJSON('data/site.json').then(c => { const u = c && c.donateUrl; if (typeof u =
   buildTrack();
   await go(STORY.stops.findIndex(s => s.file));
 })();
-addEventListener('resize', () => { fit(); redrawZones(); });
+addEventListener('resize', () => { if (CINE){ if (CINE.full) refitKeep(); } else { fit(); redrawZones(); } });

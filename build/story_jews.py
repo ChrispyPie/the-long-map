@@ -89,7 +89,7 @@ def cap(text, cert, src): return {"type":"caption","text":text,"cert":cert,"src"
 def scene(text): return {"type":"caption","text":text,"cert":"scene","src":[]}
 STOP["play"] = {
  "to":-1150, "title":"From 1207 BC to c. 1150 BC",
- "intro":"With subtitles. Pause, step back or forward, change speed, or tap the map to pause at any time.",
+ "intro":"Plays full screen like a short film, with subtitles (CC). Pause, step back or forward, change speed, or tap the picture to pause at any time.",
  "zoneObjects":{"philistia":"philistines","highlands":"israelp"},
  "beats":[
   {"steps":[{"type":"year","to":-1200},{"type":"focus","c":[34.6,34.0],"k":1.5},
