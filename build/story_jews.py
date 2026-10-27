@@ -1,3 +1,4 @@
+import narration_jews_1207 as NAR
 A,D,T = "attested","disputed","tradition"
 STORY = {
  "id":"jews","title":"Story of the Jews","site":"The Long Map",
@@ -28,7 +29,9 @@ STORY = {
 STOP = {
  "story":"jews","year":-1207,"label":"1207 BC","title":"Israel is named",
  "keyObjects":["israelp","hills","jerusalem","shechem","ashkelon","gezer","yenoam","jordan"],
- "transitionIn":"The first chapter of the Jewish story on this map. The great powers are Egypt, Hatti, Assyria and Babylon. Israel is small, and new.",
+ # the opening film: a short opener that ends on a choice, then chapters 2 and 3 (see narration_jews_1207.py)
+ "transitionIn":{"text":"The first chapter of the Jewish story on this map. Egypt, Hatti, Assyria and Babylon are the great powers. In the hills of Canaan lives a people called Israel.",
+   "title":"The world of 1207 BC","ambient":"desert","beats":NAR.clean(NAR.INTRO_BEATS)},
  "transitionOut":{"to":-1150,"text":"Next: the hill villages grow over the following generations. In Jewish memory this is the time of the Judges, when the tribes lived without a king."},
  "events":[
   {"id":"kadesh","kicker":"Background","title":"A land between empires","date":"1274 BC","cert":A,
@@ -48,7 +51,7 @@ STOP = {
    "src":["morris","moran","killebrew","zuckerman"],"objects":["gaza","bethshean","megiddo","jerusalem","shechem","gezer","hazor","wayshorus","coastroad","canaanites"],"focus":{"c":[35.1,32.2],"k":5.5},"hl":["gaza","bethshean","jerusalem","shechem","megiddo"]},
   {"id":"exodus","kicker":"Jewish tradition","title":"The memory of Egypt","date":"Tradition, no fixed date","cert":T,
    "text":"The Hebrew Bible tells how the children of Israel, descendants of Abraham, Isaac and Jacob, went down to Egypt and were enslaved there. God brought them out under the leadership of Moses. At Mount Sinai they received the Torah, and after forty years in the wilderness they came to the land of Canaan.",
-   "why":"For Jews, the Exodus is the founding memory: the story of becoming a free people bound by a covenant with God. It is retold every year at the Passover Seder, and it shapes prayer and law: 'you shall not wrong a stranger, for you were strangers in the land of Egypt' (Exodus 22:20).",
+   "why":"For Jews, the Exodus is the founding memory: the story of becoming a free people bound by a covenant with God. It is retold every year at the Passover Seder, and it shapes prayer and law: 'you shall not wrong a stranger, for you were strangers in the land of Egypt' (Exodus 22:21).",
    "claims":[["The account of slavery, Exodus, Sinai and the wilderness is told in the Torah (Exodus to Deuteronomy).",T,["bible"]],["Exodus 1:11 names the store-cities Pithom and Raamses. Many scholars connect Raamses with Pi-Ramesses, the residence of Ramesses II.",D,["killebrew","pusch"]],["People from Canaan did live and work in New Kingdom Egypt, and Egypt ruled Canaan, so contact between the two lands was real.",A,["killebrew","morris"]],["No Egyptian text found so far mentions Moses or the Exodus. Scholars differ on how the memory relates to history, from a large historical exodus to the experience of a smaller group.",D,["killebrew","faust","finkelstein"]]],
    "src":["bible","killebrew","faust"],"objects":["piramesses","sinai","nile","egypt","israelp"],"focus":{"c":[32.6,30.2],"k":2.6},"hl":["piramesses","sinai"]},
   {"id":"assyria","kicker":"The wider world","title":"Assyria on the rise","date":"c. 1243–1207 BC","cert":A,
@@ -85,63 +88,13 @@ STOP["explore"] = {
 # A beat runs its steps together; beats run one after another.
 # Step types: caption, focus, migration, border, battle, year (+ optional audio cue on any beat: "audio":"path.mp3").
 # Every caption carries cert + sources. Uncertain movements are dashed and marked Disputed.
-PHILISTIA = [[34.38,31.38],[34.52,31.66],[34.63,31.86],[34.92,31.86],[34.98,31.62],[34.6,31.28],[34.38,31.38]]
-HIGHLANDS = [[34.98,32.55],[35.42,32.55],[35.55,32.15],[35.5,31.6],[35.25,31.35],[34.98,31.42],[34.92,31.9],[34.98,32.55]]
-def cap(text, cert, src): return {"type":"caption","text":text,"cert":cert,"src":src}
-# "scene" captions are scene-setting only: framed as "Imagine ...", they assert no new facts and carry no sources.
-def scene(text): return {"type":"caption","text":text,"cert":"scene","src":[]}
 STOP["play"] = {
  "to":-1150, "title":"From 1207 BC to c. 1150 BC",
- "intro":"Plays full screen like a short film, with subtitles (CC). Pause, step back or forward, change speed, or tap the picture to pause at any time.",
+ "intro":"Plays full screen like a short narrated film, with subtitles (CC). Pause, step back or forward, change speed, or tap the picture to pause at any time. Stop whenever you like: it remembers your chapter.",
  "zoneObjects":{"philistia":"philistines","highlands":"israelp"},
  # sound (js/app.js, assets/sfx/README.md): the scene's ambient loop; battle, migration, border and year
  # steps get a default effect; "sfx" overrides it (null = none) and "sfxHold" (ms) lets it play out
  "ambient":"desert",
- "beats":[
-  {"steps":[{"type":"year","to":-1200},{"type":"focus","c":[34.6,34.0],"k":1.5},
-    cap("In the years after the Israel Stele, the world around Israel fell apart. Historians call it the Late Bronze Age collapse.",A,["cline","kuhrt"])]},
-  {"steps":[{"type":"year","to":-1190},{"type":"focus","c":[35.9,35.3],"k":4.5,"hl":["ugarit"]},
-    {"type":"battle","at":[35.78,35.60],"label":"Ugarit destroyed","cert":A,"sfxHold":2500,
-     "arrows":[{"path":[[34.2,35.95],[35.0,35.75],[35.66,35.62]],"side":"enemy","cert":D}]},
-    cap("Around 1190 BC Ugarit, a rich port on the Syrian coast, was destroyed. Its last letters tell of enemy ships off the coast.",A,["kaniewski","cline"])]},
-  {"steps":[cap("The exact year and the attackers are debated; radiocarbon dates from nearby Tell Tweini point to about 1192–1190 BC.",D,["kaniewski"])]},
-  {"steps":[{"type":"year","to":-1185},{"type":"focus","c":[35.0,38.0],"k":2.2,"hl":["carchemish"]},
-    {"type":"border","fade":[{"zone":"hatti"}]},
-    cap("Soon after, the Hittite court left Hattusa and the empire ended. Excavators found little sign of a final battle there. A branch of the royal family held on at Carchemish.",A,["seeher","bryce"])]},
-  {"steps":[{"type":"year","to":-1180},{"type":"focus","c":[31.5,34.2],"k":1.35,"hl":["seapeoples"]},
-    {"type":"migration","label":"By sea","cert":D,"sfxHold":2500,"path":[[25.8,37.2],[28.6,36.3],[31.6,36.0],[33.8,35.3],[35.2,34.9],[34.85,33.4],[34.35,32.1],[33.4,31.45],[32.2,31.55]]},
-    {"type":"migration","label":"By land","cert":D,"path":[[28.2,38.4],[31.0,37.8],[34.0,37.1],[35.9,36.4],[36.2,34.7],[35.6,33.4]]},
-    cap("'The foreign countries made a conspiracy in their islands … No land could stand before their arms, from Hatti … on.' So Ramesses III of Egypt had it written at Medinet Habu.",A,["edgerton","mhabu"])]},
-  {"steps":[cap("Modern historians call them the 'Sea Peoples'. Their origins, numbers and part in the collapse are disputed; drought, earthquakes and broken trade also played a role.",D,["cline","kaniewski"])]},
-  {"ambient":"river","steps":[{"type":"year","to":-1177},{"type":"focus","c":[33.2,31.9],"k":2.8},
-    {"type":"battle","at":[35.25,33.1],"label":"Land battle in Djahy (place disputed)","cert":D,"sfxHold":3000,
-     "arrows":[{"path":[[34.47,31.50],[34.75,32.3],[35.1,32.9]],"side":"egypt","cert":A},{"path":[[35.9,34.4],[35.5,33.7],[35.32,33.25]],"side":"enemy","cert":D}]},
-    {"type":"battle","at":[31.95,31.42],"label":"Sea battle at the Nile mouths","cert":A,
-     "arrows":[{"path":[[31.83,30.80],[31.9,31.25]],"side":"egypt","cert":A},{"path":[[33.0,31.75],[32.4,31.6],[32.05,31.48]],"side":"enemy","cert":D}]},
-    cap("In his year 8 (c. 1177 BC in the usual dating), Ramesses III fought them on land in Djahy and at sea at the mouths of the Nile, and claimed victory. The Peleset, later called Philistines, were among them.",A,["edgerton","mhabu","cline"])]},
-  {"steps":[cap("A later papyrus says he settled the defeated 'in strongholds'. Whether that means Egypt itself placed the Philistines in Canaan is disputed.",D,["harris","killebrew"])]},
-  {"ambient":"desert","steps":[{"type":"year","to":-1170},{"type":"focus","c":[34.72,31.62],"k":7,"hl":["ashdod","ashkelon","ekron","gath","gaza"]},
-    {"type":"border","add":[{"zone":"philistia","certainty":"unsure","label":"PHILISTIA","labelAt":[34.45,31.95],"coords":PHILISTIA}]},
-    cap("On the southern coast, newcomers made Ashdod, Ashkelon, Ekron and Gath their own. Their pottery, cooking and weaving followed Aegean ways. Ancient DNA from Ashkelon shows people with southern European ancestry who soon mixed with locals.",A,["killebrew","yasur","feldman"])]},
-  {"steps":[cap("When they arrived is debated: about 1175 BC in the usual view, or about 1135 BC in a lower dating.",D,["fink1995","yasur"])]},
-  {"steps":[cap("The Hebrew Bible remembers the Philistines as coming from Caphtor (Amos 9:7), and as Israel's great rival in the days of the Judges, Samson and Saul.",T,["bible"])]},
-  {"steps":[{"type":"year","to":-1160},{"type":"focus","c":[35.2,32.1],"k":4.2,"hl":["bethshean","gaza"]},
-    {"type":"border","fade":[{"zone":"egypt","certainty":"unsure"}]},
-    cap("Egypt kept garrisons in Canaan, such as Beth-Shean, for some decades more. Its rule there ended during the 12th century BC.",A,["weinstein","millek","morris"])]},
-  {"steps":[cap("Whether the end came quickly or slowly, over 75 years or more, is debated.",D,["weinstein","millek"])]},
-  {"steps":[{"type":"year","to":-1150},{"type":"focus","c":[35.2,31.95],"k":5.5,"hl":["hills","izbetsartah","shechem","jerusalem"]},
-    {"type":"border","fade":[{"zone":"israel"}],"add":[{"zone":"highlands","certainty":"people","label":"ISRAEL","labelAt":[34.95,32.62],"coords":HIGHLANDS}]},
-    cap("In the hills, small farming villages kept multiplying. Surveys count about 30 sites in the 13th century BC and about 250 by the end of Iron I, around 1000 BC.",A,["fink2013","faust"])]},
-  {"steps":[scene("Imagine the hills at dawn: rock and scrub, smoke from cooking fires, flocks heading out to graze. Here is what excavations show.")]},
-  {"steps":[{"type":"focus","c":[35.05,32.07],"k":9,"hl":["izbetsartah"]},
-    cap("Most villages were small, often a few dozen households. Some of the earliest, such as Izbet Sartah, were laid out as a ring of houses around an open yard.",A,["finkelstein","faust"])]},
-  {"steps":[cap("A typical home was a pillared house of three or four spaces around a central room. Animals and stores were probably kept on the ground floor, with living space above.",A,["faust","killebrew"])]},
-  {"steps":[cap("Families stored grain in stone-lined pits and in large 'collared-rim' jars, and cut cisterns into the rock to keep winter rain for the dry summer. On steeper slopes, terraces held the soil.",A,["finkelstein","killebrew"])]},
-  {"steps":[cap("They grew wheat and barley, tended olives and vines, and herded sheep and goats. Pig bones are rare at these hill sites.",A,["faust","fink2013"])]},
-  {"steps":[{"type":"focus","c":[35.0,32.3],"k":4.4},
-    cap("Down on the coast and the trade roads, the long-distance trade in copper, tin and fine goods that had fed the palaces had faltered.",A,["cline"])]},
-  {"steps":[cap("For Israel, the world nearby had changed: the empire that named it in stone was withdrawing, the Philistines were new neighbours on the coast, and the hill villages kept growing.",A,["millek","killebrew","fink2013"])]},
-  {"steps":[scene("Imagine a winter evening in one of these houses, rain on the roof and the animals shifting below. We do not know these villagers' names. Their houses, jars and terraces are what they left us.")]},
-  {"steps":[cap("In Jewish tradition this is the age of the Judges, when 'there was no king in Israel' (Judges 21:25) and leaders rose tribe by tribe.",T,["bible"])]}
- ]
+ # the narrated beats, one recorded line each (build/narration_jews_1207.py, audio from build/narrate.py)
+ "beats":NAR.clean(NAR.PLAY)
 }
