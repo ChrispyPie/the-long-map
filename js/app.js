@@ -185,6 +185,13 @@ function drawZones(era){
     .attr('r', 1).on('click', (e, d) => open(e, d.id));
   redrawZones();
 }
+// the ISRAEL label sits in the hill country among the sites; a tap on the word itself opens Israel even
+// where a site's (larger) tap circle reaches under it (rivers and roads keep their own taps)
+svg.node().addEventListener('click', e => {
+  const t = gZones.select('text.zl-people').node(); if (!t || CINE || !(e.target.classList && e.target.classList.contains('hit'))) return;
+  const r = t.getBoundingClientRect(); if (!r.width || getComputedStyle(t).display === 'none' || +getComputedStyle(t).opacity === 0) return;
+  if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom){ e.stopPropagation(); e.preventDefault(); openObj(ERA.zoneObjects.israel); }
+}, true);
 function redrawZones(){
   gZones.selectAll('path').attr('d', path);
   gZones.selectAll('text.zlabel').attr('x', d => projection(d.c)[0]).attr('y', d => projection(d.c)[1]);
@@ -384,6 +391,7 @@ function tick(now){
   if (!PLAY) return;
   const dt = Math.min(100, now - (PLAY.last || now)); PLAY.last = now;
   if (!PLAY.paused && !PLAY.hold && !PLAY.wait) PLAY.clock += dt * SPEED;   // wait: the opener's choice
+  audioWatch(now);
   const c = PLAY.clock;
   PLAY.anims = PLAY.anims.filter(a => { const f = Math.min(1, Math.max(0, (c - a.t0) / a.ms)); a.fn(ease(f)); return f < 1; });
   if (PLAY.anims.length) scaleMarks();
@@ -394,6 +402,15 @@ function tick(now){
   }
   if (PLAY.bEnd) $('capbar').style.width = Math.min(100, 100 * (PLAY.clock - PLAY.b0) / (PLAY.bEnd - PLAY.b0)) + '%';
   PLAY.raf = requestAnimationFrame(tick);
+}
+// watchdog for the narrator's clip: if its time does not move for STALL_MS while the film runs
+// (stalled download, the phone paused it, a failed play()), retry once, then skip it
+const STALL_MS = 2500;
+function audioWatch(now){
+  const w = PLAY && PLAY.aw; if (!w || PLAY.audio !== w.a) return;
+  if (PLAY.paused || w.a.ended){ w.t = now; return; }
+  if (w.a.currentTime !== w.last){ w.last = w.a.currentTime; w.t = now; return; }
+  if (now - w.t > STALL_MS){ w.t = now; w.retry(); }
 }
 function tweenYear(to, ms){
   const from = YEAR == null ? STOP.year : YEAR;
@@ -474,16 +491,20 @@ const STEP = {
   }
 };
 const words = t => t.split(/\s+/).length;
-// reading time ~2.5 words per second, at least 4 s (make_data.py writes this as beat.duration)
+// reading time ~2.5 words per second, at least 2 s (make_data.py writes this as beat.duration)
 // with the voice on, a recorded line lasts as long as its audio (audioMs, measured when it was recorded)
-const lineMs = b => { if (VOICE && b.audio && b.audioMs) return b.audioMs; const c = b.steps.find(x => x.type === 'caption'); return b.duration || Math.max(4000, Math.round(words(c ? c.text : '') / 2.5 * 1000)); };
-const pauseMs = b => b.pauseAfter == null ? 2000 : b.pauseAfter;
+const lineMs = b => { if (VOICE && b.audio && b.audioMs) return b.audioMs; const c = b.steps.find(x => x.type === 'caption'); return b.duration || Math.max(2000, Math.round(words(c ? c.text : '') / 2.5 * 1000)); };
+const pauseMs = b => b.pauseAfter == null ? 600 : b.pauseAfter;
+// the gap after a line: short and natural (pauseAfter, ~0.6 s); with sound on a battle or march may
+// stretch it so its effect can swell (sfxHold), but no breathing moment is longer than BREATH_MAX
+const BREATH_MAX = 2000;
+const breathMs = b => { const h = holdMs(b); return h ? Math.min(BREATH_MAX, Math.max(pauseMs(b), h)) : pauseMs(b); };
 const VISUAL = ['migration', 'battle', 'border'];
 // planned length of one beat at 1x (without audio)
 function beatPlan(b){
   let t = 0; const f = b.steps.find(x => x.type === 'focus'); if (f) t += dur(f) + GAP;
   b.steps.filter(x => VISUAL.includes(x.type)).forEach(x => { t += dur(x) + GAP; });
-  return Math.max(lineMs(b), t) + pauseMs(b) + holdMs(b);
+  return Math.max(lineMs(b), t) + breathMs(b);
 }
 const playTotal = (r = 'play') => (reelBeats(r) || []).reduce((s, b) => s + beatPlan(b), 0);
 function clearFx(){ gFx.selectAll('*').interrupt().remove(); gFxTop.selectAll('*').remove(); FXZ = []; }
@@ -508,9 +529,15 @@ function runBeat(i){
   if (b.audio && VOICE){ try {
     // tok: a play() aborted by a later seek must not release this line's hold (the same file can be reused)
     audioDone = false; const a = PLAY.audio = audioFor(b.audio), tok = PLAY.tok = (PLAY.tok || 0) + 1; a.currentTime = 0; a.playbackRate = SPEED;
-    const done = () => { if (PLAY && PLAY.tok === tok && PLAY.audio === a){ audioDone = true; a.onended = a.onerror = null; PLAY.audio = null; PLAY.hold = false; sndLevel('fill'); } };
-    a.onended = a.onerror = done;
-    if (!PLAY.paused) a.play().catch(err => { if (!err || err.name !== 'AbortError') done(); });
+    const done = () => { if (PLAY && PLAY.tok === tok && PLAY.audio === a){ audioDone = true; a.onended = a.onerror = null; PLAY.audio = null; PLAY.aw = null; PLAY.hold = false; sndLevel('fill'); } };
+    // a clip that fails, stalls or is stopped by the phone (call, other app) never pauses the film:
+    // it is retried once, then skipped and the film goes on with the subtitles on the beat timer
+    const skip = () => { if (PLAY && PLAY.tok === tok && PLAY.audio === a){ try { a.pause(); } catch(e){} PLAY.audioSkips = (PLAY.audioSkips || 0) + 1; done(); } };
+    const retry = () => { if (!PLAY || PLAY.tok !== tok || PLAY.audio !== a) return; if (PLAY.aw.tries++ >= 1) return skip(); PLAY.aw.t = performance.now();
+      if (a.error){ const pos = a.currentTime; a.load(); try { a.currentTime = pos; } catch(e){} } if (!PLAY.paused) a.play().catch(err => { if (!err || err.name !== 'AbortError') skip(); }); };
+    PLAY.aw = {a, tok, last: -1, t: performance.now(), tries: 0, retry};
+    a.onended = done; a.onerror = retry;
+    if (!PLAY.paused) a.play().catch(err => { if (!err || err.name !== 'AbortError') retry(); });
   } catch(e){ audioDone = true; } }
   preload(PLAY.beats[i + 1]);
   // 2) camera moves first, 3) then one visual event at a time
@@ -523,10 +550,10 @@ function runBeat(i){
   at(lineEnd, () => { if (!audioDone) PLAY.hold = true; else sndLevel('fill'); });
   // the opener's last line ends on a choice: the film waits until the viewer picks one
   at(lineEnd + 1, () => { if (b.choice && PLAY.reel === 'intro'){ PLAY.wait = true; sndLevel('fill'); showChoice(i); return; }
-    const pz = pauseMs(b) + holdMs(b); PLAY.b0 = t0; PLAY.bEnd = PLAY.clock + pz; at(PLAY.clock + pz, () => runBeat(i + 1)); });
-  PLAY.b0 = t0; PLAY.bEnd = lineEnd + pauseMs(b) + holdMs(b);
+    const pz = breathMs(b); PLAY.b0 = t0; PLAY.bEnd = PLAY.clock + pz; at(PLAY.clock + pz, () => runBeat(i + 1)); });
+  PLAY.b0 = t0; PLAY.bEnd = lineEnd + breathMs(b);
   $('capn').textContent = `${i + 1} / ${PLAY.beats.length}`;
-  setPP();
+  setPP(true);   // a new beat keeps the idle timer going but does not bring hidden controls back
 }
 function seek(i){
   // rebuild the state of beats 0..i-1 instantly, then play beat i
@@ -562,7 +589,10 @@ async function playStart(reel = 'play', from = 0){
 }
 // the opener's choice, shown over the picture when its last line has been spoken
 function showChoice(i){
-  const c = $('choice'); c.hidden = false; c.classList.remove('in'); void c.offsetWidth; c.classList.add('in'); wake();
+  // while the choice is up the subtitle, source line, progress bar and chapter strip step aside;
+  // the panel sits between the year and the controls, and scrolls if a screen is very short
+  document.body.classList.add('choosing');
+  const c = $('choice'); c.hidden = false; c.classList.remove('in'); void c.offsetWidth; c.classList.add('in'); wake(); placeChoice();
   const nxt = chapterAt('intro', i + 1);
   $('choicego').textContent = 'Continue the story ›';
   $('choicesub').textContent = nxt && nxt.i === i + 1 ? `Chapter ${nxt.n}: ${nxt.title} · ${mmss(reelChapters('intro').filter(x => x.n >= nxt.n).reduce((s, x) => s + x.ms, 0))}` : '';
@@ -570,7 +600,15 @@ function showChoice(i){
   $('choicemap').onclick = e => { e.stopPropagation(); if (!PLAY) return; const r = PLAY.reel; playStop(false); resumeSet(r, i + 1); };
   setTimeout(() => { if (!c.hidden) $('choicego').focus({preventScroll: true}); }, 50);
 }
-function hideChoice(){ const c = $('choice'); if (c) c.hidden = true; }
+function hideChoice(){ const c = $('choice'); if (c) c.hidden = true; document.body.classList.remove('choosing'); }
+function placeChoice(){
+  const c = $('choice'); if (!c || c.hidden) return;
+  const vb = $('vp').getBoundingClientRect(), cap = $('cap'), cy = $('cyear');
+  const capTop = !cap.hidden && cap.offsetHeight ? cap.getBoundingClientRect().top : vb.bottom;
+  const yb = cy && cy.offsetHeight ? cy.getBoundingClientRect().bottom : vb.top;
+  c.style.setProperty('--choice-top', Math.max(8, Math.round(yb - vb.top) + 8) + 'px');
+  c.style.setProperty('--choice-bottom', Math.max(8, Math.round(vb.bottom - capTop) + 8) + 'px');
+}
 // the opening film ends by handing over to the map: zoom out onto the Explore step
 function introEnd(){ resumeSet('intro', 0); playStop(false); }
 // a chapter card at the start of each chapter, and chapter segments above the film controls
@@ -597,8 +635,8 @@ function drawChapters(){
 // phones: subtitles sit next to the map so they never cover the animation
 const NARROW = () => matchMedia('(max-width:899px)').matches;
 function placeCap(){ const c = $('cap'), vp = $('vp'); if (NARROW() && !CINE){ if (c.parentNode === vp) vp.after(c); c.classList.add('below'); } else { if (c.parentNode !== vp) vp.append(c); c.classList.remove('below'); } }
-addEventListener('resize', () => { if (PLAY) placeCap(); });
-function setPP(){ const p = PLAY && PLAY.paused; $('cappp').textContent = p ? '▶' : '❚❚'; $('cappp').setAttribute('aria-label', p ? 'Play' : 'Pause'); $('cap').classList.toggle('paused', !!p); wake(); }
+addEventListener('resize', () => { if (PLAY) placeCap(); placeChoice(); });
+function setPP(quiet){ const p = PLAY && PLAY.paused; $('cappp').textContent = p ? '▶' : '❚❚'; $('cappp').setAttribute('aria-label', p ? 'Play' : 'Pause'); $('cap').classList.toggle('paused', !!p); if (!quiet || (!idleT && !document.body.classList.contains('idle'))) wake(); }
 function playPause(force){
   if (!PLAY) return;
   PLAY.paused = force === undefined ? !PLAY.paused : force;
@@ -764,7 +802,7 @@ function exitCine(){
   const c = CINE, vp = $('vp'), b = document.body, ph = $('vpph');
   c.fsOn = false;
   if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {});
-  clearTimeout(idleT); b.classList.remove('idle');
+  clearTimeout(idleT); idleT = null; b.classList.remove('idle');
   c.out = (c.ready || Promise.resolve()).then(() => {
     const from = vp.getBoundingClientRect();
     vp.classList.remove('full'); b.classList.remove('cine'); placeCap();
@@ -778,14 +816,16 @@ function exitCine(){
 }
 // controls fade after a few quiet seconds and come back on any touch or mouse move
 function wake(){
-  const b = document.body; b.classList.remove('idle'); clearTimeout(idleT);
-  if (CINE && PLAY && !PLAY.paused) idleT = setTimeout(() => { if (CINE && PLAY && !PLAY.paused && !CINE.out) b.classList.add('idle'); }, IDLE_MS);
+  const b = document.body; b.classList.remove('idle'); clearTimeout(idleT); idleT = null;
+  if (CINE && PLAY && !PLAY.paused) idleT = setTimeout(() => { idleT = null; if (CINE && PLAY && !PLAY.paused && !CINE.out) b.classList.add('idle'); }, IDLE_MS);
 }
 ['pointermove', 'pointerdown', 'touchstart', 'keydown'].forEach(t => addEventListener(t, () => { if (CINE) wake(); }, {passive: true}));
-// in the film a tap on the picture shows the controls and pauses (objects are not opened mid-film)
+// in the film a tap (or click) on the picture only shows the controls (or keeps them up); it never pauses
+// or plays, which is too easy to do by accident. Play and pause: the button in the control bar, or Space.
+// Objects are not opened mid-film.
 $('vp').addEventListener('click', e => {
-  if (!CINE || e.target.closest('.crow, .chaps, .choice')) return;
-  e.stopPropagation(); e.preventDefault(); wake(); if (PLAY && !PLAY.paused) playPause(true);
+  if (!CINE || e.target.closest('.cap2, .choice, button, a')) return;
+  e.stopPropagation(); e.preventDefault(); wake();
 }, true);
 addEventListener('keydown', e => {
   if (!CINE || !PLAY) return;
@@ -816,8 +856,7 @@ function setVoice(on){
 $('capvoice').onclick = e => { e.stopPropagation(); setVoice(!VOICE); };
 setVoice(VOICE);
 $('capskip').onclick = e => { e.stopPropagation(); if (PLAY && PLAY.reel === 'intro'){ resumeSet('intro', 0); playStop(false); return; } if (PLAY){ svg.interrupt(); PLAY.anims = []; PLAY.events = []; resetMap(); YEAR = STOP.year; PLAY.clockOn = false; PLAY.beats.forEach((b, j) => applyInstant(j)); playEnd(); } };
-// tapping the map pauses (tapping an object opens its box, which also pauses)
-svg.on('click.play', () => { if (PLAY && !PLAY.paused) playPause(true); });
+// a tap on the map never pauses Play (too easy by accident); tapping an object opens its box, which pauses
 
 // a stop that is not built yet, reached at the end of Play: the map keeps the end state
 const liveBefore = k => { for (let j = k; j >= 0; j--) if (STORY.stops[j].file) return j; return 0; };
@@ -899,7 +938,7 @@ window.__app = { openObj, closeObj, showStep, go, playStart, playPause, playStop
   get cc(){ return CC; }, setCC, enterCine, exitCine, IDLE_MS,
   get snd(){ return {on: SND.on, ctx: SND.ctx ? SND.ctx.state : null, phase: SND.phase, target: SND.target, gain: SND.bus ? SND.bus.gain.value : null,
     amb: SND.amb ? SND.amb.name : null, shots: SND.shots.map(o => o.name), loaded: Object.keys(SND.buf).sort()}; }, setSnd,
-  plan: i => PLAY ? beatPlan(PLAY.beats[i]) : null, get clock(){ return PLAY ? PLAY.clock : null; } };
+  plan: i => PLAY ? beatPlan(PLAY.beats[i]) : null, gap: i => PLAY ? breathMs(PLAY.beats[i]) : null, get audioEl(){ return PLAY ? PLAY.audio : null; }, get audioSkips(){ return PLAY ? PLAY.audioSkips || 0 : 0; }, STALL_MS, get clock(){ return PLAY ? PLAY.clock : null; } };
 
 // donations: hidden until data/site.json has a donateUrl (https only)
 // "Report an error" works the same way with reportUrl

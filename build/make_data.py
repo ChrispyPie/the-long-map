@@ -66,7 +66,7 @@ def check_reel(where, beats, frame_ok):
             for f in x.get("fade",[]) + x.get("add",[]): assert f["zone"] in zones_known, f["zone"]
 for where, beats, frame_ok in REELS: check_reel(where, beats, frame_ok)
 # pacing (see build/README.md): each beat gets duration = reading time of its line (~2.5 words/s, at
-# least 4 s; used when the voice is off) and pauseAfter (default 2 s) unless set by hand. With the voice
+# least 2 s; used when the voice is off) and pauseAfter (0.6 s, 1.5 s before a new chapter) unless set by hand. With the voice
 # on the recorded line sets the length: audio + audioMs come from assets/narration/index.json
 # (build/narrate.py); a line whose text changed since it was recorded is refused.
 NIDX = json.load(open(narrate.IDX)) if os.path.exists(narrate.IDX) else {}
@@ -76,9 +76,11 @@ for where, beats, _ in REELS:
     words = 0
     for n,b in enumerate(beats):
         c = next(x for x in b["steps"] if x["type"]=="caption"); wc = len(c["text"].split()); words += wc
-        b.setdefault("duration", max(4000, round(wc / 2.5 * 10) * 100))
-        b.setdefault("pauseAfter", 2000)
-        assert 1500 <= b["pauseAfter"] <= 2500, f"pauseAfter out of range in beat"
+        b.setdefault("duration", max(2000, round(wc / 2.5 * 10) * 100))
+        # short natural gap after a line; a longer breath only before a new chapter
+        nxt = beats[n + 1] if n + 1 < len(beats) else None
+        b.setdefault("pauseAfter", 1500 if nxt and nxt.get("chapter") else 600)
+        assert 400 <= b["pauseAfter"] <= 2000, f"pauseAfter out of range in beat"
         fp = narrate.file_of(REEL_FILE[where], n); e = NIDX.get(fp)
         if e and os.path.exists(fp) and e["sha"] == narrate.sha(c["text"]):
             assert os.path.getsize(fp) < 80_000, f"{fp} too big"
@@ -89,6 +91,8 @@ for where, beats, _ in REELS:
     (play if where == "play" else tin)["words"] = words
 zmap = {"egypt":"egypt","hatti":"hatti","assyria":"assyria","babylon":"babylon_s","elam":"elam","israel":"israelp"}
 labelAt = {k: c.get("labelAt") for k,c in era.get("cards",{}).items()} or era.get("labelAt")
+# the people label "Israel" sits inside the central hill country (it used to hang out over the sea west of the coast)
+labelAt["israel"] = story_jews.NAR.ISRAEL_LABEL
 era = {"year":-1207,"label":"1207 BC","zones":era["zones"],"zoneObjects":zmap,"labelAt":labelAt,
        "note":"Outlines are approximate. Drawn by The Long Map from the sources in each fact box, not traced from one published map. Solid = core area well documented. Dashed = extent uncertain. Coastline and rivers are modern."}
 def w(p, d):

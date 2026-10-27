@@ -27,7 +27,7 @@ const ROOT = process.env.ROOT || path.join(__dirname, '..');
     p.on('console', m => { if (m.type()==='error') errs.push(name+': '+m.text()); });
     p.on('pageerror', e => errs.push(name+' pageerror: '+e.message));
     const req = []; p.on('request', r => { if (/assets\/sfx\//.test(r.url())) req.push(r.url()); });
-    const tap = async sel => mobile ? p.tap(sel) : p.click(sel);
+    const tap = async sel => { if (/^#cap/.test(sel)){ await p.evaluate(()=>dispatchEvent(new PointerEvent('pointermove'))); await p.waitForTimeout(80); } return mobile ? p.tap(sel) : p.click(sel); };
     const S = () => p.evaluate(() => __app.snd);
     await p.goto(url, {waitUntil:'networkidle'}); await p.waitForTimeout(900);
     ok(name+' no audio and no sfx downloads before a gesture', await p.evaluate(() => window.__acN === 0 && __app.snd.ctx === null) && req.length === 0);
@@ -53,14 +53,14 @@ const ROOT = process.env.ROOT || path.join(__dirname, '..');
     ok(name+' ambient loop under the scene: '+s.amb, s.amb === 'desert');
     ok(name+' ducked about -18 dB under the line '+JSON.stringify(s), s.phase === 'voice' && near(s.target, Math.pow(10, -18/20)) && s.gain < 0.2);
     ok(name+' year change plays the page turn', s.shots.includes('year'));
-    // beat 6: Ugarit battle with sfxHold 3000
+    // beat 6: Ugarit battle with sfxHold 3000; the breath after the line is capped at 2 s (0.6 s pause + up to 1.4 s swell)
     const planOn = await p.evaluate(() => __app.plan(6));
     await p.evaluate(() => __app.seek(6));
     await p.waitForFunction(() => __app.snd.shots.includes('battle'), null, {timeout: 6000}).catch(() => {});
     ok(name+' battle step plays the battle clip', (await S()).shots.includes('battle'));
     const t0 = await p.evaluate(() => __app.clock);
     await p.waitForFunction(() => __app.snd.phase === 'fill', null, {timeout: 20000}).catch(() => {});
-    await p.waitForTimeout(1600); s = await S();
+    await p.waitForTimeout(1100); s = await S();
     ok(name+' rises to about -6 dB in the pause '+JSON.stringify(s), s.phase === 'fill' && near(s.target, Math.pow(10, -6/20)) && s.gain > 0.4);
     // the hold: beat 6 lasts its plan (with the hold) on the virtual clock
     await p.waitForFunction(() => __app.play && __app.play.i === 7, null, {timeout: 25000}).catch(() => {});
@@ -70,7 +70,7 @@ const ROOT = process.env.ROOT || path.join(__dirname, '..');
     // sound off: the plan drops the hold, the choice is remembered
     await tap('#capsnd'); await p.waitForTimeout(700);
     const planOff = await p.evaluate(() => __app.plan(6)); s = await S();
-    ok(name+' sfxHold adds 3 s only with sound on ('+planOn+' vs '+planOff+', beat ran '+Math.round(t1 - t0)+' ms of clock)', planOn - planOff === 3000 && t1 - t0 > planOn - 3100 - 700);
+    ok(name+' sfxHold stretches the gap to 2 s max, only with sound on ('+planOn+' vs '+planOff+', beat ran '+Math.round(t1 - t0)+' ms of clock)', planOn - planOff === 1400 && t1 - t0 > planOn - 1500 - 700);
     ok(name+' sound off: silent, remembered '+JSON.stringify(s), !s.on && s.target === 0 && s.amb === null && await p.evaluate(() => localStorage.getItem('tlm.snd') === 'off' && document.getElementById('capsnd').getAttribute('aria-pressed') === 'false'));
     await tap('#capsnd'); await p.waitForTimeout(1500); s = await S();
     ok(name+' sound back on: ambient again '+JSON.stringify(s), s.on && s.amb === 'desert' && s.ctx === 'running');

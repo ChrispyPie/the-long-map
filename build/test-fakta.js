@@ -18,6 +18,8 @@ const D = process.env.SHOTS || 'screens';
     await p.goto(url, {waitUntil:'networkidle'}); await p.waitForTimeout(1200);
     notes.push(name+' bytes on load: '+bytes);
     const tap = async (x,y) => mobile ? p.touchscreen.tap(x,y) : p.mouse.click(x,y);
+    // film controls fade out after a few seconds; a touch or mouse move brings them back first
+    const ctl = async sel => { await p.evaluate(()=>dispatchEvent(new PointerEvent('pointermove'))); await p.waitForTimeout(80); return p.click(sel); };
     const st = () => p.evaluate(() => ({open: __app.open, step: __app.step, K: __app.K, tr: document.querySelector('#map > g').getAttribute('transform'), n: document.getElementById('evn').textContent, title: document.title}));
     let s = await st(); ok(name+' title "'+s.title+'"', s.title.includes('Story of the Jews'));
     ok(name+' objects drawn: '+await p.evaluate(()=>document.querySelectorAll('g.obj, g.lobj').length), true);
@@ -113,16 +115,15 @@ const D = process.env.SHOTS || 'screens';
     // pacing: beat 1 is a recorded line of 9.8 s + 2 s pause (reading time 8.4 s with the voice off), so at ~9 s we are still on it
     await p.waitForTimeout(6000);
     ok(name+' pacing: still on beat 1 after 9 s', await p.evaluate(()=>__app.play.i) === 0);
-    const pace = await p.evaluate(()=>fetch('data/stories/jews/1207bc.json').then(r=>r.json()).then(d=>d.play.beats.every(b=>b.duration>=4000 && b.pauseAfter>=1500 && b.pauseAfter<=2500 && b.audioMs>2000 && /^assets\/narration\//.test(b.audio)) && d.play.words));
+    const pace = await p.evaluate(()=>fetch('data/stories/jews/1207bc.json').then(r=>r.json()).then(d=>d.play.beats.every(b=>b.duration>=2000 && b.pauseAfter>=400 && b.pauseAfter<=2000 && b.audioMs>2000 && /^assets\/narration\//.test(b.audio)) && d.play.words));
     ok(name+' every beat has duration, pauseAfter and its recorded line in the JSON; words '+pace, pace >= 1000 && pace <= 1500);
     ok(name+' year counter moving: '+await p.textContent('#pill'), /^c\. 1\d{3} BC$/.test(await p.textContent('#pill')));
     // pause / resume
-    await p.click('#cappp'); const pz = await p.evaluate(()=>__app.play.paused); await p.waitForTimeout(300); await p.click('#cappp');
+    await ctl('#cappp'); const pz = await p.evaluate(()=>__app.play.paused); await p.waitForTimeout(300); await ctl('#cappp');
     ok(name+' pause/resume', pz === true && (await p.evaluate(()=>__app.play.paused)) === false);
     await p.evaluate(()=>document.getElementById('map').dispatchEvent(new MouseEvent('click',{bubbles:true})));
-    ok(name+' tapping the map pauses', await p.evaluate(()=>__app.play.paused) === true);
-    await p.click('#cappp');
-    const sp = []; for (let i = 0; i < 3; i++){ await p.click('#capspd'); sp.push(await p.textContent('#capspd')); }
+    ok(name+' tapping the map does not pause', await p.evaluate(()=>__app.play.paused) === false);
+    const sp = []; for (let i = 0; i < 3; i++){ await ctl('#capspd'); sp.push(await p.textContent('#capspd')); }
     ok(name+' speed button cycles '+sp.join(' '), sp.join(' ') === '1.25× 0.75× 1×');
     ok(name+' controls visible: prev, pause, next, speed', await p.evaluate(()=>['capprev','cappp','capnext','capspd'].every(id=>{const r=document.getElementById(id).getBoundingClientRect(); return r.width>30 && r.height>30;})));
     // migration beat: arrows drawing + caption
@@ -152,7 +153,7 @@ const D = process.env.SHOTS || 'screens';
     // replay then stop -> back at 1207 explore, zones reset
     await p.evaluate(()=>{ __app.speed = 1; document.getElementById('replay').click(); }); await p.waitForTimeout(800);
     ok(name+' replay runs', await p.evaluate(()=>__app.play && __app.play.i === 0));
-    await p.click('#capx'); await p.waitForTimeout(1200);
+    await ctl('#capx'); await p.waitForTimeout(1200);
     ok(name+' stop -> 1207 explore, no added zones', await p.evaluate(()=>__app.mode==='stop' && !!document.getElementById('playbtn') && document.querySelectorAll('.added').length===0 && document.getElementById('pill').textContent==='1207 BC'));
     // timeline straight to c. 1150 rebuilds the end state
     await p.evaluate(()=>__app.go(1)); await p.waitForTimeout(1200);

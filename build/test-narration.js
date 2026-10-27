@@ -45,7 +45,7 @@ const ROOT = process.env.ROOT || path.join(__dirname, '..');
     const ip = await p.evaluate(() => ({go: document.getElementById('gostory').textContent, map: !!document.getElementById('goexplore'), read: !!document.getElementById('goread'), ch: document.querySelectorAll('#evbody .chlist .chb').length}));
     ok(name+' intro panel: '+JSON.stringify(ip), /Watch the opening · about 1 minute/.test(ip.go) && ip.map && ip.read && ip.ch === 3);
     const chIn = await p.evaluate(() => __app.chapters('intro'));
-    ok(name+' opener plan '+Math.round(chIn[0].ms/1000)+' s (75-90), chapters '+chIn.map(c => c.title+' '+Math.round(c.ms/1000)+'s').join(' | '), chIn.length === 3 && chIn[0].ms >= 75000 && chIn[0].ms <= 90000 && chIn[0].end === iChoice + 1);
+    ok(name+' opener plan '+Math.round(chIn[0].ms/1000)+' s (60-90), chapters '+chIn.map(c => c.title+' '+Math.round(c.ms/1000)+'s').join(' | '), chIn.length === 3 && chIn[0].ms >= 60000 && chIn[0].ms <= 90000 && chIn[0].end === iChoice + 1);
     if (shots){ await p.evaluate(() => document.getElementById('gostory').scrollIntoView({block:'center'})); await p.waitForTimeout(300); }
     if (shots) await panelShot('#gostory', 'narr_intro_panel');
     await tap('#gostory'); await p.waitForTimeout(2200);
