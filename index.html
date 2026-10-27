@@ -10,34 +10,70 @@
   h1 { margin:0; font-size:20px; }
   .chapter { margin:2px 0 0; color:#cbbfa2; font:12px/1.3 system-ui, sans-serif; }
   .yearpill { font:700 12px/1 system-ui, sans-serif; background:#e2b45a; color:#14210f; border-radius:99px; padding:6px 9px; }
-  .viewport { height:58vh; max-height:620px; overflow:hidden; touch-action:none; background:#7f9cb5; margin:0 8px; border-radius:10px; position:relative; }
-  .stage { width:220%; transform-origin:0 0; will-change:transform; position:relative; }
-  img.map { width:100%; display:block; }
-  .zones { position:absolute; inset:0; width:100%; height:100%; }
-  .zones polygon { fill:rgba(226,180,90,.18); stroke:#e2b45a; stroke-width:.08; stroke-dasharray:.25 .18; cursor:pointer; }
-  .zones polygon[data-z=egypt] { fill:rgba(196,161,90,.22); stroke:#c4a15a; }
-  .zones polygon[data-z=hatti] { fill:rgba(125,154,114,.22); stroke:#7d9a72; }
-  .zones polygon[data-z=assyria] { fill:rgba(196,123,90,.22); stroke:#c47b5a; }
-  .zones polygon[data-z=babylon] { fill:rgba(110,140,170,.25); stroke:#6e8caa; }
-  .zones polygon[data-z=elam] { fill:rgba(168,120,90,.25); stroke:#a8785a; }
-  .hint { position:absolute; left:8px; bottom:8px; color:#163044; background:rgba(243,236,217,.85); font:11px/1 system-ui, sans-serif; padding:4px 6px; border-radius:6px; }
-  .timeline { padding:8px 10px 12px; }
-  .tlabel { font:11px/1.3 system-ui, sans-serif; color:#cbbfa2; }
+  .viewport { height:56vh; max-height:620px; overflow:hidden; touch-action:none; background:#7f9cb5; margin:0 8px; border-radius:10px; position:relative; }
+  @media (min-width:900px){ .viewport { height:66vh; max-height:760px; } }
+  #map { width:100%; height:100%; display:block; cursor:grab; }
+  .land { fill:#d8cba6; stroke:#a8987a; stroke-width:.6; vector-effect:non-scaling-stroke; }
+  .lake { fill:#7f9cb5; stroke:#5f7f9c; stroke-width:.5; vector-effect:non-scaling-stroke; }
+  .river { fill:none; stroke:#5a7fa3; stroke-width:1.1; vector-effect:non-scaling-stroke; stroke-linecap:round; }
+  .river.approx { stroke-dasharray:3 2; }
+  .zone { cursor:pointer; vector-effect:non-scaling-stroke; }
+  .zone.sure { fill-opacity:.30; stroke-width:1.6; }
+  .zone.unsure { fill-opacity:.15; stroke-width:1.3; stroke-dasharray:5 4; }
+  path.halo { fill:none; stroke-width:7; stroke-opacity:.22; vector-effect:non-scaling-stroke; pointer-events:none; }
+  .z-egypt { fill:#c4a15a; stroke:#8a6a2a; } .z-hatti { fill:#7d9a72; stroke:#4d6a42; } .z-assyria { fill:#c47b5a; stroke:#8a4b2a; }
+  .z-babylon { fill:#6e8caa; stroke:#3e5c7a; } .z-elam { fill:#a8785a; stroke:#784a2a; }
+  .israel { fill:#e2b45a; fill-opacity:.85; stroke:none; cursor:pointer; }
+  .hit { fill:transparent; cursor:pointer; }
+  .zlabel { font:700 10px/1 system-ui, sans-serif; letter-spacing:.12em; fill:#2a2418; fill-opacity:.75; text-anchor:middle; text-transform:uppercase; cursor:pointer; paint-order:stroke; stroke:#efe6cc; stroke-opacity:.6; stroke-width:2px; }
+  .zlabel.zl-people { fill:#7a5410; fill-opacity:1; text-anchor:end; }
+  .place circle { fill:#1c2418; }
+  .place text { font:11px/1 system-ui, sans-serif; fill:#1c2418; paint-order:stroke; stroke:#efe6cc; stroke-width:2.5px; stroke-linejoin:round; pointer-events:none; }
+  .place.israel-l text { fill:#6b4c10; font-weight:700; }
+  .legend { position:absolute; right:8px; top:8px; background:rgba(243,236,217,.9); color:#1c2418; font:11px/1.35 system-ui, sans-serif; padding:6px 8px; border-radius:8px; }
+  .legend div { display:flex; align-items:center; gap:6px; }
+  .legend i { display:inline-block; width:18px; height:0; border-top:2px solid #4d6a42; }
+  .legend i.d { border-top-style:dashed; } .legend i.g { width:12px; height:12px; border:0; border-radius:50%; background:radial-gradient(#e2b45a 40%, rgba(226,180,90,0) 75%); }
+  .hint { position:absolute; left:8px; bottom:8px; color:#163044; background:rgba(243,236,217,.85); font:11px/1 system-ui, sans-serif; padding:4px 6px; border-radius:6px; pointer-events:none; }
+  .soonbox { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); background:rgba(28,36,24,.92); border:1px solid #3c4632; border-radius:12px; padding:12px 16px; text-align:center; font:14px/1.4 system-ui, sans-serif; pointer-events:none; }
+  .soonbox b { display:block; color:#e2b45a; font-size:12px; letter-spacing:.06em; text-transform:uppercase; }
+  .timeline { padding:10px 12px 4px; font-family:system-ui, sans-serif; }
+  .tl-head { display:flex; align-items:center; gap:10px; }
+  .tl-head .mid { flex:1; text-align:center; }
+  .big { font:700 30px/1 Georgia, serif; color:#e2b45a; }
+  .big.soon { color:#8d836f; }
+  .ttitle { font:13px/1.3 system-ui, sans-serif; color:#cbbfa2; margin-top:4px; }
+  .step { width:44px; height:44px; font-size:22px; padding:0; }
+  .step:disabled { opacity:.3; }
+  .track { position:relative; height:44px; margin:10px 6px 0; }
+  .track .line { position:absolute; left:0; right:0; top:14px; height:2px; background:#3c4632; }
+  .mk { position:absolute; top:4px; width:22px; height:22px; margin-left:-11px; padding:0; border:0; background:transparent; }
+  .mk::after { content:''; position:absolute; left:6px; top:6px; width:10px; height:10px; border-radius:50%; background:#5c5a4c; }
+  .mk.live::after { background:#e2b45a; }
+  .mk.cur::after { left:3px; top:3px; width:16px; height:16px; box-shadow:0 0 0 3px rgba(226,180,90,.35); }
+  .mk.cur:not(.live)::after { background:#8d836f; }
+  .tick { position:absolute; top:28px; transform:translateX(-50%); font-size:10px; color:#7f7866; white-space:nowrap; }
+  footer { padding:6px 12px 14px; font:11px/1.4 system-ui, sans-serif; color:#8d836f; }
+  footer a { color:#cbbfa2; }
   .sheet { position:fixed; inset:0; background:rgba(6,10,5,.72); display:none; align-items:end; justify-content:center; padding:12px; z-index:5; }
   .sheet.open { display:flex; }
-  .card { position:relative; width:min(560px,100%); background:#1c2418; border:1px solid #3c4632; border-radius:16px; padding:14px 40px 14px 14px; }
+  .card { position:relative; width:min(560px,100%); background:#1c2418; border:1px solid #3c4632; border-radius:16px; padding:14px 40px 14px 14px; max-height:78vh; overflow:auto; box-sizing:border-box; }
   .kicker { font:700 11px/1 system-ui, sans-serif; letter-spacing:.06em; text-transform:uppercase; color:#e2b45a; }
   .card h3 { margin:6px 0 8px; font-size:22px; }
-  .card p { font-size:16px; line-height:1.4; margin:0 0 8px; }
   button { font:700 14px/1 system-ui, sans-serif; border-radius:10px; padding:10px 12px; border:1px solid #3c4632; background:transparent; color:#f3ecd9; }
-  .x { position:absolute; top:8px; right:8px; width:32px; height:32px; border-radius:8px; border:1px solid #3c4632; background:#10160e; color:#f3ecd9; font:600 20px/1 system-ui, sans-serif; }
-  .play { margin-top:8px; background:#e2b45a; color:#14210f; border-color:#e2b45a; } .card{max-height:78vh;overflow:auto} dl{margin:0} .row{display:flex;gap:8px;padding:5px 0;border-bottom:1px solid #2c3626;font:14px/1.3 system-ui,sans-serif} .row b{width:92px;flex:none;color:#cbbfa2;font-weight:600} .shot{width:100%;border-radius:8px;margin-top:10px;display:block} .cap{margin:4px 0 0;color:#cbbfa2;font:12px/1.35 system-ui,sans-serif} .scene{position:absolute;left:8px;top:46px;background:rgba(12,16,11,.72);color:#f3ecd9;font:11px/1 system-ui,sans-serif;padding:4px 6px;border-radius:6px}
+  .x { position:absolute; top:8px; right:8px; width:32px; height:32px; border-radius:8px; border:1px solid #3c4632; background:#10160e; color:#f3ecd9; font:600 20px/1 system-ui, sans-serif; padding:0; }
+  .play { margin-top:8px; background:#e2b45a; color:#14210f; border-color:#e2b45a; }
+  dl{margin:0} .row{display:flex;gap:8px;padding:5px 0;border-bottom:1px solid #2c3626;font:14px/1.3 system-ui,sans-serif} .row b{width:92px;flex:none;color:#cbbfa2;font-weight:600}
+  .area { margin:8px 0 0; font:12px/1.4 system-ui, sans-serif; color:#cbbfa2; }
+  .area span { display:block; }
+  .shot{width:100%;border-radius:8px;margin-top:10px;display:block} .cap{margin:4px 0 0;color:#cbbfa2;font:12px/1.35 system-ui,sans-serif}
+  .src { margin-top:10px; font:12px/1.4 system-ui, sans-serif; color:#cbbfa2; }
+  .src b { color:#f3ecd9; } .src ol { margin:4px 0 0; padding-left:18px; }
+  .scene{position:absolute;left:8px;top:46px;background:rgba(12,16,11,.72);color:#f3ecd9;font:11px/1.3 system-ui,sans-serif;padding:4px 6px;border-radius:6px;max-width:75%}
   .story { align-items:stretch; padding:0; background:#0c100b; }
-  .film { width:100%; height:100%; max-width:none; border:0; border-radius:0; background:#0c100b; padding:0; display:flex; flex-direction:column; }
+  .film { width:100%; height:100%; max-width:none; max-height:none; border:0; border-radius:0; background:#0c100b; padding:0; display:flex; flex-direction:column; }
   .still { width:100%; height:42vh; object-fit:cover; border-radius:0; margin:0; }
   .film .kicker { padding:12px 16px 0; }
-  .film h3 { padding:4px 16px 0; margin:0; }
-  .film p { padding:8px 16px 12px; font-size:17px; line-height:1.4; overflow:auto; }
   .controls { display:flex; gap:8px; padding:0 16px 8px; }
   .nav { flex:1; background:#1c2418; color:#f3ecd9; border:1px solid #3c4632; }
   .nav.exit { background:#e2b45a; color:#14210f; border-color:#e2b45a; }
@@ -48,130 +84,45 @@
 <header>
   <div>
     <h1>The Long Map</h1>
-    <p class="chapter">1207 BC · pinch zooms where your fingers are</p>
+    <p class="chapter" id="chapter">Pinch zooms where your fingers are</p>
   </div>
-  <div class="yearpill">1207 BC</div>
+  <div class="yearpill" id="pill">1207 BC</div>
 </header>
 <div class="viewport" id="vp">
-  <div class="stage" id="stage">
-    <svg class="zones" viewBox="0 0 46 27.5" preserveAspectRatio="none">
-      <polygon data-z="egypt" points="11.80,11.40 14.80,11.70 15.00,13.20 14.20,16.50 13.20,18.80 11.60,18.60 10.80,14.50 11.20,12.20"/>
-      <polygon data-z="hatti" points="8.50,1.80 18.50,1.60 21.50,3.80 20.50,6.20 16.00,6.80 10.50,6.40 8.20,4.80"/>
-      <polygon data-z="assyria" points="23.60,5.80 27.80,6.00 28.20,8.40 25.20,8.80 23.40,7.60"/>
-      <polygon data-z="babylon" points="25.20,9.40 29.60,9.60 30.20,11.80 27.00,12.40 25.00,11.20"/>
-      <polygon data-z="elam" points="29.80,10.20 35.20,10.60 36.20,13.40 31.40,13.40 29.60,11.80"/>
-      <polygon data-z="israel" points="16.95,10.65 17.35,10.65 17.38,11.40 17.05,11.50 16.92,11.10"/>
-    </svg>
-    <img class="map" alt="Near East and Persia" src="images/land-base-1207.png">
+  <svg id="map" aria-label="Map of the Near East, from Greece to Persia"></svg>
+  <div class="legend" id="legend">
+    <div><i></i>Core, well documented</div>
+    <div><i class="d"></i>Extent uncertain</div>
+    <div><i class="g"></i>A people, no border</div>
   </div>
-  <div class="hint">Pinch on a place to zoom there</div>
+  <div class="soonbox" id="soon" hidden><b>Coming soon</b><span id="soont"></span></div>
+  <div class="hint">Tap an area · pinch to zoom</div>
 </div>
-<div class="timeline"><div class="tlabel">Same land for every year. Persia is on the right. Israel is the gold speck by the sea.</div></div>
-<div class="sheet" id="sheet"><div class="card"><button class="x" type="button" onclick="closeZ()" aria-label="Close">×</button><div class="kicker" id="kicker"></div><h3 id="zt"></h3><dl id="facts"></dl><div id="pics"></div><button class="play" id="play" type="button" onclick="openStory()" hidden>Play story</button></div></div>
+<div class="timeline">
+  <div class="tl-head">
+    <button class="step" id="prev" type="button" aria-label="Previous stop">‹</button>
+    <div class="mid"><div class="big" id="big">1207 BC</div><div class="ttitle" id="ttitle"></div></div>
+    <button class="step" id="next" type="button" aria-label="Next stop">›</button>
+  </div>
+  <div class="track" id="track"><div class="line"></div></div>
+</div>
+<footer>
+  Map data: <a href="https://www.naturalearthdata.com/">Natural Earth</a> (public domain). Modern coastlines and rivers. Orontes drawn approximately (dashed).
+  Areas: approximate outlines by The Long Map, sources on each card.
+</footer>
+<div class="sheet" id="sheet"><div class="card"><button class="x" type="button" onclick="closeZ()" aria-label="Close">×</button><div class="kicker" id="kicker"></div><h3 id="zt"></h3><dl id="facts"></dl><div class="area" id="area"></div><div id="pics"></div><button class="play" id="play" type="button" onclick="openStory()" hidden>Play story</button><div class="src" id="src"></div></div></div>
 <div class="sheet story" id="story">
   <div class="card film">
     <button class="x" type="button" onclick="closeStory()" aria-label="Close">×</button>
-    <img class="still" id="still" alt="Story picture" src="images/ridge.jpg"><div class="scene">Scene, not a photograph</div>
+    <img class="still" id="still" alt="Story picture" src="images/ridge.jpg"><div class="scene" id="scene">Scene, not a photograph</div>
     <div class="kicker">Israel · about 1207 BC · Rex</div>
     <div class="reel" id="reel"><div class="reel-inner" id="reel-inner"></div></div>
     <div class="controls"><button class="nav" type="button" onclick="skip(-10)">-10s</button><button class="nav exit" id="pp" type="button" onclick="togglePlay()">Pause</button><button class="nav" type="button" onclick="skip(10)">+10s</button></div>
     <div class="time" id="time">0:00</div>
-    <audio id="narr" preload="auto" src="audio/israel.mp3"></audio>
+    <audio id="narr" preload="none" src="audio/israel.mp3"></audio>
   </div>
 </div>
-<script>
-const Z = {
-  egypt: {name:'Egypt', rows:[['Year','1207 BC'],['Place','Nile valley, and vassal cities in Canaan'],['Who rules','Merneptah, king of Egypt'],['People','Egyptians. Canaanites in the vassal cities'],['Population','About 2 to 4 million in Egypt proper. A modern guess'],['Worship','Amun, Ra, Osiris. Vassal cities keep Baal, El, Asherah']], pics:[]},
-  hatti: {name:'Hatti', rows:[['Year','1207 BC'],['Place','Central Anatolia, and northern Syria'],['Who rules','Suppiluliuma II, the Hittite king'],['People','Hittites, plus Luwians, Hurrians, Syrian vassals'],['Population','Core maybe around 1 million. Very uncertain'],['Worship','Storm god, sun goddess of Arinna. Vassals keep their own gods']], pics:[]},
-  assyria: {name:'Assyria', rows:[['Year','1207 BC'],['Place','Around Assur, on the middle Tigris'],['Who rules','The Assyrian king at Assur'],['People','Assyrians, Akkadian-speaking'],['Population','A few hundred thousand in the core. No reliable count'],['Worship','Ashur, plus the shared Mesopotamian gods']], pics:[]},
-  babylon: {name:'Babylon', rows:[['Year','1207 BC'],['Place','Southern Mesopotamia, around Babylon'],['Who rules','A Kassite king'],['People','Babylonians. The kings did not replace them'],['Population','Roughly under 1 million. Uncertain'],['Worship','Marduk, adopted by the Kassite kings']], pics:[]},
-  elam: {name:'Elam', rows:[['Year','1207 BC'],['Place','Southwest Iran, around Susa'],['Who rules','An Elamite king'],['People','Elamites. Not Persians'],['Population','No good count. Smaller than Babylon'],['Worship','Inshushinak at Susa']], pics:[]},
-  israel: {name:'Israel', rows:[['Year','1207 BC'],['Place','Hills between Shechem and Hebron'],['Who rules','No king'],['People','A people named Israel. Not a state'],['Population','A few tens of thousands, if that'],['Worship','A highland cult. Yahweh among Canaanite gods. Not later Judaism']], pics:[{src:'images/merneptah.jpg', cap:'The Merneptah Stele, Egyptian Museum, Cairo. Photograph by Onceinawhile, 2022. CC BY-SA 4.0.'}]}
-};
-function openZ(id){
-  const z = Z[id];
-  document.getElementById('kicker').textContent = '1207 BC · evidence';
-  document.getElementById('zt').textContent = z.name;
-  document.getElementById('facts').innerHTML = z.rows.map(r => '<div class="row"><b>'+r[0]+'</b><span>'+r[1]+'</span></div>').join('');
-  document.getElementById('pics').innerHTML = z.pics.map(p => '<img class="shot" alt="" src="'+p.src+'"><p class="cap">'+p.cap+'</p>').join('');
-  document.getElementById('play').hidden = id !== 'israel';
-  document.getElementById('sheet').classList.add('open');
-}
-const TALE = "Down on the coast, Egypt still holds the cities. Gaza. Ashkelon. The roads, and the grain that moves along them. A king in the Nile valley can name those cities. He can send soldiers to their gates. Up in the hills, between Shechem and Hebron, there is no gate worth naming. Stone houses sit on the ridges. Terraces cut the slope into thin green steps. Flocks move in the last light. No king. No wall a pharaoh would bother to write down. Then Merneptah, king of Egypt, has a victory stone cut. He lists the cities he claims to have crushed. Ashkelon. Gezer. Yanoam. And then one line is different. Israel is laid waste. Its seed is not. The mark beside the name is not the mark for a city. It is the mark for a people. No capital. No border a scribe could draw. But the name is already in the stone. In the hills above the Egyptian road, a people is living who will one day be called by that name in every empire that follows. Tonight they are only villages. A fire on a ridge. And a word an Egyptian chisel was not supposed to make eternal.";
-const words = TALE.split(/\s+/);
-const weights = words.map(w => w.replace(/[^A-Za-z]/g,'').length + (/[.!?]/.test(w) ? 4 : 0) + 1);
-const weightSum = weights.reduce((a,b)=>a+b,0);
-const DURATION = 66.6;
-let cursor = 0;
-const times = weights.map(w => { const start = cursor; cursor += DURATION * w / weightSum; return start; });
-const stoneAt = words.findIndex(w => w.startsWith('Then'));
-const inner = document.getElementById('reel-inner');
-inner.innerHTML = words.map((w,i)=>`<span class="w" id="w${i}">${w}</span>`).join(' ');
-function closeZ(){ document.getElementById('sheet').classList.remove('open'); }
-function openStory(){ document.getElementById('story').classList.add('open'); const a = document.getElementById('narr'); a.currentTime = 0; a.play(); }
-function closeStory(){ document.getElementById('narr').pause(); document.getElementById('story').classList.remove('open'); }
-function togglePlay(){ const a = document.getElementById('narr'); if (a.paused) a.play(); else a.pause(); }
-function skip(s){ const a = document.getElementById('narr'); a.currentTime = Math.max(0, Math.min((a.duration||DURATION)-0.2, a.currentTime + s)); }
-const narr = document.getElementById('narr');
-narr.addEventListener('play', () => document.getElementById('pp').textContent = 'Pause');
-narr.addEventListener('pause', () => document.getElementById('pp').textContent = 'Play');
-narr.addEventListener('timeupdate', () => {
-  const t = narr.currentTime;
-  let i = 0;
-  while (i < times.length-1 && times[i+1] <= t) i++;
-  document.querySelectorAll('.w.on').forEach(el => el.classList.remove('on'));
-  const el = document.getElementById('w'+i);
-  if (el) el.classList.add('on');
-  const reel = document.getElementById('reel');
-  const top = el.offsetTop - reel.clientHeight * 0.62;
-  inner.style.transform = `translateY(${-top}px)`;
-  document.getElementById('still').src = i >= stoneAt ? 'images/stone.jpg' : 'images/ridge.jpg';
-  const m = Math.floor(t/60), s = Math.floor(t%60);
-  document.getElementById('time').textContent = m + ':' + String(s).padStart(2,'0');
-});
-
-document.querySelectorAll('.zones polygon').forEach(p => p.addEventListener('click', e => { e.stopPropagation(); openZ(p.dataset.z); }));
-document.getElementById('sheet').addEventListener('click', e => { if (e.target.id === 'sheet') closeZ(); });
-const stage = document.getElementById('stage');
-const vp = document.getElementById('vp');
-let scale = 1, x = 0, y = 0;
-const pointers = new Map();
-function draw(){ stage.style.transform = `translate(${x}px, ${y}px) scale(${scale})`; }
-function zoomAt(px, py, next){
-  next = Math.min(6, Math.max(0.6, next));
-  const ratio = next / scale;
-  x = px - (px - x) * ratio;
-  y = py - (py - y) * ratio;
-  scale = next;
-  draw();
-}
-draw();
-vp.addEventListener('wheel', e => {
-  e.preventDefault();
-  const r = vp.getBoundingClientRect();
-  zoomAt(e.clientX - r.left, e.clientY - r.top, scale * (e.deltaY < 0 ? 1.12 : 0.89));
-}, {passive:false});
-vp.addEventListener('pointerdown', e => { vp.setPointerCapture(e.pointerId); pointers.set(e.pointerId, {x:e.clientX, y:e.clientY}); });
-vp.addEventListener('pointerup', e => pointers.delete(e.pointerId));
-vp.addEventListener('pointercancel', e => pointers.delete(e.pointerId));
-vp.addEventListener('pointermove', e => {
-  if (!pointers.has(e.pointerId)) return;
-  const prev = pointers.get(e.pointerId);
-  const pts = [...pointers.values()];
-  if (pointers.size === 1) {
-    x += e.clientX - prev.x; y += e.clientY - prev.y;
-    pointers.set(e.pointerId, {x:e.clientX, y:e.clientY});
-    draw();
-  } else if (pointers.size === 2) {
-    pointers.set(e.pointerId, {x:e.clientX, y:e.clientY});
-    const [a, b] = [...pointers.values()];
-    const [pa, pb] = pts;
-    const oldD = Math.hypot(pa.x - pb.x, pa.y - pb.y) || 1;
-    const newD = Math.hypot(a.x - b.x, a.y - b.y) || 1;
-    const r = vp.getBoundingClientRect();
-    zoomAt(((a.x + b.x) / 2) - r.left, ((a.y + b.y) / 2) - r.top, scale * (newD / oldD));
-  }
-});
-</script>
+<script src="js/d3-lite.min.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>

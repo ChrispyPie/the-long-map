@@ -1,0 +1,82 @@
+{
+ "from": -1400,
+ "to": 2030,
+ "stops": [
+  {
+   "year": -1207,
+   "label": "1207 BC",
+   "title": "Merneptah names Israel",
+   "file": "data/stops/1207bc.json"
+  },
+  {
+   "year": -1150,
+   "label": "c. 1150 BC",
+   "title": "Highland villages"
+  },
+  {
+   "year": -1000,
+   "label": "c. 1000 BC",
+   "title": "A kingdom? (tradition and dispute)"
+  },
+  {
+   "year": -930,
+   "label": "c. 930 BC",
+   "title": "Israel and Judah"
+  },
+  {
+   "year": -722,
+   "label": "722 BC",
+   "title": "Assyria takes Samaria"
+  },
+  {
+   "year": -586,
+   "label": "586 BC",
+   "title": "Babylon takes Jerusalem"
+  },
+  {
+   "year": -538,
+   "label": "538 BC",
+   "title": "Persian rule"
+  },
+  {
+   "year": -516,
+   "label": "516 BC",
+   "title": "Second Temple"
+  },
+  {
+   "year": -167,
+   "label": "167 BC",
+   "title": "Maccabean revolt"
+  },
+  {
+   "year": -63,
+   "label": "63 BC",
+   "title": "Rome arrives"
+  },
+  {
+   "year": 70,
+   "label": "AD 70",
+   "title": "Temple destroyed"
+  },
+  {
+   "year": 135,
+   "label": "AD 135",
+   "title": "Bar Kokhba revolt ends"
+  },
+  {
+   "year": 638,
+   "label": "AD 638",
+   "title": "Arab conquest of Jerusalem"
+  },
+  {
+   "year": 1948,
+   "label": "1947–48",
+   "title": "Partition and war"
+  },
+  {
+   "year": 1979,
+   "label": "1979",
+   "title": "Egypt–Israel peace"
+  }
+ ]
+}
