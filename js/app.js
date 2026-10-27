@@ -434,7 +434,7 @@ const VISUAL = ['migration', 'battle', 'border'];
 function beatPlan(b){
   let t = 0; const f = b.steps.find(x => x.type === 'focus'); if (f) t += dur(f) + GAP;
   b.steps.filter(x => VISUAL.includes(x.type)).forEach(x => { t += dur(x) + GAP; });
-  return Math.max(lineMs(b), t) + pauseMs(b);
+  return Math.max(lineMs(b), t) + pauseMs(b) + holdMs(b);
 }
 const playTotal = () => STOP && STOP.play ? STOP.play.beats.reduce((s, b) => s + beatPlan(b), 0) : 0;
 function clearFx(){ gFx.selectAll('*').interrupt().remove(); gFxTop.selectAll('*').remove(); FXZ = []; }
@@ -443,23 +443,26 @@ function applyInstant(i){ PLAY.beats[i].steps.forEach(x => { if (x.type !== 'cap
 function runBeat(i){
   if (i >= PLAY.beats.length) return playEnd();
   const b = PLAY.beats[i], t0 = PLAY.clock;
-  PLAY.i = i; PLAY.events = []; PLAY.hold = false;
+  PLAY.i = i; PLAY.events = []; PLAY.hold = false; PLAY.sndUsed = new Set();
   if (PLAY.audio){ PLAY.audio.pause(); PLAY.audio = null; }
+  // sound: last beat's effects fade, the scene's ambient loop continues, everything ducks under the new line
+  sndFadeShots(1.5); sndAmbient(ambAt(i)); sndLevel('voice');
   // earlier beats' arrows and markers step back so the new ones read clearly
   gFx.selectAll(':scope > g').classed('old', true); gFxTop.selectAll(':scope > g').classed('old', true);
   // 1) the line starts: caption (and audio), year counter runs alongside
-  b.steps.filter(x => x.type === 'caption' || x.type === 'year').forEach(x => STEP[x.type](x, dur(x) || 1));
+  b.steps.filter(x => x.type === 'caption' || x.type === 'year').forEach(x => { STEP[x.type](x, dur(x) || 1); if (x.type === 'year') sndShot(sfxOf(x)); });
   let audioDone = true;
-  if (b.audio){ try { audioDone = false; const a = PLAY.audio = new Audio(b.audio); a.playbackRate = SPEED; a.onended = a.onerror = () => { audioDone = true; if (PLAY) PLAY.hold = false; }; a.play().catch(() => { audioDone = true; }); } catch(e){ audioDone = true; } }
+  if (b.audio){ try { audioDone = false; const a = PLAY.audio = new Audio(b.audio); a.playbackRate = SPEED; a.onended = a.onerror = () => { audioDone = true; if (PLAY){ PLAY.hold = false; sndLevel('fill'); } }; a.play().catch(() => { audioDone = true; }); } catch(e){ audioDone = true; } }
   // 2) camera moves first, 3) then one visual event at a time
   let t = t0; const f = b.steps.find(x => x.type === 'focus');
   if (f){ STEP.focus(f, dur(f)); t += dur(f) + GAP; }
-  b.steps.filter(x => VISUAL.includes(x.type)).forEach(x => { at(t, () => STEP[x.type](x, dur(x))); t += dur(x) + GAP; });
+  b.steps.filter(x => VISUAL.includes(x.type)).forEach(x => { at(t, () => { STEP[x.type](x, dur(x)); sndShot(sfxOf(x)); }); t += dur(x) + GAP; });
   // 4) wait for the line to finish (reading time, or the audio), 5) then the pause
   const lineEnd = Math.max(t0 + lineMs(b), t);
-  at(lineEnd, () => { if (!audioDone) PLAY.hold = true; });
-  at(lineEnd + 1, () => { PLAY.b0 = t0; PLAY.bEnd = lineEnd + pauseMs(b); at(PLAY.clock + pauseMs(b), () => runBeat(i + 1)); });
-  PLAY.b0 = t0; PLAY.bEnd = lineEnd + pauseMs(b);
+  // in the pause the effects and ambient rise so the film can breathe; sfxHold lets a battle or march play out
+  at(lineEnd, () => { if (!audioDone) PLAY.hold = true; else sndLevel('fill'); });
+  at(lineEnd + 1, () => { const pz = pauseMs(b) + holdMs(b); PLAY.b0 = t0; PLAY.bEnd = PLAY.clock + pz; at(PLAY.clock + pz, () => runBeat(i + 1)); });
+  PLAY.b0 = t0; PLAY.bEnd = lineEnd + pauseMs(b) + holdMs(b);
   $('capn').textContent = `${i + 1} / ${PLAY.beats.length}`;
   setPP();
 }
@@ -474,6 +477,7 @@ function seek(i){
   runBeat(i);
 }
 async function playStart(){
+  sndEnsure(); // inside the Play click: the browser allows audio from here on
   // the narrated part runs as a small film: the map grows to fill the screen first
   const film = enterCine();
   if (MODE !== 'stop') await go(liveBefore(cur));
@@ -498,6 +502,7 @@ function playPause(force){
   if (!PLAY) return;
   PLAY.paused = force === undefined ? !PLAY.paused : force;
   if (PLAY.audio){ PLAY.paused ? PLAY.audio.pause() : PLAY.audio.play().catch(() => {}); }
+  if (SND.ctx){ PLAY.paused ? SND.ctx.suspend().catch(() => {}) : SND.on && SND.ctx.resume().catch(() => {}); }
   if (PLAY.paused) svg.interrupt();
   setPP();
 }
@@ -506,6 +511,8 @@ function setSpeed(v){ SPEED = v; if (PLAY && PLAY.audio) PLAY.audio.playbackRate
 function playStop(toEnd){
   if (!PLAY) return;
   cancelAnimationFrame(PLAY.raf); if (PLAY.audio) PLAY.audio.pause();
+  if (SND.ctx && SND.ctx.state === 'suspended' && SND.on) SND.ctx.resume().catch(() => {});
+  sndStop(0.8);
   PLAY = null; document.body.classList.remove('playing'); $('cap').hidden = true; $('ev').classList.remove('dim');
   const out = exitCine();
   if (!toEnd){ resetMap(); YEAR = null; $('big').textContent = STOP.label; $('pill').textContent = STOP.label; drawKeys(); out.then(() => { if (!PLAY) showStep(steps().length - 1); }); }
@@ -532,6 +539,82 @@ function setCC(on){
   const b = $('capcc'); b.setAttribute('aria-pressed', String(CC)); b.setAttribute('aria-label', CC ? 'Subtitles on' : 'Subtitles off'); b.classList.toggle('on', CC);
 }
 setCC(CC);
+
+// ---------- sound effects: a quiet bed under the narration that rises in the pauses ----------
+// Clips live in assets/sfx (prompts and credits in assets/sfx/README.md). Web Audio starts only after a
+// user gesture (BEGIN ADVENTURE, Play or the sound button); nothing is fetched before. While a line is
+// being narrated the effects sit about 18 dB down; in the pause after it they rise to about -6 dB, then
+// duck smoothly when the next line starts. Steps may set "sfx" (a clip name, or null for none) and
+// "sfxHold" (ms the pause is stretched so the sound can play out; on the same virtual clock, so it
+// follows the speed setting, and Skip cuts it).
+const SFX_FILES = {battle:'battle', migration:'migration', border:'border', year:'year', desert:'amb-desert', river:'amb-river'};
+const SFX_DEFAULT = {battle:'battle', migration:'migration', border:'border', year:'year'};
+const DB = d => Math.pow(10, d / 20);
+const SFX_LEVEL = {voice: DB(-18), fill: DB(-6), off: 0};
+const AMB_GAIN = DB(-5);
+let GESTURE = false;
+['pointerdown', 'keydown', 'touchend', 'click'].forEach(t => addEventListener(t, e => { if (e.isTrusted) GESTURE = true; }, {capture: true, passive: true}));
+const SND = {on: !REDUCED(), ctx: null, bus: null, buf: {}, loading: null, amb: null, ambName: null, shots: [], phase: 'off', target: 0};
+try { const v = localStorage.getItem('tlm.snd'); if (v) SND.on = v === 'on'; } catch(e){}
+const sfxOf = x => x.sfx === undefined ? SFX_DEFAULT[x.type] : x.sfx;
+function sndEnsure(){
+  if (!SND.on || !GESTURE) return null;
+  if (!SND.ctx){
+    const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null;
+    try { SND.ctx = new AC(); } catch(e){ return null; }
+    SND.bus = SND.ctx.createGain(); SND.bus.gain.value = 0; SND.bus.connect(SND.ctx.destination);
+  }
+  if (SND.ctx.state === 'suspended' && !(PLAY && PLAY.paused)) SND.ctx.resume().catch(() => {});
+  if (!SND.loading) SND.loading = Promise.all(Object.entries(SFX_FILES).map(([k, f]) => fetch('assets/sfx/' + f + '.mp3')
+    .then(r => r.arrayBuffer()).then(a => new Promise((ok, no) => SND.ctx.decodeAudioData(a, ok, no))).then(b => { SND.buf[k] = b; }).catch(() => {})));
+  return SND.ctx;
+}
+function ramp(param, to, sec){ const t = SND.ctx.currentTime; param.cancelScheduledValues(t); param.setValueAtTime(param.value, t); param.linearRampToValueAtTime(to, t + sec); }
+function sndLevel(phase){
+  SND.phase = phase; SND.target = SND.on ? SFX_LEVEL[phase] : 0;
+  if (SND.ctx) ramp(SND.bus.gain, SND.target, phase === 'fill' ? 1.4 : phase === 'voice' ? 0.6 : 0.5);
+}
+function sndShot(name){
+  if (!name || !SND.on || !PLAY || !PLAY.clockOn || !sndEnsure()) return;
+  if (PLAY.sndUsed){ if (PLAY.sndUsed.has(name)) return; PLAY.sndUsed.add(name); }
+  const go = () => {
+    const b = SND.buf[name]; if (!b || !PLAY || !SND.on) return;
+    const c = SND.ctx, s = c.createBufferSource(), g = c.createGain(), t = c.currentTime;
+    s.buffer = b; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(1, t + 0.3);
+    s.connect(g); g.connect(SND.bus); s.start(t);
+    const o = {name, s, g}; SND.shots.push(o); s.onended = () => { SND.shots = SND.shots.filter(x => x !== o); };
+  };
+  SND.buf[name] ? go() : SND.loading.then(go);
+}
+function sndFadeShots(sec){
+  if (SND.ctx) SND.shots.forEach(o => { try { ramp(o.g.gain, 0, sec); o.s.stop(SND.ctx.currentTime + sec + 0.05); } catch(e){} });
+  SND.shots = [];
+}
+function sndAmbient(name){
+  if (!SND.on) name = null;
+  if (name === SND.ambName && (SND.amb || !name)) return;
+  const old = SND.amb; SND.amb = null; SND.ambName = name;
+  if (old && SND.ctx){ try { ramp(old.g.gain, 0, 2); old.s.stop(SND.ctx.currentTime + 2.1); } catch(e){} }
+  if (!name || !sndEnsure()) return;
+  const go = () => {
+    const b = SND.buf[name]; if (!b || SND.ambName !== name || SND.amb || !PLAY) return;
+    const c = SND.ctx, s = c.createBufferSource(), g = c.createGain(), t = c.currentTime;
+    s.buffer = b; s.loop = true; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(AMB_GAIN, t + 2.5);
+    s.connect(g); g.connect(SND.bus); s.start(t); SND.amb = {name, s, g};
+  };
+  SND.buf[name] ? go() : SND.loading.then(go);
+}
+function sndStop(sec){ sndFadeShots(sec); sndAmbient(null); sndLevel('off'); }
+// the scene's ambient loop: the nearest earlier beat that names one, else the transition's default
+const ambAt = i => { for (let j = i; j >= 0; j--) if (PLAY.beats[j].ambient) return PLAY.beats[j].ambient; return STOP.play.ambient || null; };
+// extra pause for steps whose sound should play out (only when sound is on)
+const holdMs = b => SND.on ? Math.max(0, ...b.steps.filter(x => sfxOf(x)).map(x => +x.sfxHold || 0)) : 0;
+function setSnd(on){
+  SND.on = !!on; try { localStorage.setItem('tlm.snd', SND.on ? 'on' : 'off'); } catch(e){}
+  const b = $('capsnd'); b.setAttribute('aria-pressed', String(SND.on)); b.setAttribute('aria-label', SND.on ? 'Sound on' : 'Sound off'); b.title = SND.on ? 'Sound on' : 'Sound off'; b.classList.toggle('on', SND.on);
+  if (!SND.on){ sndStop(0.4); SND.phase = PLAY ? SND.phase : 'off'; return; }
+  if (PLAY){ sndEnsure(); sndLevel(SND.phase === 'off' ? 'voice' : SND.phase); sndAmbient(ambAt(PLAY.i)); }
+}
 // keep the same picture on screen when the map viewport changes size
 function refitKeep(){
   const vb = (svg.attr('viewBox') || '').split(/[ ,]+/).map(Number);
@@ -619,6 +702,8 @@ $('capprev').onclick = e => { e.stopPropagation(); if (PLAY) seek(PLAY.i - 1); }
 $('capspd').onclick = e => { e.stopPropagation(); setSpeed(SPEEDS[(SPEEDS.indexOf(SPEED) + 1) % SPEEDS.length] || 1); };
 $('capx').onclick = e => { e.stopPropagation(); playStop(false); };
 $('capcc').onclick = e => { e.stopPropagation(); setCC(!CC); };
+$('capsnd').onclick = e => { e.stopPropagation(); setSnd(!SND.on); };
+setSnd(SND.on);
 $('capskip').onclick = e => { e.stopPropagation(); if (PLAY){ svg.interrupt(); PLAY.anims = []; PLAY.events = []; resetMap(); YEAR = STOP.year; PLAY.clockOn = false; PLAY.beats.forEach((b, j) => applyInstant(j)); playEnd(); } };
 // tapping the map pauses (tapping an object opens its box, which also pauses)
 svg.on('click.play', () => { if (PLAY && !PLAY.paused) playPause(true); });
@@ -698,7 +783,10 @@ window.__app = { openObj, closeObj, showStep, go, playStart, playPause, playStop
   get play(){ return PLAY ? {i: PLAY.i, n: PLAY.beats.length, paused: PLAY.paused} : null; },
   set speed(v){ setSpeed(v); }, projection,
   get cine(){ return CINE ? {full: !!CINE.full, fs: !!document.fullscreenElement, idle: document.body.classList.contains('idle')} : null; },
-  get cc(){ return CC; }, setCC, enterCine, exitCine, IDLE_MS };
+  get cc(){ return CC; }, setCC, enterCine, exitCine, IDLE_MS,
+  get snd(){ return {on: SND.on, ctx: SND.ctx ? SND.ctx.state : null, phase: SND.phase, target: SND.target, gain: SND.bus ? SND.bus.gain.value : null,
+    amb: SND.amb ? SND.amb.name : null, shots: SND.shots.map(o => o.name), loaded: Object.keys(SND.buf).sort()}; }, setSnd,
+  plan: i => PLAY ? beatPlan(PLAY.beats[i]) : null, get clock(){ return PLAY ? PLAY.clock : null; } };
 
 // donations: hidden until data/site.json has a donateUrl (https only)
 // "Report an error" works the same way with reportUrl

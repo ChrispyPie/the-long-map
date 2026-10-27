@@ -49,12 +49,13 @@ Each claim is `[text, label, [source keys]]`. The label is `attested`, `disputed
 | `battle` | `at`, `label`, `cert`, `arrows:[{path, side: egypt/enemy, cert}]` | army arrows, then a pulsing marker |
 | `border` | `fade:[{zone, certainty?}]`, `add:[{zone, certainty, label, labelAt, coords}]` | crossfade of zones |
 
-Optional on a beat: `audio` (path to an mp3), `duration`, `pauseAfter`. Optional on a step: `duration` (ms).
+Optional on a beat: `audio` (path to an mp3), `duration`, `pauseAfter`, `ambient` (`desert` or `river`, inherited by later beats; default `play.ambient`). Optional on a step: `duration` (ms); on battle, migration and border steps also `sfx` (clip name, or null for none) and `sfxHold` (ms, at most 4000).
 
 ### Pacing rules
 
 1. The narration line drives timing. `make_data.py` writes `duration` = reading time (about 2.5 words per second, at least 4000 ms) and `pauseAfter` = 2000 ms (allowed range 1500–2500) into every beat unless they are set by hand. With `audio`, the beat waits for the audio to end, then the pause.
 2. One main visual event at a time: the camera moves first (`focus`, 1600 ms), then each `migration` (3200 ms), `battle` (3000 ms) and `border` (3000 ms) runs on its own, one after another, with slow easing. The next beat starts only after max(line, visuals) + `pauseAfter`.
+3. Sound (see `assets/sfx/README.md`): effects and the ambient loop sit about 18 dB down while a line is narrated, rise to about -6 dB in the pause, and duck again when the next line starts. With sound on, a step's `sfxHold` is added to the pause so the sound can play out. It runs on the same virtual clock, so it follows the speed setting, and Skip cuts it.
 3. The controls are always shown: back one step, pause/play, forward one step, and speed 0.75× / 1× / 1.25×. Tapping the map pauses. All timing runs on one clock, so pause and speed affect everything.
 4. At the end the map stays on the new year's intro. It does not continue by itself.
 5. Captions must work without audio. Keep each transition to about 300–550 words (2–4 minutes read aloud); the build prints the word count.

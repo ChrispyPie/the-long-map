@@ -56,6 +56,17 @@ for b in play["beats"]:
     b.setdefault("pauseAfter", 2000)
     assert 1500 <= b["pauseAfter"] <= 2500, f"pauseAfter out of range in beat"
 play["words"] = words
+# sound: known clips only, holds of a few seconds at most, small files
+SFX = {"battle","migration","border","year"}; AMB = {"desert","river"}
+FILES = {"battle":"battle","migration":"migration","border":"border","year":"year","desert":"amb-desert","river":"amb-river"}
+for k,f in FILES.items():
+    fp = f"assets/sfx/{f}.mp3"; assert os.path.exists(fp), fp; assert os.path.getsize(fp) < 130_000, f"{fp} too big"
+assert play.get("ambient") in AMB
+for b in play["beats"]:
+    assert b.get("ambient", "desert") in AMB, b.get("ambient")
+    for x in b["steps"]:
+        if "sfx" in x: assert x["sfx"] is None or x["sfx"] in SFX, x["sfx"]
+        if "sfxHold" in x: assert 0 <= x["sfxHold"] <= 4000 and x["type"] in ("battle","migration","border"), x
 zmap = {"egypt":"egypt","hatti":"hatti","assyria":"assyria","babylon":"babylon_s","elam":"elam","israel":"israelp"}
 labelAt = {k: c.get("labelAt") for k,c in era.get("cards",{}).items()} or era.get("labelAt")
 era = {"year":-1207,"label":"1207 BC","zones":era["zones"],"zoneObjects":zmap,"labelAt":labelAt,

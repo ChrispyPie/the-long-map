@@ -203,6 +203,7 @@
   .cap2 .crow { display:flex; align-items:center; gap:6px; margin-top:7px; } .cap2 .crow button { min-width:40px; min-height:38px; padding:6px 10px; font-size:13px; }
   .cap2 .crow .n { flex:1; text-align:center; font:11px/1 var(--sans); color:var(--ink2); }
   .cap2 .bar { height:2px; background:var(--line); border-radius:2px; overflow:hidden; margin-top:7px; } .cap2 .bar i { display:block; height:100%; width:0; background:var(--accent); }
+  .cap2 .crow .snd .ico { width:17px; height:17px; display:block; margin:auto; } .cap2 .crow .snd .x { display:none; } .cap2 .crow .snd:not(.on) .w { display:none; } .cap2 .crow .snd:not(.on) .x { display:inline; }
   .cap2 .crow .cc { font-size:11px; letter-spacing:.04em; } .cap2 .crow .cc.on { background:var(--ink); color:var(--paper-hi); border-color:var(--ink); }
   body.playing .legend, body.playing .hint { display:none; }
   .ev.dim { opacity:.55; }
@@ -323,6 +324,8 @@
   body.cine.idle #vp, body.cine.idle #map { cursor:none; }
   body.cc-off .cap2 .ctext, body.cc-off .cap2 .csrc { display:none; }
   @media (max-width:899px){ body.cine .cap2 .ctext { font-size:15.5px; } body.cine .cap2 .crow button { min-width:38px; padding:6px 8px; } }
+  /* small phones: one row of controls; the progress bar shows how far along the film is */
+  @media (max-width:430px){ body.cine .cap2 .crow { gap:2px; } body.cine .cap2 .crow button { min-width:36px; padding:6px 6px; } body.cine .cap2 .crow .n { display:none; } }
   @media (prefers-reduced-motion: reduce){
     .intro, .notice, .book, .cover, #vp.cinefx, #vp::before, #vp::after, header, .timeline, .ev, footer, .cap2 .crow { transition:none !important; }
     .cap2.in .ctext { animation:none; }
@@ -439,7 +442,7 @@
   <button class="xp" id="xp" type="button" hidden aria-label="Explore progress"><span class="ring0"></span><span id="xpn">0/0</span>&nbsp;explored</button>
   <div class="cap2 paper" id="cap" hidden aria-live="polite"><p class="ctext" id="captext"></p><div class="csrc" id="capsrc"></div>
     <div class="bar"><i id="capbar"></i></div>
-    <div class="crow"><button type="button" id="capprev" aria-label="Previous step">‹</button><button type="button" id="cappp" aria-label="Pause">❚❚</button><button type="button" id="capnext" aria-label="Next step">›</button><button type="button" id="capspd" aria-label="Speed 1x">1×</button><button type="button" id="capcc" class="cc on" aria-pressed="true" aria-label="Subtitles on">CC</button><span class="n" id="capn"></span><button type="button" id="capskip">Skip</button><button type="button" id="capx" aria-label="Exit film" title="Exit film">×</button></div></div>
+    <div class="crow"><button type="button" id="capprev" aria-label="Previous step">‹</button><button type="button" id="cappp" aria-label="Pause">❚❚</button><button type="button" id="capnext" aria-label="Next step">›</button><button type="button" id="capspd" aria-label="Speed 1x">1×</button><button type="button" id="capcc" class="cc on" aria-pressed="true" aria-label="Subtitles on">CC</button><button type="button" id="capsnd" class="cc snd on" aria-pressed="true" aria-label="Sound on" title="Sound on"><svg class="ico" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 7.5h3l4-3.5v12l-4-3.5H3z" fill="currentColor"/><path class="w" d="M13 7a4 4 0 0 1 0 6M15.2 4.8a7 7 0 0 1 0 10.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path class="x" d="M13 7.5l5 5M18 7.5l-5 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button><span class="n" id="capn"></span><button type="button" id="capskip">Skip</button><button type="button" id="capx" aria-label="Exit film" title="Exit film">×</button></div></div>
   <div class="soonbox" id="soon" hidden><b>Coming soon</b><span id="soont"></span></div>
   <div class="hint">Tap anything · pinch to zoom</div>
 </div>
