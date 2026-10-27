@@ -707,6 +707,9 @@ getJSON('data/site.json').then(c => { [['donateUrl', 'donate'], ['reportUrl', 'r
   const [base, story, srcs, lib] = await Promise.all([getJSON('data/base.topo.json'), getJSON(STORY_URL), getJSON('data/sources.json'), getJSON('data/objects/near-east.json')]);
   STORY = story; SRC = srcs; OBJS = lib.objects; OBJS.forEach(o => OBJ[o.id] = o);
   document.title = `${STORY.site} · ${STORY.title}`; $('stitle').textContent = STORY.title;
+  // each book in the series brings its own accent colours (story.json "theme"), on the shared leather-and-paper look
+  Object.entries(STORY.theme || {}).forEach(([k, v]) => { if (/^[a-z-]+$/.test(k) && /^#[0-9a-f]{3,8}$/i.test(v)) document.documentElement.style.setProperty('--' + k, v); });
+  if (STORY.book) $('sbook').textContent = STORY.book;
   const o = base.objects;
   gLand.append('path').datum(rewindAll(d3.feature(base, o.land))).attr('class','land');
   const lakes = rewindAll(d3.feature(base, o.lakes)).features;

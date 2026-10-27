@@ -20,6 +20,12 @@ const D = process.env.SHOTS || 'screens';
     ok(name+' notice says what it is and is not', await p.evaluate(()=>{ const t=document.getElementById('notice').textContent; return /What this is/.test(t) && /What this is not/.test(t) && /source/.test(t) && /approximate/.test(t) && /religious text/.test(t) && /modern conflicts/.test(t) && /final word/.test(t); }));
     ok(name+' notice fits the screen', await p.evaluate(()=>{ const r=document.getElementById('begin').getBoundingClientRect(); return r.bottom <= innerHeight && r.top > 0; }));
     if (!rm) await shot('cine_notice'+sfx);
+    // series framing, title and per-book theme
+    ok(name+' notice: Book One of a series, later books coming later', await p.evaluate(()=>{ const t=document.getElementById('notice').textContent; return /Book One/.test(t) && /Story of the Jews/.test(t) && /Book Two · Story of the Arabs/.test(t) && /Story of the Persians/.test(t) && (t.match(/Coming later/g)||[]).length===2 && !/History of the/.test(t); }));
+    ok(name+' cover reads The Long Map / Book One / Story of the Jews', await p.evaluate(()=>[...document.querySelectorAll('.cover .front .frame div')].filter(d=>!d.children.length).map(d=>d.textContent.trim()).join('/')==='The Long Map/Book One/Story of the Jews'));
+    ok(name+' header, title and OG say Story of the Jews', await p.evaluate(()=>document.getElementById('stitle').textContent==='Story of the Jews' && document.getElementById('sbook').textContent==='Book One' && document.title==='The Long Map · Story of the Jews' && /Story of the Jews/.test(document.querySelector('meta[property="og:title"]').content) && /Book Two/.test(document.querySelector('footer .fseries').textContent)));
+    ok(name+' per-book accent from story.json', await p.evaluate(()=>document.documentElement.style.getPropertyValue('--accent').trim()==='#b8893a'));
+    ok(name+' paper panels and leather buttons', await p.evaluate(()=>document.getElementById('ev').classList.contains('paper') && document.getElementById('pop').classList.contains('paper') && !!document.getElementById('torn')));
     // 2) the book
     await tap('#begin');
     if (!rm){

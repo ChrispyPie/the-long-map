@@ -19,7 +19,7 @@ const D = process.env.SHOTS || 'screens';
     notes.push(name+' bytes on load: '+bytes);
     const tap = async (x,y) => mobile ? p.touchscreen.tap(x,y) : p.mouse.click(x,y);
     const st = () => p.evaluate(() => ({open: __app.open, step: __app.step, K: __app.K, tr: document.querySelector('#map > g').getAttribute('transform'), n: document.getElementById('evn').textContent, title: document.title}));
-    let s = await st(); ok(name+' title "'+s.title+'"', s.title.includes('History of the Jews'));
+    let s = await st(); ok(name+' title "'+s.title+'"', s.title.includes('Story of the Jews'));
     ok(name+' objects drawn: '+await p.evaluate(()=>document.querySelectorAll('g.obj, g.lobj').length), true);
     if (!mobile && shots) await p.screenshot({path:D+'/faktaruta_desktop_overview.png'});
     const toEv = async () => { await p.evaluate(()=>scrollTo(0,0) || scrollTo(0, document.getElementById('ev').getBoundingClientRect().top + scrollY - document.getElementById('vp').offsetHeight - 8)); await p.waitForTimeout(150); };

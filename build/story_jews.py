@@ -1,6 +1,9 @@
 A,D,T = "attested","disputed","tradition"
 STORY = {
- "id":"jews","title":"History of the Jews","site":"The Long Map",
+ "id":"jews","title":"Story of the Jews","site":"The Long Map",
+ "book":"Book One",
+ "series":"A series of histories, each told from the perspective of a different people. Later books (Book Two: Story of the Arabs, then Story of the Persians) are coming later and not yet written.",
+ "theme":{"accent":"#b8893a","accent-ink":"#7a5614","accent-soft":"#f0dfb4","accent-map":"#e2b45a","accent-foil":"#e0bd72"},
  "perspective":"Told from the perspective of Israel and the Jewish people. Other peoples appear as the world around them.",
  "intro":"This is the story of the Jewish people, told on a map. It begins with a name carved in stone. Around 1208 BC an Egyptian king listed his enemies in Canaan, and among them was a people called Israel. Jewish tradition remembers this early world through the Torah: the patriarchs, slavery in Egypt, the Exodus and the covenant at Sinai. Ancient inscriptions and archaeology add their own evidence. Here both are told side by side, and every line says whether it is attested, disputed, or tradition.",
  "from":-1400,"to":2030,

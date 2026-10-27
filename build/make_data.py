@@ -3,7 +3,7 @@ Outputs:
   data/sources.json              shared source registry (all stories)
   data/objects/near-east.json    shared object library = small fact boxes (all stories)
   data/eras/1207bc.json          shared era layer: zone geometry + which object each zone opens
-  data/stories/jews/story.json   the 'History of the Jews' story: title, intro, stops
+  data/stories/jews/story.json   the 'Story of the Jews' story: title, intro, stops
   data/stories/jews/1207bc.json  events (big fact boxes) for the 1207 BC stop, told from Israel's perspective
 """
 import json, os, sys

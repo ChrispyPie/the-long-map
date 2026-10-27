@@ -16,7 +16,7 @@ Run from the repo root: `python3 build/make_data.py`. It checks that every sourc
 - `data/sources.json`: shared source registry, from `build/sources.py`. Each entry has kind, full reference, link and how it was checked.
 - `data/objects/near-east.json`: shared map objects (the small fact boxes: cities, sites, rivers, lakes, seas, regions, routes, states, peoples), from `build/objects.py`. Any story can reuse them.
 - `data/eras/1207bc.json`: shared zones for the year (see above).
-- `data/stories/jews/story.json` and `data/stories/jews/1207bc.json`: the story "History of the Jews" (intro, stops, the big event boxes and transitions), from `build/story_jews.py`.
+- `data/stories/jews/story.json` and `data/stories/jews/1207bc.json`: the story "Story of the Jews" (Book One) (intro, stops, the big event boxes and transitions), from `build/story_jews.py`.
 
 A new perspective gets its own `build/story_<id>.py` and `data/stories/<id>/`, and reuses the shared objects, eras and sources.
 
@@ -71,7 +71,7 @@ Optional on a beat: `audio` (path to an mp3), `duration`, `pauseAfter`. Optional
 
 ## About notice and the opening book (`js/intro.js`)
 
-On the first visit a short notice says what the site is (a source-based retelling of Jewish history from the perspective of the Jewish people; every claim has a source and a label; maps and borders are approximate) and what it is not (a religious text, political advocacy about modern conflicts, or the final word). **Begin adventure** opens a book: the cover "The Long Map · History of the Jews" turns and the page grows into the map. CSS only, no images or libraries.
+On the first visit a short notice says what the site is (a source-based retelling of Jewish history from the perspective of the Jewish people; every claim has a source and a label; maps and borders are approximate) and what it is not (a religious text, political advocacy about modern conflicts, or the final word). **Begin adventure** opens a book: the leather cover ("The Long Map" / "Book One" / "Story of the Jews") turns and the page grows into the map. CSS only, no images or libraries.
 
 - The choice is stored in `localStorage` as `tlm.notice.v1 = "seen"`; returning visitors go straight to the map. "About" in the header and "About this site" in the footer open the notice again.
 - With `prefers-reduced-motion: reduce` there is no book; the notice simply closes.
@@ -90,3 +90,13 @@ When a narrated part runs (Play, Replay), the map viewport grows from its place 
 ## Test
 
 `build/test-fakta.js` uses Playwright and headless Chromium. It tests 393 px with touch and 1280 px: stepping through the events, opening every object, tap outside, X, chips, and console errors. It presets the About notice as seen. `build/test-cine.js` tests the notice, the book, cinematic mode, CC, auto-hide, tap-to-pause, the zoom-out and the reduced-motion path at 393 px (touch) and 1280 px. Run it with `node build/test-fakta.js http://127.0.0.1:8793/ noshots` against a local `python3 -m http.server 8793`. Playwright must be installed.
+
+## Design and series
+
+*The Long Map* is a series. Each book tells history from the perspective of one people, on the same map and with the same rules for sources. This site is **Book One: Story of the Jews**. Book Two (Story of the Arabs) and the Story of the Persians are shown only as "coming later"; nothing about them is written yet. The series framing appears in the notice, on the book cover and in the footer.
+
+The look is an old book: worn brown leather for the cover, header, frames and buttons (CSS gradients, a tiny inline SVG noise for grain and mottling, dashed "stitching"), and yellowed paper with torn edges for every text panel (class `paper`: grain, faint stains and an SVG `#torn` displacement filter on a `::before` layer, so text itself is never distorted). Browsers that ignore the filter show straight paper edges. No image files or libraries. Text is ink on paper, AA contrast or better; reduced motion turns off the book animation, pulses and rings.
+
+Each book brings its own accent colours in `story.json` under `"theme"` (keys `accent`, `accent-ink`, `accent-soft`, `accent-map`, `accent-foil`, hex only); `js/app.js` sets them as CSS variables. The base palette deliberately belongs to no people or side (no flag colours, no dominant green).
+
+`build/shots-design.js` takes the `design2_` screenshots (notice, cover, explore, fact box, film; mobile 393 px and desktop).
