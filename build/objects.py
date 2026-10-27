@@ -105,6 +105,7 @@ o("israelp","people","Israel",{"zone":"israel"},1,"A people named Israel, the an
          ("In the Hebrew Bible, Israel is the name God gave to Jacob, and his twelve sons are the ancestors of the tribes of Israel (Genesis 32; 35).",T,["bible"])],
   pop={"v":"Unknown. The hill-country villages held perhaps c. 10,000–20,000 people around 1200 BC","cert":D,"src":["fink2013"]})
 o("canaanites","people","Canaanites",{"at":[35.05,32.95]},2,"Name for the people of the city-states of Canaan, each with its own ruler under Egyptian overlordship.",["killebrew","moran"],people="Canaanites")
+o("bullsite","site","Bull Site",{"at":[35.3236,32.4092]},3,"A small hilltop shrine of the early Iron Age in the northern hills, open to the sky. A bronze figurine of a bull was found there.",["mazar1982"])
 o("shasu","people","Shasu",{"at":[35.65,30.45]},2,"Egyptian word for tent-dwelling herders, especially in Edom, the Negev and Transjordan.",["killebrew","soleb"],
   facts=[("A temple list at Soleb names a 'land of the Shasu, yhw'.",A,["soleb"]),("Whether yhw there is the god Yahweh is disputed.",D,["soleb"])])
 # ---------- States (open when a coloured area is tapped) ----------

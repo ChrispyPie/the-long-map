@@ -110,11 +110,11 @@ const D = process.env.SHOTS || 'screens';
     ok(name+' play started, caption with badge + sources: '+JSON.stringify(cap).slice(0,160), cap.vis && cap.b && cap.s.startsWith('Sources:') && cap.play && cap.play.i === 0);
     await p.waitForTimeout(1500);
     if (shots) await p.screenshot({path:D+'/faktaruta_play'+(mobile?'':'_desktop')+'.png'});
-    // pacing: beat 1 (21 words) holds for reading time 8.4 s + 2 s pause, so at ~9 s we are still on it
+    // pacing: beat 1 is a recorded line of 9.8 s + 2 s pause (reading time 8.4 s with the voice off), so at ~9 s we are still on it
     await p.waitForTimeout(6000);
     ok(name+' pacing: still on beat 1 after 9 s', await p.evaluate(()=>__app.play.i) === 0);
-    const pace = await p.evaluate(()=>fetch('data/stories/jews/1207bc.json').then(r=>r.json()).then(d=>d.play.beats.every(b=>b.duration>=4000 && b.pauseAfter>=1500 && b.pauseAfter<=2500) && d.play.words));
-    ok(name+' every beat has duration + pauseAfter in the JSON; words '+pace, pace >= 300 && pace <= 650);
+    const pace = await p.evaluate(()=>fetch('data/stories/jews/1207bc.json').then(r=>r.json()).then(d=>d.play.beats.every(b=>b.duration>=4000 && b.pauseAfter>=1500 && b.pauseAfter<=2500 && b.audioMs>2000 && /^assets\/narration\//.test(b.audio)) && d.play.words));
+    ok(name+' every beat has duration, pauseAfter and its recorded line in the JSON; words '+pace, pace >= 1000 && pace <= 1500);
     ok(name+' year counter moving: '+await p.textContent('#pill'), /^c\. 1\d{3} BC$/.test(await p.textContent('#pill')));
     // pause / resume
     await p.click('#cappp'); const pz = await p.evaluate(()=>__app.play.paused); await p.waitForTimeout(300); await p.click('#cappp');
@@ -126,11 +126,11 @@ const D = process.env.SHOTS || 'screens';
     ok(name+' speed button cycles '+sp.join(' '), sp.join(' ') === '1.25× 0.75× 1×');
     ok(name+' controls visible: prev, pause, next, speed', await p.evaluate(()=>['capprev','cappp','capnext','capspd'].every(id=>{const r=document.getElementById(id).getBoundingClientRect(); return r.width>30 && r.height>30;})));
     // migration beat: arrows drawing + caption
-    await p.evaluate(()=>__app.seek(4)); await p.waitForTimeout(6600);
+    await p.evaluate(()=>__app.seek(11)); await p.waitForTimeout(6600);
     const mig = await p.evaluate(()=>({arrows:document.querySelectorAll('.arrow.mig.unsure').length, lab:[...document.querySelectorAll('.fxlab text')].map(t=>t.textContent), cap:document.getElementById('captext').textContent.slice(0,40)}));
     ok(name+' migration arrows dashed + Disputed: '+JSON.stringify(mig), mig.arrows === 2 && mig.lab.every(l=>/Disputed/.test(l)));
     if (shots) await p.screenshot({path:D+'/faktaruta_animation'+(mobile?'':'_desktop')+'.png'});
-    await p.evaluate(()=>__app.seek(6)); await p.waitForTimeout(8800);
+    await p.evaluate(()=>__app.seek(15)); await p.waitForTimeout(8800);
     ok(name+' battle beat: markers '+await p.evaluate(()=>document.querySelectorAll('.battle').length)+', army arrows '+await p.evaluate(()=>document.querySelectorAll('.arrow.army').length), await p.evaluate(()=>document.querySelectorAll('.battle').length===3 && document.querySelectorAll('.arrow.army').length===5));
     if (shots) await p.screenshot({path:D+'/faktaruta_battle'+(mobile?'':'_desktop')+'.png'});
     ok(name+' Hatti faded', await p.evaluate(()=>[...document.querySelectorAll('path.z-hatti.zone')].every(e=>e.classList.contains('gone'))));

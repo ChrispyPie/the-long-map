@@ -8,8 +8,9 @@ const STORY_URL = 'data/stories/jews/story.json';
 let STORY = null, STOP = null, ERA = null, SRC = {}, OBJ = {}, OBJS = [];
 let cur = 0, step = 0, K = 1, openId = null, MODE = 'stop', SPEED = 1;
 const cache = {};
-const CERT = {attested:'Attested', disputed:'Disputed', tradition:'Tradition', scene:'Imagine'};
-const badge = c => `<span class="cb cb-${c}">${CERT[c]}</span>`;
+// frame = the film's own framing lines (title, how to read the labels, the choice): shown without a badge
+const CERT = {attested:'Attested', disputed:'Disputed', tradition:'Tradition', scene:'Imagine', frame:''};
+const badge = c => CERT[c] ? `<span class="cb cb-${c}">${CERT[c]}</span>` : '';
 const TYPE = {city:'City', site:'Site', river:'River', lake:'Lake', sea:'Sea', region:'Region', route:'Route', people:'People', state:'Kingdom'};
 const ICON = {
   city:'<circle cx="8" cy="8" r="4.5"/>', site:'<rect x="4" y="4" width="8" height="8" transform="rotate(45 8 8)"/>',
@@ -281,8 +282,11 @@ function showStep(i, fly = true){
   let h;
   if (e.intro){
     h = `<div class="kicker">${esc(STORY.title)} · ${esc(STOP.label)}</div><h2>${esc(STOP.title)}</h2>` +
-        `<p class="lead">${esc(STORY.intro)}</p><p>${esc(STOP.transitionIn)}</p>` +
-        `<div class="cta"><button type="button" class="play" id="gostory">Start the story ›</button><button type="button" id="goexplore">Explore the map</button></div>` +
+        `<p class="lead">${esc(STORY.intro)}</p><p>${esc(tinText())}</p>` +
+        (tinBeats() ? `<div class="cta"><button type="button" class="play" id="gostory">▶ Watch the opening · ${minsOf(reelChapters('intro')[0].ms)}</button><button type="button" id="goexplore">Explore the map</button></div>` +
+            resumeBtn('intro', 'goresume') + chapterList('intro') +
+            `<p class="cap"><button type="button" class="linkish" id="goread">Or read it as fact boxes ›</button></p>`
+          : `<div class="cta"><button type="button" class="play" id="gostory">Start the story ›</button><button type="button" id="goexplore">Explore the map</button></div>`) +
         `<div class="sub">Key places and peoples</div>${chips(STOP.keyObjects)}` +
         `<div class="legend2">${badge('attested')} found in ancient evidence · ${badge('disputed')} scholars disagree · ${badge('tradition')} Jewish tradition and the Hebrew Bible</div>`;
   } else if (e.explore){
@@ -292,7 +296,8 @@ function showStep(i, fly = true){
         `<div class="sub xpcount"></div><ul class="checklist"></ul>` +
         `<button type="button" class="linkish" id="xpreset">Reset progress</button>` +
         (pl ? `<div class="next"><div class="sub">Next</div><p>${esc(STOP.transitionOut.text)}</p>` +
-              `<button type="button" class="play big" id="playbtn">▶ Play: ${esc(pl.title)}</button><p class="cap">About ${Math.max(1, Math.round(playTotal() / 60000))} minutes. ${esc(pl.intro)}</p></div>` : '');
+              `<button type="button" class="play big" id="playbtn">▶ Play: ${esc(pl.title)}</button><p class="cap">About ${Math.max(1, Math.round(playTotal() / 60000))} minutes, in ${reelChapters('play').length} chapters. ${esc(pl.intro)}</p>` +
+              resumeBtn('play', 'playresume') + chapterList('play') + '</div>' : '');
   } else {
     h = `<div class="kicker">${esc(e.kicker)} · ${esc(e.date)}</div><h2>${esc(e.title)} ${badge(e.cert)}</h2>` +
         `<p class="lead">${esc(e.text)}</p>` +
@@ -306,7 +311,12 @@ function showStep(i, fly = true){
   $('evn').textContent = `${step + 1} / ${S.length}`;
   $('evprev').disabled = step === 0; $('evnext').disabled = last;
   $('evbody').querySelectorAll('.chip').forEach(b => b.onclick = ev => { ev.stopPropagation(); openObj(b.dataset.o, true); });
-  if (e.intro){ $('gostory').onclick = () => showStep(1); $('goexplore').onclick = () => showStep(S.length - 1); }
+  if (e.intro){
+    $('gostory').onclick = ev => { ev.stopPropagation(); tinBeats() ? playStart('intro') : showStep(1); };
+    $('goexplore').onclick = () => showStep(S.length - 1);
+    if ($('goread')) $('goread').onclick = () => showStep(1);
+  }
+  $('evbody').querySelectorAll('[data-reel]').forEach(b => b.onclick = ev => { ev.stopPropagation(); playStart(b.dataset.reel, +b.dataset.b); });
   if (e.explore){
     renderChecklist();
     $('xpreset').onclick = ev => { ev.stopPropagation(); EXPLORED.clear(); saveExplored(); drawKeys(); renderChecklist(); };
@@ -318,6 +328,42 @@ function showStep(i, fly = true){
 }
 $('evprev').onclick = () => showStep(step - 1);
 $('evnext').onclick = () => showStep(step + 1);
+
+// ---------- narrated films ("reels"): the opening film of a stop (transitionIn.beats) and Play ----------
+// transitionIn is either a plain string (older stops) or {text, beats}; beats run like Play's.
+const tinText = () => !STOP ? '' : typeof STOP.transitionIn === 'string' ? STOP.transitionIn : (STOP.transitionIn && STOP.transitionIn.text) || '';
+const tinBeats = () => STOP && STOP.transitionIn && typeof STOP.transitionIn === 'object' && STOP.transitionIn.beats && STOP.transitionIn.beats.length ? STOP.transitionIn.beats : null;
+const reelBeats = r => r === 'intro' ? tinBeats() : STOP && STOP.play ? STOP.play.beats : null;
+const reelAmbient = r => r === 'intro' ? (STOP.transitionIn.ambient || null) : (STOP.play.ambient || null);
+const minsOf = ms => ms < 90000 ? 'about ' + Math.max(1, Math.round(ms / 60000)) + ' minute' : 'about ' + Math.round(ms / 60000) + ' minutes';
+// chapters: a beat with "chapter" opens one; each runs to the next. ms = planned length at 1x.
+function reelChapters(r){
+  const bs = reelBeats(r) || [], out = [];
+  bs.forEach((b, i) => { if (b.chapter || !out.length) out.push({title: b.chapter || '', i, ms: 0}); out[out.length - 1].ms += beatPlan(b); });
+  out.forEach((c, k) => { c.end = k + 1 < out.length ? out[k + 1].i : bs.length; c.n = k + 1; });
+  return out;
+}
+const chapterAt = (r, i) => { const cs = reelChapters(r); let c = cs[0]; cs.forEach(x => { if (x.i <= i) c = x; }); return c; };
+const mmss = ms => { const s = Math.round(ms / 1000); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+// resume: the chapter to come back to, per stop and film, on this device
+const resumeKey = r => `tlm.resume.${STORY && STORY.id}.${STOP && STOP.year}.${r}`;
+function resumeGet(r){ try { const v = +localStorage.getItem(resumeKey(r)); const bs = reelBeats(r); return v > 0 && bs && v < bs.length ? v : 0; } catch(e){ return 0; } }
+function resumeSet(r, i){ try { i > 0 ? localStorage.setItem(resumeKey(r), String(i)) : localStorage.removeItem(resumeKey(r)); } catch(e){} }
+function resumeBtn(r, id){
+  const i = resumeGet(r); if (!i) return '';
+  const c = chapterAt(r, i);
+  return `<button type="button" class="resume" id="${id}" data-reel="${r}" data-b="${c.i}">▶ Resume at chapter ${c.n}: ${esc(c.title)}</button>`;
+}
+function chapterList(r){
+  const cs = reelChapters(r); if (cs.length < 2) return '';
+  return `<div class="sub">Chapters</div><ol class="chlist">` + cs.map(c => `<li><button type="button" class="chb" data-reel="${r}" data-b="${c.i}"><span class="cn">${c.n}</span><span class="ct">${esc(c.title)}</span><span class="cm">${mmss(c.ms)}</span></button></li>`).join('') + '</ol>';
+}
+// the narrator's voice has its own switch (default on, also with reduced motion); effects are separate
+let VOICE = true;
+try { VOICE = localStorage.getItem('tlm.voice') !== 'off'; } catch(e){}
+const AUD = {};   // Audio objects by file, created during a film only (after the click), the next line preloaded
+function audioFor(src){ let a = AUD[src]; if (!a){ a = AUD[src] = new Audio(); a.preload = 'auto'; a.src = src; } return a; }
+function preload(b){ if (b && b.audio && VOICE) audioFor(b.audio); }
 
 // ---------- Play: timed transition to the next stop ----------
 // A beat runs its steps together (caption, focus, migration, border, battle, year); beats run in order.
@@ -337,7 +383,7 @@ function at(t, fn){ PLAY.events.push({t, fn}); }
 function tick(now){
   if (!PLAY) return;
   const dt = Math.min(100, now - (PLAY.last || now)); PLAY.last = now;
-  if (!PLAY.paused && !PLAY.hold) PLAY.clock += dt * SPEED;
+  if (!PLAY.paused && !PLAY.hold && !PLAY.wait) PLAY.clock += dt * SPEED;   // wait: the opener's choice
   const c = PLAY.clock;
   PLAY.anims = PLAY.anims.filter(a => { const f = Math.min(1, Math.max(0, (c - a.t0) / a.ms)); a.fn(ease(f)); return f < 1; });
   if (PLAY.anims.length) scaleMarks();
@@ -351,7 +397,7 @@ function tick(now){
 }
 function tweenYear(to, ms){
   const from = YEAR == null ? STOP.year : YEAR;
-  anim(ms, f => setYear(from + (to - from) * f, true));
+  anim(ms, f => setYear(from + (to - from) * f, from !== to || to !== STOP.year));
 }
 // short hops on a regional map: planar lon/lat with a cos(lat) factor is accurate enough
 const gDist = (a, b) => Math.hypot((b[0]-a[0]) * Math.cos((a[1]+b[1]) * Math.PI / 360), b[1]-a[1]);
@@ -419,15 +465,18 @@ const STEP = {
   },
   caption: (x, ms) => {
     if (!ms) return;
-    $('captext').innerHTML = `${badge(x.cert)} ${esc(x.text)}`;
-    $('capsrc').textContent = x.cert === 'scene' ? 'Scene-setting only: no new facts.' : 'Sources: ' + x.src.map(shortSrc).join('; ');
+    // subtitles show digits ("display") while the voice reads the words ("text")
+    $('captext').innerHTML = (badge(x.cert) ? badge(x.cert) + ' ' : '') + esc(x.display || x.text);
+    $('capsrc').textContent = x.cert === 'scene' ? 'Scene-setting only: no new facts.' : x.cert === 'frame' ? '' : 'Sources: ' + x.src.map(shortSrc).join('; ') + (x.ref ? ' · ' + x.ref : '');
+    $('cap').classList.toggle('frame', x.cert === 'frame');
     $('capsrc').title = x.src.map(k => SRC[k] ? SRC[k].t : k).join('\n');
     const c = $('cap'); c.classList.remove('in'); void c.offsetWidth; c.classList.add('in');
   }
 };
 const words = t => t.split(/\s+/).length;
 // reading time ~2.5 words per second, at least 4 s (make_data.py writes this as beat.duration)
-const lineMs = b => { const c = b.steps.find(x => x.type === 'caption'); return b.duration || Math.max(4000, Math.round(words(c ? c.text : '') / 2.5 * 1000)); };
+// with the voice on, a recorded line lasts as long as its audio (audioMs, measured when it was recorded)
+const lineMs = b => { if (VOICE && b.audio && b.audioMs) return b.audioMs; const c = b.steps.find(x => x.type === 'caption'); return b.duration || Math.max(4000, Math.round(words(c ? c.text : '') / 2.5 * 1000)); };
 const pauseMs = b => b.pauseAfter == null ? 2000 : b.pauseAfter;
 const VISUAL = ['migration', 'battle', 'border'];
 // planned length of one beat at 1x (without audio)
@@ -436,15 +485,19 @@ function beatPlan(b){
   b.steps.filter(x => VISUAL.includes(x.type)).forEach(x => { t += dur(x) + GAP; });
   return Math.max(lineMs(b), t) + pauseMs(b) + holdMs(b);
 }
-const playTotal = () => STOP && STOP.play ? STOP.play.beats.reduce((s, b) => s + beatPlan(b), 0) : 0;
+const playTotal = (r = 'play') => (reelBeats(r) || []).reduce((s, b) => s + beatPlan(b), 0);
 function clearFx(){ gFx.selectAll('*').interrupt().remove(); gFxTop.selectAll('*').remove(); FXZ = []; }
 function resetMap(){ clearFx(); drawZones(ERA); drawObjects(); }
 function applyInstant(i){ PLAY.beats[i].steps.forEach(x => { if (x.type !== 'caption') STEP[x.type](x, 0); }); }
 function runBeat(i){
-  if (i >= PLAY.beats.length) return playEnd();
+  if (i >= PLAY.beats.length) return PLAY.reel === 'intro' ? introEnd() : playEnd();
   const b = PLAY.beats[i], t0 = PLAY.clock;
-  PLAY.i = i; PLAY.events = []; PLAY.hold = false; PLAY.sndUsed = new Set();
-  if (PLAY.audio){ PLAY.audio.pause(); PLAY.audio = null; }
+  PLAY.i = i; PLAY.events = []; PLAY.hold = false; PLAY.wait = false; PLAY.sndUsed = new Set(); hideChoice();
+  PLAY.tok = (PLAY.tok || 0) + 1;
+  if (PLAY.audio){ PLAY.audio.onended = PLAY.audio.onerror = null; PLAY.audio.pause(); PLAY.audio = null; }
+  const ch = chapterAt(PLAY.reel, i);
+  if (b.chapter || i === PLAY.from){ showChapter(ch, PLAY.reel); }
+  resumeSet(PLAY.reel, ch.i); drawChapters();
   // sound: last beat's effects fade, the scene's ambient loop continues, everything ducks under the new line
   sndFadeShots(1.5); sndAmbient(ambAt(i)); sndLevel('voice');
   // earlier beats' arrows and markers step back so the new ones read clearly
@@ -452,7 +505,14 @@ function runBeat(i){
   // 1) the line starts: caption (and audio), year counter runs alongside
   b.steps.filter(x => x.type === 'caption' || x.type === 'year').forEach(x => { STEP[x.type](x, dur(x) || 1); if (x.type === 'year') sndShot(sfxOf(x)); });
   let audioDone = true;
-  if (b.audio){ try { audioDone = false; const a = PLAY.audio = new Audio(b.audio); a.playbackRate = SPEED; a.onended = a.onerror = () => { audioDone = true; if (PLAY){ PLAY.hold = false; sndLevel('fill'); } }; a.play().catch(() => { audioDone = true; }); } catch(e){ audioDone = true; } }
+  if (b.audio && VOICE){ try {
+    // tok: a play() aborted by a later seek must not release this line's hold (the same file can be reused)
+    audioDone = false; const a = PLAY.audio = audioFor(b.audio), tok = PLAY.tok = (PLAY.tok || 0) + 1; a.currentTime = 0; a.playbackRate = SPEED;
+    const done = () => { if (PLAY && PLAY.tok === tok && PLAY.audio === a){ audioDone = true; a.onended = a.onerror = null; PLAY.audio = null; PLAY.hold = false; sndLevel('fill'); } };
+    a.onended = a.onerror = done;
+    if (!PLAY.paused) a.play().catch(err => { if (!err || err.name !== 'AbortError') done(); });
+  } catch(e){ audioDone = true; } }
+  preload(PLAY.beats[i + 1]);
   // 2) camera moves first, 3) then one visual event at a time
   let t = t0; const f = b.steps.find(x => x.type === 'focus');
   if (f){ STEP.focus(f, dur(f)); t += dur(f) + GAP; }
@@ -461,7 +521,9 @@ function runBeat(i){
   const lineEnd = Math.max(t0 + lineMs(b), t);
   // in the pause the effects and ambient rise so the film can breathe; sfxHold lets a battle or march play out
   at(lineEnd, () => { if (!audioDone) PLAY.hold = true; else sndLevel('fill'); });
-  at(lineEnd + 1, () => { const pz = pauseMs(b) + holdMs(b); PLAY.b0 = t0; PLAY.bEnd = PLAY.clock + pz; at(PLAY.clock + pz, () => runBeat(i + 1)); });
+  // the opener's last line ends on a choice: the film waits until the viewer picks one
+  at(lineEnd + 1, () => { if (b.choice && PLAY.reel === 'intro'){ PLAY.wait = true; sndLevel('fill'); showChoice(i); return; }
+    const pz = pauseMs(b) + holdMs(b); PLAY.b0 = t0; PLAY.bEnd = PLAY.clock + pz; at(PLAY.clock + pz, () => runBeat(i + 1)); });
   PLAY.b0 = t0; PLAY.bEnd = lineEnd + pauseMs(b) + holdMs(b);
   $('capn').textContent = `${i + 1} / ${PLAY.beats.length}`;
   setPP();
@@ -476,22 +538,61 @@ function seek(i){
   if (!PLAY.beats[i].steps.some(x => x.type === 'focus') && PLAY.lastFocus){ const f = PLAY.lastFocus; setHighlight(f.hl || []); flyTo(f.c, f.k, 600); }
   runBeat(i);
 }
-async function playStart(){
+async function playStart(reel = 'play', from = 0){
+  if (typeof reel !== 'string') reel = 'play';
   sndEnsure(); // inside the Play click: the browser allows audio from here on
   // the narrated part runs as a small film: the map grows to fill the screen first
   const film = enterCine();
   if (MODE !== 'stop') await go(liveBefore(cur));
-  if (!STOP || !STOP.play){ exitCine(); return; }
+  if (!STOP || !reelBeats(reel)){ exitCine(); return; }
   closeObj();
   await film; if (!CINE) return;
-  Object.assign(ERA.zoneObjects, STOP.play.zoneObjects);
-  if (PLAY) cancelAnimationFrame(PLAY.raf);
-  PLAY = {beats: STOP.play.beats, i: 0, paused: false, clock: 0, clockOn: true, anims: [], events: []};
+  if (reel === 'play') Object.assign(ERA.zoneObjects, STOP.play.zoneObjects);
+  if (PLAY){ cancelAnimationFrame(PLAY.raf); if (PLAY.audio) PLAY.audio.pause(); }
+  const beats = reelBeats(reel); from = Math.max(0, Math.min(beats.length - 1, +from || 0));
+  PLAY = {reel, beats, from, i: 0, paused: false, clock: 0, clockOn: true, anims: [], events: []};
+  document.body.classList.toggle('reel-intro', reel === 'intro');
   document.body.classList.add('playing'); placeCap(); $('cap').hidden = false; drawKeys();
   if (NARROW()) scrollTo({top:0, behavior:'smooth'});
   $('ev').classList.add('dim');
   resetMap(); YEAR = STOP.year; setHighlight([]);
-  runBeat(0); PLAY.raf = requestAnimationFrame(tick);
+  buildChapters();
+  if (from) seek(from); else runBeat(0);
+  PLAY.raf = requestAnimationFrame(tick);
+}
+// the opener's choice, shown over the picture when its last line has been spoken
+function showChoice(i){
+  const c = $('choice'); c.hidden = false; c.classList.remove('in'); void c.offsetWidth; c.classList.add('in'); wake();
+  const nxt = chapterAt('intro', i + 1);
+  $('choicego').textContent = 'Continue the story ›';
+  $('choicesub').textContent = nxt && nxt.i === i + 1 ? `Chapter ${nxt.n}: ${nxt.title} · ${mmss(reelChapters('intro').filter(x => x.n >= nxt.n).reduce((s, x) => s + x.ms, 0))}` : '';
+  $('choicego').onclick = e => { e.stopPropagation(); if (!PLAY) return; hideChoice(); PLAY.wait = false; if (PLAY.paused) playPause(false); runBeat(i + 1); };
+  $('choicemap').onclick = e => { e.stopPropagation(); if (!PLAY) return; const r = PLAY.reel; playStop(false); resumeSet(r, i + 1); };
+  setTimeout(() => { if (!c.hidden) $('choicego').focus({preventScroll: true}); }, 50);
+}
+function hideChoice(){ const c = $('choice'); if (c) c.hidden = true; }
+// the opening film ends by handing over to the map: zoom out onto the Explore step
+function introEnd(){ resumeSet('intro', 0); playStop(false); }
+// a chapter card at the start of each chapter, and chapter segments above the film controls
+let chapT = 0;
+function showChapter(c, r){
+  const el = $('chapcard'); if (!c || !c.title) return;
+  const n = reelChapters(r).length;
+  el.innerHTML = `<span class="k">Chapter ${c.n} of ${n}</span><span class="t">${esc(c.title)}</span>`;
+  el.hidden = false; el.classList.remove('in'); void el.offsetWidth; el.classList.add('in');
+  clearTimeout(chapT); chapT = setTimeout(() => { el.hidden = true; }, 3600);
+}
+function buildChapters(){
+  const box = $('capch'), cs = reelChapters(PLAY.reel), tot = cs.reduce((s, c) => s + c.ms, 0);
+  box.hidden = cs.length < 2;
+  box.innerHTML = cs.map(c => `<button type="button" class="chs" data-b="${c.i}" style="flex:${Math.max(1, Math.round(1000 * c.ms / tot))}" aria-label="Chapter ${c.n}: ${esc(c.title)}" title="Chapter ${c.n}: ${esc(c.title)} · ${mmss(c.ms)}"><i></i><span>${c.n} · ${esc(c.title)}</span></button>`).join('');
+  box.querySelectorAll('.chs').forEach(b => b.onclick = e => { e.stopPropagation(); if (PLAY){ hideChoice(); seek(+b.dataset.b); } });
+}
+function drawChapters(){
+  if (!PLAY) return;
+  const cs = reelChapters(PLAY.reel), i = PLAY.i;
+  $('capch').querySelectorAll('.chs').forEach((el, k) => { const c = cs[k]; const f = i >= c.end ? 1 : i < c.i ? 0 : (i - c.i) / (c.end - c.i);
+    el.classList.toggle('cur', i >= c.i && i < c.end); el.classList.toggle('done', i >= c.end); el.querySelector('i').style.width = Math.round(100 * f) + '%'; });
 }
 // phones: subtitles sit next to the map so they never cover the animation
 const NARROW = () => matchMedia('(max-width:899px)').matches;
@@ -513,13 +614,15 @@ function playStop(toEnd){
   cancelAnimationFrame(PLAY.raf); if (PLAY.audio) PLAY.audio.pause();
   if (SND.ctx && SND.ctx.state === 'suspended' && SND.on) SND.ctx.resume().catch(() => {});
   sndStop(0.8);
-  PLAY = null; document.body.classList.remove('playing'); $('cap').hidden = true; $('ev').classList.remove('dim');
+  PLAY = null; document.body.classList.remove('playing', 'reel-intro'); $('cap').hidden = true; $('ev').classList.remove('dim');
+  hideChoice(); $('chapcard').hidden = true; clearTimeout(chapT);
   const out = exitCine();
   if (!toEnd){ resetMap(); YEAR = null; $('big').textContent = STOP.label; $('pill').textContent = STOP.label; drawKeys(); out.then(() => { if (!PLAY) showStep(steps().length - 1); }); }
   return out;
 }
 function playEnd(){
   // the transition ends on the new year's intro and stays there
+  resumeSet('play', 0);
   const to = STOP.play.to;
   const k = STORY.stops.findIndex(s => s.year === to);
   // zoom back out to the explore view first, then land on the new year's intro
@@ -606,7 +709,7 @@ function sndAmbient(name){
 }
 function sndStop(sec){ sndFadeShots(sec); sndAmbient(null); sndLevel('off'); }
 // the scene's ambient loop: the nearest earlier beat that names one, else the transition's default
-const ambAt = i => { for (let j = i; j >= 0; j--) if (PLAY.beats[j].ambient) return PLAY.beats[j].ambient; return STOP.play.ambient || null; };
+const ambAt = i => { for (let j = i; j >= 0; j--) if (PLAY.beats[j].ambient) return PLAY.beats[j].ambient; return reelAmbient(PLAY.reel); };
 // extra pause for steps whose sound should play out (only when sound is on)
 const holdMs = b => SND.on ? Math.max(0, ...b.steps.filter(x => sfxOf(x)).map(x => +x.sfxHold || 0)) : 0;
 function setSnd(on){
@@ -681,7 +784,7 @@ function wake(){
 ['pointermove', 'pointerdown', 'touchstart', 'keydown'].forEach(t => addEventListener(t, () => { if (CINE) wake(); }, {passive: true}));
 // in the film a tap on the picture shows the controls and pauses (objects are not opened mid-film)
 $('vp').addEventListener('click', e => {
-  if (!CINE || e.target.closest('.crow')) return;
+  if (!CINE || e.target.closest('.crow, .chaps, .choice')) return;
   e.stopPropagation(); e.preventDefault(); wake(); if (PLAY && !PLAY.paused) playPause(true);
 }, true);
 addEventListener('keydown', e => {
@@ -704,7 +807,15 @@ $('capx').onclick = e => { e.stopPropagation(); playStop(false); };
 $('capcc').onclick = e => { e.stopPropagation(); setCC(!CC); };
 $('capsnd').onclick = e => { e.stopPropagation(); setSnd(!SND.on); };
 setSnd(SND.on);
-$('capskip').onclick = e => { e.stopPropagation(); if (PLAY){ svg.interrupt(); PLAY.anims = []; PLAY.events = []; resetMap(); YEAR = STOP.year; PLAY.clockOn = false; PLAY.beats.forEach((b, j) => applyInstant(j)); playEnd(); } };
+// voice off: the line in progress stops and the subtitles keep their reading time; on: from the next line
+function setVoice(on){
+  VOICE = !!on; try { localStorage.setItem('tlm.voice', VOICE ? 'on' : 'off'); } catch(e){}
+  const b = $('capvoice'); b.setAttribute('aria-pressed', String(VOICE)); b.setAttribute('aria-label', VOICE ? 'Narrator on' : 'Narrator off'); b.title = VOICE ? 'Narrator on' : 'Narrator off'; b.classList.toggle('on', VOICE);
+  if (!VOICE && PLAY && PLAY.audio){ const a = PLAY.audio; a.pause(); if (a.onended) a.onended(); }
+}
+$('capvoice').onclick = e => { e.stopPropagation(); setVoice(!VOICE); };
+setVoice(VOICE);
+$('capskip').onclick = e => { e.stopPropagation(); if (PLAY && PLAY.reel === 'intro'){ resumeSet('intro', 0); playStop(false); return; } if (PLAY){ svg.interrupt(); PLAY.anims = []; PLAY.events = []; resetMap(); YEAR = STOP.year; PLAY.clockOn = false; PLAY.beats.forEach((b, j) => applyInstant(j)); playEnd(); } };
 // tapping the map pauses (tapping an object opens its box, which also pauses)
 svg.on('click.play', () => { if (PLAY && !PLAY.paused) playPause(true); });
 
@@ -721,16 +832,16 @@ function arriveSoon(k, rebuild){
   flyTo([35.0, 31.95], 4.6, rebuild ? 0 : 1400);
   timelineState(s);
   $('chapter').textContent = s.title; $('ev').hidden = false; $('soon').hidden = true;
-  const recap = STOP.play.beats.map(b => b.steps.find(x => x.type === 'caption')).filter(c => c && c.cert !== 'scene');
+  const recap = STOP.play.beats.map(b => b.steps.find(x => x.type === 'caption')).filter(c => c && c.cert !== 'scene' && c.cert !== 'frame');
   const all = [...new Set(recap.flatMap(c => c.src))];
   $('evbody').innerHTML = `<div class="kicker">${esc(STORY.title)} · ${esc(s.label)}</div><h2>${esc(s.soon.title)}</h2>` +
     `<div class="soonflag">Next chapter coming soon</div><p class="lead">${esc(s.soon.text)}</p>` +
     `<div class="cta"><button type="button" class="play" id="replay">↺ Replay transition</button><button type="button" id="back1207">‹ Back to ${esc(STOP.label)}</button></div>` +
-    `<div class="sub">What changed, step by step</div><ul class="claims">` + recap.map(c => `<li>${badge(c.cert)} ${esc(c.text)}</li>`).join('') + '</ul>' +
+    `<div class="sub">What changed, step by step</div><ul class="claims">` + recap.map(c => `<li>${badge(c.cert)} ${esc(c.display || c.text)}</li>`).join('') + '</ul>' +
     `<details class="src"><summary>Sources (${all.length})</summary>${srcList(all)}</details>`;
   $('evbody').scrollTop = 0;
   $('evn').textContent = '1 / 1'; $('evprev').disabled = true; $('evnext').disabled = true;
-  $('replay').onclick = e => { e.stopPropagation(); MODE = 'stop'; cur = liveBefore(k); timelineState(STORY.stops[cur]); playStart(); };
+  $('replay').onclick = e => { e.stopPropagation(); MODE = 'stop'; cur = liveBefore(k); timelineState(STORY.stops[cur]); playStart('play'); };
   $('back1207').onclick = e => { e.stopPropagation(); go(liveBefore(k)); };
   drawKeys();
 }
@@ -780,7 +891,9 @@ window.__zoomTest = () => flyTo([35.3, 32.0], 7, 600);
 window.__app = { openObj, closeObj, showStep, go, playStart, playPause, playStop, seek: i => PLAY && seek(i),
   get step(){ return step; }, get K(){ return K; }, get open(){ return openId; }, get mode(){ return MODE; }, get cur(){ return cur; },
   get explored(){ return [...EXPLORED]; }, get keys(){ return [...KEYSET]; },
-  get play(){ return PLAY ? {i: PLAY.i, n: PLAY.beats.length, paused: PLAY.paused} : null; },
+  get play(){ return PLAY ? {i: PLAY.i, n: PLAY.beats.length, paused: PLAY.paused, reel: PLAY.reel, hold: !!(PLAY.hold || PLAY.wait), chapter: chapterAt(PLAY.reel, PLAY.i).n, choice: !$('choice').hidden} : null; },
+  get voice(){ return {on: VOICE, playing: !!(PLAY && PLAY.audio && !PLAY.audio.paused), src: PLAY && PLAY.audio ? PLAY.audio.src : null}; }, setVoice,
+  chapters: r => reelChapters(r || 'play').map(c => ({n: c.n, title: c.title, i: c.i, end: c.end, ms: c.ms})), resume: r => resumeGet(r || 'play'),
   set speed(v){ setSpeed(v); }, projection,
   get cine(){ return CINE ? {full: !!CINE.full, fs: !!document.fullscreenElement, idle: document.body.classList.contains('idle')} : null; },
   get cc(){ return CC; }, setCC, enterCine, exitCine, IDLE_MS,

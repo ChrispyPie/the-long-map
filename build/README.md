@@ -58,7 +58,7 @@ Optional on a beat: `audio` (path to an mp3), `duration`, `pauseAfter`, `ambient
 3. Sound (see `assets/sfx/README.md`): effects and the ambient loop sit about 18 dB down while a line is narrated, rise to about -6 dB in the pause, and duck again when the next line starts. With sound on, a step's `sfxHold` is added to the pause so the sound can play out. It runs on the same virtual clock, so it follows the speed setting, and Skip cuts it.
 3. The controls are always shown: back one step, pause/play, forward one step, and speed 0.75× / 1× / 1.25×. Tapping the map pauses. All timing runs on one clock, so pause and speed affect everything.
 4. At the end the map stays on the new year's intro. It does not continue by itself.
-5. Captions must work without audio. Keep each transition to about 300–550 words (2–4 minutes read aloud); the build prints the word count.
+5. Captions must work without audio (narrator off, or a line not recorded yet). Long films are split into chapters of about 2–3 minutes (see Narration); the build prints the word count and the voiced length.
 
 ### Scene-setting captions
 
@@ -86,11 +86,24 @@ When a narrated part runs (Play, Replay), the map viewport grows from its place 
 - Floating controls: back, pause/play, forward, speed (0.75/1/1.25), **CC** (subtitles on/off, stored as `tlm.cc`), step count, Skip, × (exit). They hide after 3 s without input while playing and come back on any touch, mouse move or key. A tap on the picture shows them **and pauses**; objects are not opened mid-film. Keys: Space pause, ←/→ step, Esc exit.
 - All pacing rules above are unchanged; the film only changes the frame. At the end the view zooms back out to the page and lands on the new year's intro (c. 1150 BC), with menus, texts and clickable objects back.
 - With `prefers-reduced-motion: reduce` the grow/shrink and fades are instant.
-- Year intros have no narration yet, so only Play transitions use the film. Audio (`beat.audio`) plays inside the film when it exists.
+- Both narrated films use it: the opening film of a year (`transitionIn.beats`) and Play. A **narrator** button (person with sound waves) next to the sound button switches the voice on or off (`tlm.voice`, default on, also with reduced motion); it is separate from the effects. With the voice off the subtitles keep their reading time.
+
+## Narration (`build/narration_jews_1207.py`, `build/narrate.py`)
+
+The script lives in `build/narration_jews_1207.py`, one recorded line per beat. `story_jews.py` takes its beats for `transitionIn.beats` (the opening film) and `play.beats`.
+
+- **Labels.** As for fact boxes (`attested`, `disputed`, `tradition`, `scene`), plus `frame` for the film's own framing lines (the title, how to read the labels, the choice). Frame lines are allowed only in the opening film, carry no sources or facts, and show no badge or source line.
+- **Written for the ear.** The spoken `text` has no digits and no brackets (the build refuses them). The subtitle can show digits through an optional `display` ("about 1207 BC" is read as "twelve hundred and seven BC"). Bible lines give the verse in `ref`, shown after the sources ("Sources: Hebrew Bible · Exodus 22:21 (22:20 in the Hebrew numbering)"): English verse numbering, Hebrew numbering in brackets where it differs.
+- **Opening film and choice.** `transitionIn` stays backwards-compatible: a plain string, or `{text, ambient, beats}` where `text` is the fallback shown in the intro panel. The opener (chapter 1, about 75–90 s) ends on the one beat with `"choice": true`: the film waits, and the viewer picks **Continue the story** (chapter 2 onwards) or **Explore the map**. The intro panel offers "Watch the opening", "Explore the map" and "read it as fact boxes".
+- **Chapters.** A beat with `"chapter": "Title"` opens a chapter; the first beat of each film must have one. Aim for 2–3 minutes per chapter. In the film a chapter card shows "Chapter N of M" and a strip of chapter segments above the controls jumps between chapters. The intro and Explore panels list the chapters with their length.
+- **Resume.** The film stores the chapter in progress per stop and film (`tlm.resume.<story>.<year>.<intro|play>`) and the panels offer "Resume at chapter N". It is cleared when the film plays to its end or is skipped.
+- **Timing.** With the voice on a beat lasts as long as its recording (`audioMs`), then `pauseAfter`, then any `sfxHold`; effects duck about 18 dB under the voice. Speed changes the voice's `playbackRate` and the virtual clock together.
+
+**Recording.** `ELEVENLABS_API_KEY=… python3 build/narrate.py` records every line whose text changed (voice Grant Gravitas `VC6vCXhVaI8BZefRtXZV`, `eleven_multilingual_v2`, narrator settings at speed 1.0, mono 22.05 kHz 32 kbps), with request stitching (`previous_request_ids`, `next_text`) so the lines sound continuous. Files: `assets/narration/<reel>-NN.mp3` and `assets/narration/index.json` (`{file: {ms, sha}}`, `sha` = first 12 hex of the SHA-1 of the spoken text). The key is read from the environment only and is never written anywhere. `make_data.py` attaches `audio` and `audioMs` to each beat and refuses a line whose text no longer matches its recording; `TLM_ALLOW_SILENT=1` builds anyway, without the voice for those lines.
 
 ## Test
 
-`build/test-fakta.js` uses Playwright and headless Chromium. It tests 393 px with touch and 1280 px: stepping through the events, opening every object, tap outside, X, chips, and console errors. It presets the About notice as seen. `build/test-cine.js` tests the notice, the book, cinematic mode, CC, auto-hide, tap-to-pause, the zoom-out and the reduced-motion path at 393 px (touch) and 1280 px. Run it with `node build/test-fakta.js http://127.0.0.1:8793/ noshots` against a local `python3 -m http.server 8793`. Playwright must be installed.
+`build/test-fakta.js` uses Playwright and headless Chromium. It tests 393 px with touch and 1280 px: stepping through the events, opening every object, tap outside, X, chips, and console errors. It presets the About notice as seen. `build/test-cine.js` tests the notice, the book, cinematic mode, CC, auto-hide, tap-to-pause, the zoom-out and the reduced-motion path at 393 px (touch) and 1280 px. `build/test-sfx.js` tests the sound effects and `build/test-narration.js` the narration (recordings, opener length, the choice, chapters and the strip, resume, the narrator button, `display`, frame lines, Bible refs). Run each with `node build/test-<name>.js http://127.0.0.1:8793/ noshots` against a local `python3 -m http.server 8793`. Playwright must be installed.
 
 ## Design and series
 

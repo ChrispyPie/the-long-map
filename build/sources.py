@@ -1,5 +1,6 @@
 # Shared source registry for all stories. checked: "opened" = page/record opened online 27 Oct 2026,
-# "search" = title/author/year confirmed via web search results 27 Oct 2026, "memory" = not checked online yet.
+# "search" = title/author/year confirmed via web search results 27 Oct 2026, "memory" = not checked online yet,
+# "catalogue" = confirmed against a publisher page, library catalogue (WorldCat, HathiTrust, NYPL), JSTOR or DOI record 27 Oct 2026.
 S = {
  "stele": ("primary","Merneptah Stele ('Israel Stele'). Egyptian Museum, Cairo, JE 31408 / CG 34025. Granite; found by W. M. F. Petrie in 1896 in Merneptah's mortuary temple, western Thebes. Year 5 of Merneptah.","https://www.globalegyptianmuseum.org/record.aspx?id=15349","search"),
  "petrie1897": ("archaeology","Petrie, W. M. F. (1897). Six Temples at Thebes, 1896. London: Quaritch.","https://pdfs.petrieproject.com/SixTemplesAtThebes.pdf","search"),
@@ -45,6 +46,17 @@ S = {
  "millek": ("archaeology","Millek, J. M. (2018). 'Destruction and the Fall of Egyptian Hegemony over the Southern Levant'. Journal of Ancient Egyptian Interconnections 19: 1–21. (Egypt's withdrawal was gradual, over 75 years or more; Jaffa perhaps c. 1125 BC)","https://journals.librarypublishing.arizona.edu/jaei/article/id/1347/","opened"),
  "fink1995": ("scholarship","Finkelstein, I. (1995). 'The Date of the Settlement of the Philistines in Canaan'. Tel Aviv 22: 213–239. (Argues for c. 1135 BC instead of the usual c. 1175 BC)","https://doi.org/10.1179/tav.1995.1995.2.213","search"),
  "feldman": ("archaeology","Feldman, M. et al. (2019). 'Ancient DNA sheds light on the genetic origins of early Iron Age Philistines'. Science Advances 5(7): eaax0061.","https://doi.org/10.1126/sciadv.aax0061","opened"),
+ # ---- added with the narration (feat/narration), all confirmed in catalogues 27 Oct 2026 ----
+ "smith2002": ("scholarship","Smith, M. S. (2002). The Early History of God: Yahweh and the Other Deities in Ancient Israel. 2nd ed. Grand Rapids: Eerdmans. (El and Baal in Canaanite religion; the name Israel containing El)","https://www.eerdmans.com/9780802839725/the-early-history-of-god/","catalogue"),
+ "yon2006": ("archaeology","Yon, M. (2006). The City of Ugarit at Tell Ras Shamra. Winona Lake: Eisenbrauns. (Ugaritic alphabetic cuneiform of thirty signs; the city not reoccupied after its destruction)","https://www.eisenbrauns.org/books/titles/978-1-57506-029-3.html","catalogue"),
+ "yurco1990": ("scholarship","Yurco, F. J. (1990). '3,200-Year-Old Picture of Israelites Found in Egypt'. Biblical Archaeology Review 16(5): 20–38. (Karnak 'Ashkelon wall' reliefs attributed to Merneptah; one scene read as Israel)","https://library.biblicalarchaeology.org/article/3200-year-old-picture-of-israelites-found-in-egypt/","catalogue"),
+ "rainey2001": ("scholarship","Rainey, A. F. (2001). 'Israel in Merenptah's Inscription and Reliefs'. Israel Exploration Journal 51(1): 57–75. (Disagrees with Yurco's identification)","https://www.jstor.org/stable/27926956","catalogue"),
+ "stager1985": ("scholarship","Stager, L. E. (1985). 'The Archaeology of the Family in Ancient Israel'. Bulletin of the American Schools of Oriental Research 260: 1–35. (Pillared house, ground floor for animals and storage, upper storey for living)","https://doi.org/10.2307/1356862","catalogue"),
+ "kingstager": ("scholarship","King, P. J. & Stager, L. E. (2001). Life in Biblical Israel. Library of Ancient Israel. Louisville: Westminster John Knox. ISBN 0-664-22148-3. (Diet, bread as staple, grinding stones, farming)","https://catalog.hathitrust.org/Record/004327614","catalogue"),
+ "meyers2013": ("scholarship","Meyers, C. (2013). Rediscovering Eve: Ancient Israelite Women in Context. New York: Oxford University Press. (Grain processing as daily, largely women's work; estimates of hours per day)","https://academic.oup.com/book/8458","catalogue"),
+ "kochavi1977": ("archaeology","Kochavi, M. (1977). 'An Ostracon of the Period of the Judges from 'Izbet Ṣarṭah'. Tel Aviv 4: 1–13. (The Izbet Sartah abecedary; its date and script are debated)","https://doi.org/10.1179/033443577788497849","catalogue"),
+ "mazar1982": ("archaeology","Mazar, A. (1982). 'The \u201cBull Site\u201d: An Iron Age I Open Cult Place'. Bulletin of the American Schools of Oriental Research 247: 27–42. (Hilltop shrine in northern Samaria with a bronze bull figurine)","https://doi.org/10.2307/1356477","catalogue"),
+ "stager1988": ("scholarship","Stager, L. E. (1988). 'Archaeology, Ecology, and Social History: Background Themes to the Song of Deborah'. In J. A. Emerton (ed.), Congress Volume Jerusalem 1986. Supplements to Vetus Testamentum 40. Leiden: Brill, 221–234.","https://doi.org/10.1163/9789004275638_020","catalogue"),
  "bible": ("tradition","Hebrew Bible (Tanakh), cited by book and verse in each line. Religious tradition, written down centuries after the events it tells.",None,"n/a"),
  "ne": ("map","Natural Earth (public domain): coastlines, rivers, lakes.","https://www.naturalearthdata.com/","opened"),
 }
