@@ -1,4 +1,5 @@
 {
- "_note": "Site settings. donateUrl: set to a full https:// link to show a small 'Support this project' link in the footer; null hides it. No donation service is chosen yet.",
- "donateUrl": null
+ "_note": "Site settings. donateUrl: set to a full https:// link to show a small 'Support this project' link in the footer; null hides it. No donation service is chosen yet. reportUrl: same for a 'Report an error' link (e.g. a form or issue tracker); null hides it.",
+ "donateUrl": null,
+ "reportUrl": null
 }

@@ -91,7 +91,8 @@ function cullNow(){
     if (!clash) boxes.push(r);
   }
 }
-const zoom = d3.zoom().scaleExtent([1, 40]).on('zoom', e => { K = e.transform.k; root.attr('transform', e.transform); scaleMarks(); });
+let TR = {k:1, x:0, y:0};
+const zoom = d3.zoom().scaleExtent([1, 40]).on('zoom', e => { TR = e.transform; K = e.transform.k; root.attr('transform', e.transform); scaleMarks(); });
 svg.call(zoom).on('dblclick.zoom', null);
 svg.append('defs').html('<filter id="soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="0.6"/></filter>');
 
@@ -99,7 +100,10 @@ async function getJSON(u){ if (!cache[u]) cache[u] = fetch(u).then(r => { if (!r
 
 function flyTo(c, k, ms = 900){
   const [w,h] = size(); const p = projection(c);
-  svg.transition().duration(ms).call(zoom.transform, d3.zoomIdentity.translate(w/2, h/2).scale(k).translate(-p[0], -p[1]));
+  // in the film the focus sits a little above the subtitles
+  let dy = 0;
+  if (CINE && CINE.full) dy = Math.min(h * 0.16, ($('cap').offsetHeight || 0) / 2);
+  svg.transition().duration(ms).call(zoom.transform, d3.zoomIdentity.translate(w/2, h/2 - dy).scale(k).translate(-p[0], -p[1]));
 }
 
 // ---------- object geometry ----------
@@ -320,7 +324,7 @@ $('evnext').onclick = () => showStep(step + 1);
 let PLAY = null, FXZ = [], YEAR = null;
 const shortSrc = k => { const s = SRC[k]; if (!s) return k; const m = s.t.match(/^([^,(.]+?)(?:,| et al\.| &)[^(]*\((\d{4})\)/); if (m) return m[1].trim() + (/ et al\./.test(s.t.slice(0, 40)) ? ' et al.' : '') + ' ' + m[2]; if (s.kind === 'tradition') return 'Hebrew Bible'; return s.t.split(/[.(]/)[0].trim().slice(0, 40); };
 const yfmt = (y, c) => (c ? 'c. ' : '') + fmt(Math.round(y));
-function setYear(y, approx){ YEAR = y; const t = yfmt(y, approx); $('big').textContent = t; $('pill').textContent = t; }
+function setYear(y, approx){ YEAR = y; const t = yfmt(y, approx); $('big').textContent = t; $('pill').textContent = t; $('cyear').textContent = t; }
 // ---------- Play: one virtual clock, so pause, speed and step all stay in sync ----------
 // Timing rules (see build/README.md): the caption line drives the beat. Camera first, then the
 // visual events one at a time, then the line must have finished (reading time or audio), then pauseAfter.
@@ -430,7 +434,7 @@ const VISUAL = ['migration', 'battle', 'border'];
 function beatPlan(b){
   let t = 0; const f = b.steps.find(x => x.type === 'focus'); if (f) t += dur(f) + GAP;
   b.steps.filter(x => VISUAL.includes(x.type)).forEach(x => { t += dur(x) + GAP; });
-  return Math.max(lineMs(b), t) + pauseMs(b);
+  return Math.max(lineMs(b), t) + pauseMs(b) + holdMs(b);
 }
 const playTotal = () => STOP && STOP.play ? STOP.play.beats.reduce((s, b) => s + beatPlan(b), 0) : 0;
 function clearFx(){ gFx.selectAll('*').interrupt().remove(); gFxTop.selectAll('*').remove(); FXZ = []; }
@@ -439,23 +443,26 @@ function applyInstant(i){ PLAY.beats[i].steps.forEach(x => { if (x.type !== 'cap
 function runBeat(i){
   if (i >= PLAY.beats.length) return playEnd();
   const b = PLAY.beats[i], t0 = PLAY.clock;
-  PLAY.i = i; PLAY.events = []; PLAY.hold = false;
+  PLAY.i = i; PLAY.events = []; PLAY.hold = false; PLAY.sndUsed = new Set();
   if (PLAY.audio){ PLAY.audio.pause(); PLAY.audio = null; }
+  // sound: last beat's effects fade, the scene's ambient loop continues, everything ducks under the new line
+  sndFadeShots(1.5); sndAmbient(ambAt(i)); sndLevel('voice');
   // earlier beats' arrows and markers step back so the new ones read clearly
   gFx.selectAll(':scope > g').classed('old', true); gFxTop.selectAll(':scope > g').classed('old', true);
   // 1) the line starts: caption (and audio), year counter runs alongside
-  b.steps.filter(x => x.type === 'caption' || x.type === 'year').forEach(x => STEP[x.type](x, dur(x) || 1));
+  b.steps.filter(x => x.type === 'caption' || x.type === 'year').forEach(x => { STEP[x.type](x, dur(x) || 1); if (x.type === 'year') sndShot(sfxOf(x)); });
   let audioDone = true;
-  if (b.audio){ try { audioDone = false; const a = PLAY.audio = new Audio(b.audio); a.playbackRate = SPEED; a.onended = a.onerror = () => { audioDone = true; if (PLAY) PLAY.hold = false; }; a.play().catch(() => { audioDone = true; }); } catch(e){ audioDone = true; } }
+  if (b.audio){ try { audioDone = false; const a = PLAY.audio = new Audio(b.audio); a.playbackRate = SPEED; a.onended = a.onerror = () => { audioDone = true; if (PLAY){ PLAY.hold = false; sndLevel('fill'); } }; a.play().catch(() => { audioDone = true; }); } catch(e){ audioDone = true; } }
   // 2) camera moves first, 3) then one visual event at a time
   let t = t0; const f = b.steps.find(x => x.type === 'focus');
   if (f){ STEP.focus(f, dur(f)); t += dur(f) + GAP; }
-  b.steps.filter(x => VISUAL.includes(x.type)).forEach(x => { at(t, () => STEP[x.type](x, dur(x))); t += dur(x) + GAP; });
+  b.steps.filter(x => VISUAL.includes(x.type)).forEach(x => { at(t, () => { STEP[x.type](x, dur(x)); sndShot(sfxOf(x)); }); t += dur(x) + GAP; });
   // 4) wait for the line to finish (reading time, or the audio), 5) then the pause
   const lineEnd = Math.max(t0 + lineMs(b), t);
-  at(lineEnd, () => { if (!audioDone) PLAY.hold = true; });
-  at(lineEnd + 1, () => { PLAY.b0 = t0; PLAY.bEnd = lineEnd + pauseMs(b); at(PLAY.clock + pauseMs(b), () => runBeat(i + 1)); });
-  PLAY.b0 = t0; PLAY.bEnd = lineEnd + pauseMs(b);
+  // in the pause the effects and ambient rise so the film can breathe; sfxHold lets a battle or march play out
+  at(lineEnd, () => { if (!audioDone) PLAY.hold = true; else sndLevel('fill'); });
+  at(lineEnd + 1, () => { const pz = pauseMs(b) + holdMs(b); PLAY.b0 = t0; PLAY.bEnd = PLAY.clock + pz; at(PLAY.clock + pz, () => runBeat(i + 1)); });
+  PLAY.b0 = t0; PLAY.bEnd = lineEnd + pauseMs(b) + holdMs(b);
   $('capn').textContent = `${i + 1} / ${PLAY.beats.length}`;
   setPP();
 }
@@ -470,9 +477,13 @@ function seek(i){
   runBeat(i);
 }
 async function playStart(){
+  sndEnsure(); // inside the Play click: the browser allows audio from here on
+  // the narrated part runs as a small film: the map grows to fill the screen first
+  const film = enterCine();
   if (MODE !== 'stop') await go(liveBefore(cur));
-  if (!STOP || !STOP.play) return;
+  if (!STOP || !STOP.play){ exitCine(); return; }
   closeObj();
+  await film; if (!CINE) return;
   Object.assign(ERA.zoneObjects, STOP.play.zoneObjects);
   if (PLAY) cancelAnimationFrame(PLAY.raf);
   PLAY = {beats: STOP.play.beats, i: 0, paused: false, clock: 0, clockOn: true, anims: [], events: []};
@@ -484,13 +495,14 @@ async function playStart(){
 }
 // phones: subtitles sit next to the map so they never cover the animation
 const NARROW = () => matchMedia('(max-width:899px)').matches;
-function placeCap(){ const c = $('cap'), vp = $('vp'); if (NARROW()){ if (c.parentNode === vp) vp.after(c); c.classList.add('below'); } else { if (c.parentNode !== vp) vp.append(c); c.classList.remove('below'); } }
+function placeCap(){ const c = $('cap'), vp = $('vp'); if (NARROW() && !CINE){ if (c.parentNode === vp) vp.after(c); c.classList.add('below'); } else { if (c.parentNode !== vp) vp.append(c); c.classList.remove('below'); } }
 addEventListener('resize', () => { if (PLAY) placeCap(); });
-function setPP(){ const p = PLAY && PLAY.paused; $('cappp').textContent = p ? '▶' : '❚❚'; $('cappp').setAttribute('aria-label', p ? 'Play' : 'Pause'); $('cap').classList.toggle('paused', !!p); }
+function setPP(){ const p = PLAY && PLAY.paused; $('cappp').textContent = p ? '▶' : '❚❚'; $('cappp').setAttribute('aria-label', p ? 'Play' : 'Pause'); $('cap').classList.toggle('paused', !!p); wake(); }
 function playPause(force){
   if (!PLAY) return;
   PLAY.paused = force === undefined ? !PLAY.paused : force;
   if (PLAY.audio){ PLAY.paused ? PLAY.audio.pause() : PLAY.audio.play().catch(() => {}); }
+  if (SND.ctx){ PLAY.paused ? SND.ctx.suspend().catch(() => {}) : SND.on && SND.ctx.resume().catch(() => {}); }
   if (PLAY.paused) svg.interrupt();
   setPP();
 }
@@ -499,20 +511,199 @@ function setSpeed(v){ SPEED = v; if (PLAY && PLAY.audio) PLAY.audio.playbackRate
 function playStop(toEnd){
   if (!PLAY) return;
   cancelAnimationFrame(PLAY.raf); if (PLAY.audio) PLAY.audio.pause();
+  if (SND.ctx && SND.ctx.state === 'suspended' && SND.on) SND.ctx.resume().catch(() => {});
+  sndStop(0.8);
   PLAY = null; document.body.classList.remove('playing'); $('cap').hidden = true; $('ev').classList.remove('dim');
-  if (!toEnd){ resetMap(); YEAR = null; $('big').textContent = STOP.label; $('pill').textContent = STOP.label; drawKeys(); showStep(steps().length - 1); }
+  const out = exitCine();
+  if (!toEnd){ resetMap(); YEAR = null; $('big').textContent = STOP.label; $('pill').textContent = STOP.label; drawKeys(); out.then(() => { if (!PLAY) showStep(steps().length - 1); }); }
+  return out;
 }
 function playEnd(){
   // the transition ends on the new year's intro and stays there
-  const to = STOP.play.to; playStop(true);
+  const to = STOP.play.to;
   const k = STORY.stops.findIndex(s => s.year === to);
-  arriveSoon(k, false);
+  // zoom back out to the explore view first, then land on the new year's intro
+  playStop(true).then(() => { if (!PLAY) arriveSoon(k, false); });
 }
+// ---------- cinematic mode: the narrated part as a small film ----------
+// The map viewport grows from its place in the page to the full screen (Fullscreen API where it exists,
+// otherwise a fixed full-viewport layer, e.g. iPhone Safari), the page chrome fades, subtitles (CC) sit
+// at the bottom. When the part ends it shrinks back into the page.
+const REDUCED = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+const CINE_MS = 650, IDLE_MS = 3000;
+let CINE = null, CC = true, idleT = 0;
+try { CC = localStorage.getItem('tlm.cc') !== 'off'; } catch(e){}
+function setCC(on){
+  CC = !!on; try { localStorage.setItem('tlm.cc', CC ? 'on' : 'off'); } catch(e){}
+  document.body.classList.toggle('cc-off', !CC);
+  const b = $('capcc'); b.setAttribute('aria-pressed', String(CC)); b.setAttribute('aria-label', CC ? 'Subtitles on' : 'Subtitles off'); b.classList.toggle('on', CC);
+}
+setCC(CC);
+
+// ---------- sound effects: a quiet bed under the narration that rises in the pauses ----------
+// Clips live in assets/sfx (prompts and credits in assets/sfx/README.md). Web Audio starts only after a
+// user gesture (BEGIN ADVENTURE, Play or the sound button); nothing is fetched before. While a line is
+// being narrated the effects sit about 18 dB down; in the pause after it they rise to about -6 dB, then
+// duck smoothly when the next line starts. Steps may set "sfx" (a clip name, or null for none) and
+// "sfxHold" (ms the pause is stretched so the sound can play out; on the same virtual clock, so it
+// follows the speed setting, and Skip cuts it).
+const SFX_FILES = {battle:'battle', migration:'migration', border:'border', year:'year', desert:'amb-desert', river:'amb-river'};
+const SFX_DEFAULT = {battle:'battle', migration:'migration', border:'border', year:'year'};
+const DB = d => Math.pow(10, d / 20);
+const SFX_LEVEL = {voice: DB(-18), fill: DB(-6), off: 0};
+const AMB_GAIN = DB(-5);
+let GESTURE = false;
+['pointerdown', 'keydown', 'touchend', 'click'].forEach(t => addEventListener(t, e => { if (e.isTrusted) GESTURE = true; }, {capture: true, passive: true}));
+const SND = {on: !REDUCED(), ctx: null, bus: null, buf: {}, loading: null, amb: null, ambName: null, shots: [], phase: 'off', target: 0};
+try { const v = localStorage.getItem('tlm.snd'); if (v) SND.on = v === 'on'; } catch(e){}
+const sfxOf = x => x.sfx === undefined ? SFX_DEFAULT[x.type] : x.sfx;
+function sndEnsure(){
+  if (!SND.on || !GESTURE) return null;
+  if (!SND.ctx){
+    const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null;
+    try { SND.ctx = new AC(); } catch(e){ return null; }
+    SND.bus = SND.ctx.createGain(); SND.bus.gain.value = 0; SND.bus.connect(SND.ctx.destination);
+  }
+  if (SND.ctx.state === 'suspended' && !(PLAY && PLAY.paused)) SND.ctx.resume().catch(() => {});
+  if (!SND.loading) SND.loading = Promise.all(Object.entries(SFX_FILES).map(([k, f]) => fetch('assets/sfx/' + f + '.mp3')
+    .then(r => r.arrayBuffer()).then(a => new Promise((ok, no) => SND.ctx.decodeAudioData(a, ok, no))).then(b => { SND.buf[k] = b; }).catch(() => {})));
+  return SND.ctx;
+}
+function ramp(param, to, sec){ const t = SND.ctx.currentTime; param.cancelScheduledValues(t); param.setValueAtTime(param.value, t); param.linearRampToValueAtTime(to, t + sec); }
+function sndLevel(phase){
+  SND.phase = phase; SND.target = SND.on ? SFX_LEVEL[phase] : 0;
+  if (SND.ctx) ramp(SND.bus.gain, SND.target, phase === 'fill' ? 1.4 : phase === 'voice' ? 0.6 : 0.5);
+}
+function sndShot(name){
+  if (!name || !SND.on || !PLAY || !PLAY.clockOn || !sndEnsure()) return;
+  if (PLAY.sndUsed){ if (PLAY.sndUsed.has(name)) return; PLAY.sndUsed.add(name); }
+  const go = () => {
+    const b = SND.buf[name]; if (!b || !PLAY || !SND.on) return;
+    const c = SND.ctx, s = c.createBufferSource(), g = c.createGain(), t = c.currentTime;
+    s.buffer = b; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(1, t + 0.3);
+    s.connect(g); g.connect(SND.bus); s.start(t);
+    const o = {name, s, g}; SND.shots.push(o); s.onended = () => { SND.shots = SND.shots.filter(x => x !== o); };
+  };
+  SND.buf[name] ? go() : SND.loading.then(go);
+}
+function sndFadeShots(sec){
+  if (SND.ctx) SND.shots.forEach(o => { try { ramp(o.g.gain, 0, sec); o.s.stop(SND.ctx.currentTime + sec + 0.05); } catch(e){} });
+  SND.shots = [];
+}
+function sndAmbient(name){
+  if (!SND.on) name = null;
+  if (name === SND.ambName && (SND.amb || !name)) return;
+  const old = SND.amb; SND.amb = null; SND.ambName = name;
+  if (old && SND.ctx){ try { ramp(old.g.gain, 0, 2); old.s.stop(SND.ctx.currentTime + 2.1); } catch(e){} }
+  if (!name || !sndEnsure()) return;
+  const go = () => {
+    const b = SND.buf[name]; if (!b || SND.ambName !== name || SND.amb || !PLAY) return;
+    const c = SND.ctx, s = c.createBufferSource(), g = c.createGain(), t = c.currentTime;
+    s.buffer = b; s.loop = true; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(AMB_GAIN, t + 2.5);
+    s.connect(g); g.connect(SND.bus); s.start(t); SND.amb = {name, s, g};
+  };
+  SND.buf[name] ? go() : SND.loading.then(go);
+}
+function sndStop(sec){ sndFadeShots(sec); sndAmbient(null); sndLevel('off'); }
+// the scene's ambient loop: the nearest earlier beat that names one, else the transition's default
+const ambAt = i => { for (let j = i; j >= 0; j--) if (PLAY.beats[j].ambient) return PLAY.beats[j].ambient; return STOP.play.ambient || null; };
+// extra pause for steps whose sound should play out (only when sound is on)
+const holdMs = b => SND.on ? Math.max(0, ...b.steps.filter(x => sfxOf(x)).map(x => +x.sfxHold || 0)) : 0;
+function setSnd(on){
+  SND.on = !!on; try { localStorage.setItem('tlm.snd', SND.on ? 'on' : 'off'); } catch(e){}
+  const b = $('capsnd'); b.setAttribute('aria-pressed', String(SND.on)); b.setAttribute('aria-label', SND.on ? 'Sound on' : 'Sound off'); b.title = SND.on ? 'Sound on' : 'Sound off'; b.classList.toggle('on', SND.on);
+  if (!SND.on){ sndStop(0.4); SND.phase = PLAY ? SND.phase : 'off'; return; }
+  if (PLAY){ sndEnsure(); sndLevel(SND.phase === 'off' ? 'voice' : SND.phase); sndAmbient(ambAt(PLAY.i)); }
+}
+// keep the same picture on screen when the map viewport changes size
+function refitKeep(){
+  const vb = (svg.attr('viewBox') || '').split(/[ ,]+/).map(Number);
+  const r = svg.node().getBoundingClientRect();
+  if (vb.length < 4 || !vb[2] || !r.width){ fit(); redrawZones(); return; }
+  const s = Math.min(r.width / vb[2], r.height / vb[3]), ox = (r.width - vb[2] * s) / 2, oy = (r.height - vb[3] * s) / 2;
+  const g1 = [30, 30], g2 = [40, 36], a = projection(g1), b = projection(g2);
+  fit();
+  const a2 = projection(g1), b2 = projection(g2), q = (b2[0] - a2[0]) / (b[0] - a[0]);
+  const cx = a2[0] - q * a[0], cy = a2[1] - q * a[1], k1 = s * TR.k / q;
+  svg.interrupt(); svg.call(zoom.transform, d3.zoomIdentity.translate(ox + s * TR.x - k1 * cx, oy + s * TR.y - k1 * cy).scale(k1));
+  redrawZones(); cullLabels();
+}
+const wait = ms => new Promise(r => setTimeout(r, ms));
+function morph(vp, from, to){
+  // animate the fixed viewport between two screen rectangles
+  const ms = REDUCED() ? 0 : CINE_MS;
+  const set = q => { vp.style.left = q.left + 'px'; vp.style.top = q.top + 'px'; vp.style.width = q.width + 'px'; vp.style.height = q.height + 'px'; };
+  vp.classList.remove('cinefx'); set(from); void vp.offsetWidth;
+  if (ms) vp.classList.add('cinefx'); set(to);
+  return wait(ms + 30).then(() => vp.classList.remove('cinefx'));
+}
+function enterCine(){
+  if (CINE) return CINE.ready;
+  const vp = $('vp'), r = vp.getBoundingClientRect(), b = document.body;
+  CINE = {full: false, fsOn: false};
+  // Fullscreen API needs the user's click, so ask right away; iPhone Safari has none and keeps the fixed layer
+  const el = document.documentElement, rq = el.requestFullscreen || el.webkitRequestFullscreen;
+  if (rq && !document.fullscreenElement){ try { const p = rq.call(el); if (p && p.then) p.then(() => { if (CINE) CINE.fsOn = true; }).catch(() => {}); else CINE.fsOn = true; } catch(e){} }
+  const ph = document.createElement('div'); ph.id = 'vpph'; ph.className = 'vpph'; ph.style.height = r.height + 'px'; vp.before(ph);
+  vp.classList.add('cinefixed'); $('cyear').textContent = $('pill').textContent;
+  b.classList.add('cine'); wake();
+  placeCap();
+  const c = CINE;
+  c.ready = morph(vp, r, {left: 0, top: 0, width: innerWidth, height: innerHeight}).then(() => {
+    if (CINE !== c) return;
+    vp.style.cssText = ''; vp.classList.add('full'); c.full = true; refitKeep();
+  });
+  return c.ready;
+}
+function exitCine(){
+  if (!CINE) return Promise.resolve();
+  if (CINE.out) return CINE.out;
+  const c = CINE, vp = $('vp'), b = document.body, ph = $('vpph');
+  c.fsOn = false;
+  if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {});
+  clearTimeout(idleT); b.classList.remove('idle');
+  c.out = (c.ready || Promise.resolve()).then(() => {
+    const from = vp.getBoundingClientRect();
+    vp.classList.remove('full'); b.classList.remove('cine'); placeCap();
+    const to = ph ? ph.getBoundingClientRect() : from;
+    return morph(vp, from, {left: to.left, top: to.top, width: to.width, height: to.height});
+  }).then(() => {
+    vp.classList.remove('cinefixed'); vp.style.cssText = ''; if (ph) ph.remove();
+    CINE = null; refitKeep(); placeCap();
+  });
+  return c.out;
+}
+// controls fade after a few quiet seconds and come back on any touch or mouse move
+function wake(){
+  const b = document.body; b.classList.remove('idle'); clearTimeout(idleT);
+  if (CINE && PLAY && !PLAY.paused) idleT = setTimeout(() => { if (CINE && PLAY && !PLAY.paused && !CINE.out) b.classList.add('idle'); }, IDLE_MS);
+}
+['pointermove', 'pointerdown', 'touchstart', 'keydown'].forEach(t => addEventListener(t, () => { if (CINE) wake(); }, {passive: true}));
+// in the film a tap on the picture shows the controls and pauses (objects are not opened mid-film)
+$('vp').addEventListener('click', e => {
+  if (!CINE || e.target.closest('.crow')) return;
+  e.stopPropagation(); e.preventDefault(); wake(); if (PLAY && !PLAY.paused) playPause(true);
+}, true);
+addEventListener('keydown', e => {
+  if (!CINE || !PLAY) return;
+  if (e.key === 'Escape'){ e.preventDefault(); playStop(false); }
+  else if (e.key === ' ' && !(e.target.closest && e.target.closest('button'))){ e.preventDefault(); playPause(); }
+  else if (e.key === 'ArrowRight') $('capnext').click();
+  else if (e.key === 'ArrowLeft') $('capprev').click();
+});
+// leaving browser fullscreen (e.g. the Esc key) also ends the film
+document.addEventListener('fullscreenchange', () => {
+  if (document.fullscreenElement){ if (CINE) CINE.fsOn = true; return; }
+  if (CINE && CINE.fsOn && !CINE.out && PLAY){ CINE.fsOn = false; playStop(false); }
+});
 $('cappp').onclick = e => { e.stopPropagation(); playPause(); };
 $('capnext').onclick = e => { e.stopPropagation(); if (PLAY) seek(PLAY.i + 1 < PLAY.beats.length ? PLAY.i + 1 : PLAY.i) ; };
 $('capprev').onclick = e => { e.stopPropagation(); if (PLAY) seek(PLAY.i - 1); };
 $('capspd').onclick = e => { e.stopPropagation(); setSpeed(SPEEDS[(SPEEDS.indexOf(SPEED) + 1) % SPEEDS.length] || 1); };
 $('capx').onclick = e => { e.stopPropagation(); playStop(false); };
+$('capcc').onclick = e => { e.stopPropagation(); setCC(!CC); };
+$('capsnd').onclick = e => { e.stopPropagation(); setSnd(!SND.on); };
+setSnd(SND.on);
 $('capskip').onclick = e => { e.stopPropagation(); if (PLAY){ svg.interrupt(); PLAY.anims = []; PLAY.events = []; resetMap(); YEAR = STOP.year; PLAY.clockOn = false; PLAY.beats.forEach((b, j) => applyInstant(j)); playEnd(); } };
 // tapping the map pauses (tapping an object opens its box, which also pauses)
 svg.on('click.play', () => { if (PLAY && !PLAY.paused) playPause(true); });
@@ -590,14 +781,23 @@ window.__app = { openObj, closeObj, showStep, go, playStart, playPause, playStop
   get step(){ return step; }, get K(){ return K; }, get open(){ return openId; }, get mode(){ return MODE; }, get cur(){ return cur; },
   get explored(){ return [...EXPLORED]; }, get keys(){ return [...KEYSET]; },
   get play(){ return PLAY ? {i: PLAY.i, n: PLAY.beats.length, paused: PLAY.paused} : null; },
-  set speed(v){ setSpeed(v); }, projection };
+  set speed(v){ setSpeed(v); }, projection,
+  get cine(){ return CINE ? {full: !!CINE.full, fs: !!document.fullscreenElement, idle: document.body.classList.contains('idle')} : null; },
+  get cc(){ return CC; }, setCC, enterCine, exitCine, IDLE_MS,
+  get snd(){ return {on: SND.on, ctx: SND.ctx ? SND.ctx.state : null, phase: SND.phase, target: SND.target, gain: SND.bus ? SND.bus.gain.value : null,
+    amb: SND.amb ? SND.amb.name : null, shots: SND.shots.map(o => o.name), loaded: Object.keys(SND.buf).sort()}; }, setSnd,
+  plan: i => PLAY ? beatPlan(PLAY.beats[i]) : null, get clock(){ return PLAY ? PLAY.clock : null; } };
 
 // donations: hidden until data/site.json has a donateUrl (https only)
-getJSON('data/site.json').then(c => { const u = c && c.donateUrl; if (typeof u === 'string' && /^https:\/\//.test(u)){ const a = $('donate'); a.href = u; a.hidden = false; } }).catch(() => {});
+// "Report an error" works the same way with reportUrl
+getJSON('data/site.json').then(c => { [['donateUrl', 'donate'], ['reportUrl', 'report']].forEach(([k, id]) => { const u = c && c[k]; if (typeof u === 'string' && /^https:\/\//.test(u)){ const a = $(id); a.href = u; a.hidden = false; } }); }).catch(() => {});
 (async function init(){
   const [base, story, srcs, lib] = await Promise.all([getJSON('data/base.topo.json'), getJSON(STORY_URL), getJSON('data/sources.json'), getJSON('data/objects/near-east.json')]);
   STORY = story; SRC = srcs; OBJS = lib.objects; OBJS.forEach(o => OBJ[o.id] = o);
   document.title = `${STORY.site} · ${STORY.title}`; $('stitle').textContent = STORY.title;
+  // each book in the series brings its own accent colours (story.json "theme"), on the shared leather-and-paper look
+  Object.entries(STORY.theme || {}).forEach(([k, v]) => { if (/^[a-z-]+$/.test(k) && /^#[0-9a-f]{3,8}$/i.test(v)) document.documentElement.style.setProperty('--' + k, v); });
+  if (STORY.book) $('sbook').textContent = STORY.book;
   const o = base.objects;
   gLand.append('path').datum(rewindAll(d3.feature(base, o.land))).attr('class','land');
   const lakes = rewindAll(d3.feature(base, o.lakes)).features;
@@ -611,4 +811,4 @@ getJSON('data/site.json').then(c => { const u = c && c.donateUrl; if (typeof u =
   buildTrack();
   await go(STORY.stops.findIndex(s => s.file));
 })();
-addEventListener('resize', () => { fit(); redrawZones(); });
+addEventListener('resize', () => { if (CINE){ if (CINE.full) refitKeep(); } else { fit(); redrawZones(); } });

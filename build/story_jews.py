@@ -1,6 +1,9 @@
 A,D,T = "attested","disputed","tradition"
 STORY = {
- "id":"jews","title":"History of the Jews","site":"The Long Map",
+ "id":"jews","title":"Story of the Jews","site":"The Long Map",
+ "book":"Book One",
+ "series":"A series of histories, each told from the perspective of a different people. Later books (Book Two: Story of the Arabs, then Story of the Persians) are coming later and not yet written.",
+ "theme":{"accent":"#b8893a","accent-ink":"#7a5614","accent-soft":"#f0dfb4","accent-map":"#e2b45a","accent-foil":"#e0bd72"},
  "perspective":"Told from the perspective of Israel and the Jewish people. Other peoples appear as the world around them.",
  "intro":"This is the story of the Jewish people, told on a map. It begins with a name carved in stone. Around 1208 BC an Egyptian king listed his enemies in Canaan, and among them was a people called Israel. Jewish tradition remembers this early world through the Torah: the patriarchs, slavery in Egypt, the Exodus and the covenant at Sinai. Ancient inscriptions and archaeology add their own evidence. Here both are told side by side, and every line says whether it is attested, disputed, or tradition.",
  "from":-1400,"to":2030,
@@ -89,13 +92,16 @@ def cap(text, cert, src): return {"type":"caption","text":text,"cert":cert,"src"
 def scene(text): return {"type":"caption","text":text,"cert":"scene","src":[]}
 STOP["play"] = {
  "to":-1150, "title":"From 1207 BC to c. 1150 BC",
- "intro":"With subtitles. Pause, step back or forward, change speed, or tap the map to pause at any time.",
+ "intro":"Plays full screen like a short film, with subtitles (CC). Pause, step back or forward, change speed, or tap the picture to pause at any time.",
  "zoneObjects":{"philistia":"philistines","highlands":"israelp"},
+ # sound (js/app.js, assets/sfx/README.md): the scene's ambient loop; battle, migration, border and year
+ # steps get a default effect; "sfx" overrides it (null = none) and "sfxHold" (ms) lets it play out
+ "ambient":"desert",
  "beats":[
   {"steps":[{"type":"year","to":-1200},{"type":"focus","c":[34.6,34.0],"k":1.5},
     cap("In the years after the Israel Stele, the world around Israel fell apart. Historians call it the Late Bronze Age collapse.",A,["cline","kuhrt"])]},
   {"steps":[{"type":"year","to":-1190},{"type":"focus","c":[35.9,35.3],"k":4.5,"hl":["ugarit"]},
-    {"type":"battle","at":[35.78,35.60],"label":"Ugarit destroyed","cert":A,
+    {"type":"battle","at":[35.78,35.60],"label":"Ugarit destroyed","cert":A,"sfxHold":2500,
      "arrows":[{"path":[[34.2,35.95],[35.0,35.75],[35.66,35.62]],"side":"enemy","cert":D}]},
     cap("Around 1190 BC Ugarit, a rich port on the Syrian coast, was destroyed. Its last letters tell of enemy ships off the coast.",A,["kaniewski","cline"])]},
   {"steps":[cap("The exact year and the attackers are debated; radiocarbon dates from nearby Tell Tweini point to about 1192–1190 BC.",D,["kaniewski"])]},
@@ -103,18 +109,18 @@ STOP["play"] = {
     {"type":"border","fade":[{"zone":"hatti"}]},
     cap("Soon after, the Hittite court left Hattusa and the empire ended. Excavators found little sign of a final battle there. A branch of the royal family held on at Carchemish.",A,["seeher","bryce"])]},
   {"steps":[{"type":"year","to":-1180},{"type":"focus","c":[31.5,34.2],"k":1.35,"hl":["seapeoples"]},
-    {"type":"migration","label":"By sea","cert":D,"path":[[25.8,37.2],[28.6,36.3],[31.6,36.0],[33.8,35.3],[35.2,34.9],[34.85,33.4],[34.35,32.1],[33.4,31.45],[32.2,31.55]]},
+    {"type":"migration","label":"By sea","cert":D,"sfxHold":2500,"path":[[25.8,37.2],[28.6,36.3],[31.6,36.0],[33.8,35.3],[35.2,34.9],[34.85,33.4],[34.35,32.1],[33.4,31.45],[32.2,31.55]]},
     {"type":"migration","label":"By land","cert":D,"path":[[28.2,38.4],[31.0,37.8],[34.0,37.1],[35.9,36.4],[36.2,34.7],[35.6,33.4]]},
     cap("'The foreign countries made a conspiracy in their islands … No land could stand before their arms, from Hatti … on.' So Ramesses III of Egypt had it written at Medinet Habu.",A,["edgerton","mhabu"])]},
   {"steps":[cap("Modern historians call them the 'Sea Peoples'. Their origins, numbers and part in the collapse are disputed; drought, earthquakes and broken trade also played a role.",D,["cline","kaniewski"])]},
-  {"steps":[{"type":"year","to":-1177},{"type":"focus","c":[33.2,31.9],"k":2.8},
-    {"type":"battle","at":[35.25,33.1],"label":"Land battle in Djahy (place disputed)","cert":D,
+  {"ambient":"river","steps":[{"type":"year","to":-1177},{"type":"focus","c":[33.2,31.9],"k":2.8},
+    {"type":"battle","at":[35.25,33.1],"label":"Land battle in Djahy (place disputed)","cert":D,"sfxHold":3000,
      "arrows":[{"path":[[34.47,31.50],[34.75,32.3],[35.1,32.9]],"side":"egypt","cert":A},{"path":[[35.9,34.4],[35.5,33.7],[35.32,33.25]],"side":"enemy","cert":D}]},
     {"type":"battle","at":[31.95,31.42],"label":"Sea battle at the Nile mouths","cert":A,
      "arrows":[{"path":[[31.83,30.80],[31.9,31.25]],"side":"egypt","cert":A},{"path":[[33.0,31.75],[32.4,31.6],[32.05,31.48]],"side":"enemy","cert":D}]},
     cap("In his year 8 (c. 1177 BC in the usual dating), Ramesses III fought them on land in Djahy and at sea at the mouths of the Nile, and claimed victory. The Peleset, later called Philistines, were among them.",A,["edgerton","mhabu","cline"])]},
   {"steps":[cap("A later papyrus says he settled the defeated 'in strongholds'. Whether that means Egypt itself placed the Philistines in Canaan is disputed.",D,["harris","killebrew"])]},
-  {"steps":[{"type":"year","to":-1170},{"type":"focus","c":[34.72,31.62],"k":7,"hl":["ashdod","ashkelon","ekron","gath","gaza"]},
+  {"ambient":"desert","steps":[{"type":"year","to":-1170},{"type":"focus","c":[34.72,31.62],"k":7,"hl":["ashdod","ashkelon","ekron","gath","gaza"]},
     {"type":"border","add":[{"zone":"philistia","certainty":"unsure","label":"PHILISTIA","labelAt":[34.45,31.95],"coords":PHILISTIA}]},
     cap("On the southern coast, newcomers made Ashdod, Ashkelon, Ekron and Gath their own. Their pottery, cooking and weaving followed Aegean ways. Ancient DNA from Ashkelon shows people with southern European ancestry who soon mixed with locals.",A,["killebrew","yasur","feldman"])]},
   {"steps":[cap("When they arrived is debated: about 1175 BC in the usual view, or about 1135 BC in a lower dating.",D,["fink1995","yasur"])]},

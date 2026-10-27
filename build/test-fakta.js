@@ -6,9 +6,12 @@ const D = process.env.SHOTS || 'screens';
   const b = await chromium.launch();
   const errs = [], notes = [];
   const ok = (n, c) => notes.push((c ? 'PASS ' : 'FAIL ') + n);
+  process.on('unhandledRejection', e => { console.log(notes.join('\n')); console.log('CRASH', e.message.split('\n')[0]); process.exit(1); });
   for (const [name, vw, vh, mobile] of [['mobile',393,852,true],['desktop',1280,800,false]]) {
     const ctx = await b.newContext({viewport:{width:vw,height:vh}, deviceScaleFactor:2, isMobile:mobile, hasTouch:mobile});
     const p = await ctx.newPage();
+    // the About notice is tested in test-cine.js; here the visitor has already seen it
+    await ctx.addInitScript(() => { try { localStorage.setItem('tlm.notice.v1', 'seen'); } catch(e){} });
     p.on('console', m => { if (m.type()==='error') errs.push(name+': '+m.text()); });
     p.on('pageerror', e => errs.push(name+' pageerror: '+e.message));
     let bytes = 0; p.on('response', async r => { try { bytes += (await r.body()).length; } catch(e){} });
@@ -16,7 +19,7 @@ const D = process.env.SHOTS || 'screens';
     notes.push(name+' bytes on load: '+bytes);
     const tap = async (x,y) => mobile ? p.touchscreen.tap(x,y) : p.mouse.click(x,y);
     const st = () => p.evaluate(() => ({open: __app.open, step: __app.step, K: __app.K, tr: document.querySelector('#map > g').getAttribute('transform'), n: document.getElementById('evn').textContent, title: document.title}));
-    let s = await st(); ok(name+' title "'+s.title+'"', s.title.includes('History of the Jews'));
+    let s = await st(); ok(name+' title "'+s.title+'"', s.title.includes('Story of the Jews'));
     ok(name+' objects drawn: '+await p.evaluate(()=>document.querySelectorAll('g.obj, g.lobj').length), true);
     if (!mobile && shots) await p.screenshot({path:D+'/faktaruta_desktop_overview.png'});
     const toEv = async () => { await p.evaluate(()=>scrollTo(0,0) || scrollTo(0, document.getElementById('ev').getBoundingClientRect().top + scrollY - document.getElementById('vp').offsetHeight - 8)); await p.waitForTimeout(150); };
@@ -60,10 +63,10 @@ const D = process.env.SHOTS || 'screens';
     await p.click('.chip[data-o="jordan"]'); await p.waitForTimeout(400);
     s = await st(); ok(name+' chip Jordan -> small box: '+s.open, s.open === 'jordan');
     // tap outside closes (header)
-    await tap(vw-120, 20); await p.waitForTimeout(300);
+    await tap(40, 14); await p.waitForTimeout(300);
     s = await st(); ok(name+' tap outside closes', s.open === null);
     // river by tapping the line itself
-    await p.evaluate(()=>scrollTo(0,0));
+    await p.evaluate(()=>scrollTo(0,0)); await p.waitForTimeout(700); // let the map settle after closing
     q = await p.evaluate(() => { const g=[...document.querySelectorAll('g.lobj')].find(e=>e.__data__.id==='jordan');
       for (const pth of g.querySelectorAll('.lhit')) { const L=pth.getTotalLength(); const m=pth.getScreenCTM();
         for (let f=0.1; f<0.95; f+=0.05) { const pt=pth.getPointAtLength(L*f); const x=pt.x*m.a+m.e, y=pt.y*m.d+m.f;

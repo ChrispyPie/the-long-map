@@ -16,7 +16,7 @@ Run from the repo root: `python3 build/make_data.py`. It checks that every sourc
 - `data/sources.json`: shared source registry, from `build/sources.py`. Each entry has kind, full reference, link and how it was checked.
 - `data/objects/near-east.json`: shared map objects (the small fact boxes: cities, sites, rivers, lakes, seas, regions, routes, states, peoples), from `build/objects.py`. Any story can reuse them.
 - `data/eras/1207bc.json`: shared zones for the year (see above).
-- `data/stories/jews/story.json` and `data/stories/jews/1207bc.json`: the story "History of the Jews" (intro, stops, the big event boxes and transitions), from `build/story_jews.py`.
+- `data/stories/jews/story.json` and `data/stories/jews/1207bc.json`: the story "Story of the Jews" (Book One) (intro, stops, the big event boxes and transitions), from `build/story_jews.py`.
 
 A new perspective gets its own `build/story_<id>.py` and `data/stories/<id>/`, and reuses the shared objects, eras and sources.
 
@@ -49,12 +49,13 @@ Each claim is `[text, label, [source keys]]`. The label is `attested`, `disputed
 | `battle` | `at`, `label`, `cert`, `arrows:[{path, side: egypt/enemy, cert}]` | army arrows, then a pulsing marker |
 | `border` | `fade:[{zone, certainty?}]`, `add:[{zone, certainty, label, labelAt, coords}]` | crossfade of zones |
 
-Optional on a beat: `audio` (path to an mp3), `duration`, `pauseAfter`. Optional on a step: `duration` (ms).
+Optional on a beat: `audio` (path to an mp3), `duration`, `pauseAfter`, `ambient` (`desert` or `river`, inherited by later beats; default `play.ambient`). Optional on a step: `duration` (ms); on battle, migration and border steps also `sfx` (clip name, or null for none) and `sfxHold` (ms, at most 4000).
 
 ### Pacing rules
 
 1. The narration line drives timing. `make_data.py` writes `duration` = reading time (about 2.5 words per second, at least 4000 ms) and `pauseAfter` = 2000 ms (allowed range 1500–2500) into every beat unless they are set by hand. With `audio`, the beat waits for the audio to end, then the pause.
 2. One main visual event at a time: the camera moves first (`focus`, 1600 ms), then each `migration` (3200 ms), `battle` (3000 ms) and `border` (3000 ms) runs on its own, one after another, with slow easing. The next beat starts only after max(line, visuals) + `pauseAfter`.
+3. Sound (see `assets/sfx/README.md`): effects and the ambient loop sit about 18 dB down while a line is narrated, rise to about -6 dB in the pause, and duck again when the next line starts. With sound on, a step's `sfxHold` is added to the pause so the sound can play out. It runs on the same virtual clock, so it follows the speed setting, and Skip cuts it.
 3. The controls are always shown: back one step, pause/play, forward one step, and speed 0.75× / 1× / 1.25×. Tapping the map pauses. All timing runs on one clock, so pause and speed affect everything.
 4. At the end the map stays on the new year's intro. It does not continue by itself.
 5. Captions must work without audio. Keep each transition to about 300–550 words (2–4 minutes read aloud); the build prints the word count.
@@ -67,6 +68,36 @@ Optional on a beat: `audio` (path to an mp3), `duration`, `pauseAfter`. Optional
 
 `donateUrl`: `null` hides the "Support this project" link in the footer. Set it to a full `https://` link to show it. No donation service has been chosen.
 
+`reportUrl`: same idea for a "Report an error" link (a form or an issue tracker). `null` hides it. None is chosen yet.
+
+## About notice and the opening book (`js/intro.js`)
+
+On the first visit a short notice says what the site is (a source-based retelling of Jewish history from the perspective of the Jewish people; every claim has a source and a label; maps and borders are approximate) and what it is not (a religious text, political advocacy about modern conflicts, or the final word). **Begin adventure** opens a book: the leather cover ("The Long Map" / "Book One" / "Story of the Jews") turns and the page grows into the map. CSS only, no images or libraries.
+
+- The choice is stored in `localStorage` as `tlm.notice.v1 = "seen"`; returning visitors go straight to the map. "About" in the header and "About this site" in the footer open the notice again.
+- With `prefers-reduced-motion: reduce` there is no book; the notice simply closes.
+
+## Cinematic mode (Play)
+
+When a narrated part runs (Play, Replay), the map viewport grows from its place in the page to the whole screen, like a small film, and shrinks back when the part ends.
+
+- Uses the Fullscreen API where it exists (requested on the Play click). iPhone Safari has no element fullscreen, so the same thing is done with a fixed full-viewport layer. Leaving browser fullscreen, Esc or × ends the film.
+- Menus, the story panel, the timeline, the legend and the progress pill fade out. Subtle letterbox bars, the year at the top, subtitles at the bottom. Each subtitle keeps its label badge and a small source line.
+- Floating controls: back, pause/play, forward, speed (0.75/1/1.25), **CC** (subtitles on/off, stored as `tlm.cc`), step count, Skip, × (exit). They hide after 3 s without input while playing and come back on any touch, mouse move or key. A tap on the picture shows them **and pauses**; objects are not opened mid-film. Keys: Space pause, ←/→ step, Esc exit.
+- All pacing rules above are unchanged; the film only changes the frame. At the end the view zooms back out to the page and lands on the new year's intro (c. 1150 BC), with menus, texts and clickable objects back.
+- With `prefers-reduced-motion: reduce` the grow/shrink and fades are instant.
+- Year intros have no narration yet, so only Play transitions use the film. Audio (`beat.audio`) plays inside the film when it exists.
+
 ## Test
 
-`build/test-fakta.js` uses Playwright and headless Chromium. It tests 393 px with touch and 1280 px: stepping through the events, opening every object, tap outside, X, chips, and console errors. Run it with `node build/test-fakta.js http://127.0.0.1:8793/ noshots` against a local `python3 -m http.server 8793`. Playwright must be installed.
+`build/test-fakta.js` uses Playwright and headless Chromium. It tests 393 px with touch and 1280 px: stepping through the events, opening every object, tap outside, X, chips, and console errors. It presets the About notice as seen. `build/test-cine.js` tests the notice, the book, cinematic mode, CC, auto-hide, tap-to-pause, the zoom-out and the reduced-motion path at 393 px (touch) and 1280 px. Run it with `node build/test-fakta.js http://127.0.0.1:8793/ noshots` against a local `python3 -m http.server 8793`. Playwright must be installed.
+
+## Design and series
+
+*The Long Map* is a series. Each book tells history from the perspective of one people, on the same map and with the same rules for sources. This site is **Book One: Story of the Jews**. Book Two (Story of the Arabs) and the Story of the Persians are shown only as "coming later"; nothing about them is written yet. The series framing appears in the notice, on the book cover and in the footer.
+
+The look is an old book: worn brown leather for the cover, header, frames and buttons (CSS gradients, a tiny inline SVG noise for grain and mottling, dashed "stitching"), and yellowed paper with torn edges for every text panel (class `paper`: grain, faint stains and an SVG `#torn` displacement filter on a `::before` layer, so text itself is never distorted). Browsers that ignore the filter show straight paper edges. No image files or libraries. Text is ink on paper, AA contrast or better; reduced motion turns off the book animation, pulses and rings.
+
+Each book brings its own accent colours in `story.json` under `"theme"` (keys `accent`, `accent-ink`, `accent-soft`, `accent-map`, `accent-foil`, hex only); `js/app.js` sets them as CSS variables. The base palette deliberately belongs to no people or side (no flag colours, no dominant green).
+
+`build/shots-design.js` takes the `design2_` screenshots (notice, cover, explore, fact box, film; mobile 393 px and desktop).
