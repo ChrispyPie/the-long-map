@@ -3,15 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<title>The Long Map</title>
+<title>The Long Map · History of the Jews</title>
 <style>
   body { margin:0; background:#0c160d; color:#f3ecd9; font-family:Georgia, serif; }
   header { display:flex; justify-content:space-between; align-items:end; padding:10px 12px 6px; }
   h1 { margin:0; font-size:20px; }
   .chapter { margin:2px 0 0; color:#cbbfa2; font:12px/1.3 system-ui, sans-serif; }
   .yearpill { font:700 12px/1 system-ui, sans-serif; background:#e2b45a; color:#14210f; border-radius:99px; padding:6px 9px; }
-  .viewport { height:56vh; max-height:620px; overflow:hidden; touch-action:none; background:#7f9cb5; margin:0 8px; border-radius:10px; position:relative; }
-  @media (min-width:900px){ .viewport { height:66vh; max-height:760px; } }
+  .viewport { height:50vh; min-height:300px; max-height:620px; overflow:hidden; touch-action:none; background:#7f9cb5; margin:0 8px; border-radius:10px; position:relative; }
+  
   #map { width:100%; height:100%; display:block; cursor:grab; }
   .land { fill:#d8cba6; stroke:#a8987a; stroke-width:.6; vector-effect:non-scaling-stroke; }
   .lake { fill:#7f9cb5; stroke:#5f7f9c; stroke-width:.5; vector-effect:non-scaling-stroke; }
@@ -27,9 +27,6 @@
   .hit { fill:transparent; cursor:pointer; }
   .zlabel { font:700 10px/1 system-ui, sans-serif; letter-spacing:.12em; fill:#2a2418; fill-opacity:.75; text-anchor:middle; text-transform:uppercase; cursor:pointer; paint-order:stroke; stroke:#efe6cc; stroke-opacity:.6; stroke-width:2px; }
   .zlabel.zl-people { fill:#7a5410; fill-opacity:1; text-anchor:end; }
-  .place circle { fill:#1c2418; }
-  .place text { font:11px/1 system-ui, sans-serif; fill:#1c2418; paint-order:stroke; stroke:#efe6cc; stroke-width:2.5px; stroke-linejoin:round; pointer-events:none; }
-  .place.israel-l text { fill:#6b4c10; font-weight:700; }
   .legend { position:absolute; right:8px; top:8px; background:rgba(243,236,217,.9); color:#1c2418; font:11px/1.35 system-ui, sans-serif; padding:6px 8px; border-radius:8px; }
   .legend div { display:flex; align-items:center; gap:6px; }
   .legend i { display:inline-block; width:18px; height:0; border-top:2px solid #4d6a42; }
@@ -70,7 +67,7 @@
   .src { margin-top:10px; font:12px/1.4 system-ui, sans-serif; color:#cbbfa2; }
   .src b { color:#f3ecd9; } .src ol { margin:4px 0 0; padding-left:18px; }
   .scene{position:absolute;left:8px;top:46px;background:rgba(12,16,11,.72);color:#f3ecd9;font:11px/1.3 system-ui,sans-serif;padding:4px 6px;border-radius:6px;max-width:75%}
-  .story { align-items:stretch; padding:0; background:#0c100b; }
+  .story { z-index:8; align-items:stretch; padding:0; background:#0c100b; }
   .film { width:100%; height:100%; max-width:none; max-height:none; border:0; border-radius:0; background:#0c100b; padding:0; display:flex; flex-direction:column; }
   .still { width:100%; height:42vh; object-fit:cover; border-radius:0; margin:0; }
   .film .kicker { padding:12px 16px 0; }
@@ -78,16 +75,88 @@
   .nav { flex:1; background:#1c2418; color:#f3ecd9; border:1px solid #3c4632; }
   .nav.exit { background:#e2b45a; color:#14210f; border-color:#e2b45a; }
   .reel{flex:1;overflow:hidden;position:relative;margin:8px 0} .reel-inner{position:absolute;left:16px;right:16px;font-size:22px;line-height:1.45} .w{color:#8d836f} .w.on{color:#e2b45a} .time{text-align:center;color:#cbbfa2;font:12px/1 system-ui,sans-serif;padding:0 0 10px}
+
+  .sub2 { color:#e2b45a; font:700 12px/1.2 system-ui, sans-serif; letter-spacing:.04em; }
+  /* map objects */
+  .obj .dot { fill:#1c2418; pointer-events:none; }
+  .obj .hit, .zhit { fill:transparent; cursor:pointer; }
+  .obj .lab { font:11px/1 system-ui, sans-serif; fill:#1c2418; paint-order:stroke; stroke:#efe6cc; stroke-width:2.5px; stroke-linejoin:round; pointer-events:none; }
+  .t-river .lab, .t-lake .lab { fill:#1f4a72; font-style:italic; }
+  .t-sea .lab { fill:#2c4f6e; font-style:italic; letter-spacing:.15em; font-size:12px; stroke:none; }
+  .t-region .lab { fill:#5a4c30; font-style:italic; letter-spacing:.08em; text-transform:uppercase; font-size:9.5px; }
+  .t-people .lab { fill:#6b4c10; font-weight:700; letter-spacing:.06em; font-size:10.5px; }
+  .t-route .lab { fill:#6a3a1a; font-size:10px; }
+  .obj.hl .lab { fill:#7a3d00; font-weight:700; }
+  .obj.hl .dot { fill:#b5651d; }
+  .obj.sel .dot { fill:#e2b45a; stroke:#1c2418; stroke-width:1.5; }
+  .obj.sel .lab { fill:#000; font-weight:700; }
+  .route { fill:none; stroke:#7a4a22; stroke-width:1.6; stroke-dasharray:4 3; vector-effect:non-scaling-stroke; }
+  .glow { fill:none; stroke:#e2b45a; stroke-width:6; stroke-opacity:0; vector-effect:non-scaling-stroke; pointer-events:none; stroke-linecap:round; }
+  .lobj.hl .glow { stroke-opacity:.55; } .lobj.sel .glow { stroke-opacity:.9; }
+  .t-lake .glow { fill:#e2b45a; fill-opacity:0; } .t-lake.sel .glow, .t-lake.hl .glow { fill-opacity:.4; }
+  .lhit { fill:none; stroke:transparent; stroke-width:16; vector-effect:non-scaling-stroke; cursor:pointer; pointer-events:stroke; }
+  .t-lake .lhit { fill:transparent; pointer-events:all; }
+  .zone.hl { fill-opacity:.5; stroke-width:2.4; } .israel.hl { fill:#f0a020; }
+  /* certainty badges */
+  .cb { display:inline-block; font:700 10px/1 system-ui, sans-serif; letter-spacing:.04em; text-transform:uppercase; padding:3px 6px; border-radius:99px; vertical-align:2px; white-space:nowrap; }
+  .cb-attested { background:#2f5a34; color:#d8f0d0; } .cb-disputed { background:#6a4a12; color:#ffe3a8; } .cb-tradition { background:#3c3a6a; color:#e0dcff; }
+  .ic { width:16px; height:16px; fill:#e2b45a; stroke:#e2b45a; flex:none; }
+  /* small fact box */
+  .pop { position:fixed; left:0; right:0; bottom:0; z-index:6; background:#1c2418; border:1px solid #3c4632; border-radius:16px 16px 0 0; box-shadow:0 -8px 30px rgba(0,0,0,.45); max-height:56vh; overflow:auto; padding:12px 14px 18px; box-sizing:border-box; font-family:system-ui, sans-serif; }
+  .pop[hidden] { display:none; }
+  .pop .grab { width:40px; height:4px; border-radius:2px; background:#3c4632; margin:0 auto 8px; }
+  .pk { display:flex; align-items:center; gap:6px; font:700 11px/1 system-ui, sans-serif; letter-spacing:.06em; text-transform:uppercase; color:#e2b45a; padding-right:44px; }
+  .pop h3 { margin:6px 44px 2px 0; font:700 20px/1.2 Georgia, serif; }
+  .alt { color:#cbbfa2; font-size:12px; }
+  .desc { margin:6px 0 6px; font-size:14px; line-height:1.4; }
+  .pop .x { width:44px; height:44px; top:6px; right:6px; position:absolute; }
+  .claims { list-style:none; margin:6px 0; padding:0; font-size:13px; line-height:1.4; } .claims li { padding:4px 0; border-bottom:1px solid #2c3626; }
+  details.src summary { cursor:pointer; min-height:36px; display:flex; align-items:center; color:#f3ecd9; font-weight:700; }
+  .src a { color:#cbbfa2; }
+  /* big fact box */
+  .ev { margin:10px 8px 0; background:#1c2418; border:1px solid #3c4632; border-radius:14px; font-family:system-ui, sans-serif; display:flex; flex-direction:column; }
+  .ev[hidden] { display:none; }
+  .evnav { display:flex; align-items:center; gap:8px; padding:8px; border-bottom:1px solid #2c3626; }
+  .evnav .step { flex:none; } .evnav .n { flex:1; text-align:center; color:#cbbfa2; font-size:13px; }
+  .evnav .lbl { font:700 11px/1 system-ui,sans-serif; letter-spacing:.06em; text-transform:uppercase; color:#e2b45a; display:block; margin-bottom:3px; }
+  .evbody { padding:12px 14px 16px; }
+  .ev h2 { margin:6px 0 8px; font:700 22px/1.25 Georgia, serif; }
+  .lead { font:16px/1.5 Georgia, serif; margin:0 0 10px; }
+  .ev p { font-size:14px; line-height:1.5; }
+  .why { background:#24301f; border-left:3px solid #e2b45a; border-radius:8px; padding:8px 10px; margin:10px 0; } .why p { margin:4px 0 0; }
+  .sub { font:700 11px/1 system-ui, sans-serif; letter-spacing:.06em; text-transform:uppercase; color:#cbbfa2; margin:12px 0 4px; }
+  .chips { display:flex; flex-wrap:wrap; gap:6px; }
+  .chip { display:inline-flex; align-items:center; gap:6px; min-height:40px; padding:8px 12px; font:600 13px/1 system-ui, sans-serif; border-radius:99px; background:#10160e; }
+  .legend2 { margin-top:12px; font-size:12px; color:#cbbfa2; line-height:2; }
+  .next { margin-top:12px; padding:10px; border:1px dashed #3c4632; border-radius:8px; color:#cbbfa2; }
+  @media (max-width:899px){
+    .layout { display:flex; flex-direction:column; } .mapcol { display:contents; }
+    .layout .viewport { order:1; position:sticky; top:0; z-index:3; height:44vh; min-height:280px; box-shadow:0 6px 14px rgba(0,0,0,.4); }
+    .ev { order:2; } .timeline { order:3; }
+    .legend { font-size:10px; padding:4px 6px; }
+  }
+  header .stitle { font:700 13px/1.2 system-ui, sans-serif; color:#e2b45a; letter-spacing:.04em; }
+  @media (min-width:900px){
+    .layout { display:grid; grid-template-columns:minmax(0,1fr) 420px; gap:10px; padding:0 8px; align-items:start; }
+    .layout .viewport { margin:0; height:calc(100vh - 230px); max-height:none; min-height:420px; }
+    .ev { margin:0; height:calc(100vh - 80px); position:sticky; top:8px; }
+    .evbody { overflow:auto; flex:1; }
+    .pop { left:24px; right:auto; top:96px; bottom:auto; width:360px; max-height:calc(100vh - 140px); border-radius:14px; box-shadow:0 10px 30px rgba(0,0,0,.45); }
+    .pop .grab { display:none; }
+  }
 </style>
 </head>
 <body>
 <header>
   <div>
     <h1>The Long Map</h1>
-    <p class="chapter" id="chapter">Pinch zooms where your fingers are</p>
+    <div class="stitle" id="stitle">History of the Jews</div>
+    <p class="chapter" id="chapter"></p>
   </div>
   <div class="yearpill" id="pill">1207 BC</div>
 </header>
+<div class="layout">
+<div class="mapcol">
 <div class="viewport" id="vp">
   <svg id="map" aria-label="Map of the Near East, from Greece to Persia"></svg>
   <div class="legend" id="legend">
@@ -96,7 +165,7 @@
     <div><i class="g"></i>A people, no border</div>
   </div>
   <div class="soonbox" id="soon" hidden><b>Coming soon</b><span id="soont"></span></div>
-  <div class="hint">Tap an area · pinch to zoom</div>
+  <div class="hint">Tap anything · pinch to zoom</div>
 </div>
 <div class="timeline">
   <div class="tl-head">
@@ -106,16 +175,22 @@
   </div>
   <div class="track" id="track"><div class="line"></div></div>
 </div>
+</div>
+<section class="ev" id="ev" aria-label="Story" hidden>
+  <div class="evnav"><button class="step" id="evprev" type="button" aria-label="Previous event">‹</button><div class="n"><span class="lbl">Story</span><span id="evn">1 / 1</span></div><button class="step" id="evnext" type="button" aria-label="Next event">›</button></div>
+  <div class="evbody" id="evbody"></div>
+</section>
+</div>
 <footer>
-  Map data: <a href="https://www.naturalearthdata.com/">Natural Earth</a> (public domain). Modern coastlines and rivers. Orontes drawn approximately (dashed).
-  Areas: approximate outlines by The Long Map, sources on each card.
+  Map data: <a href="https://www.naturalearthdata.com/">Natural Earth</a> (public domain). Modern coastlines and rivers. Orontes and routes drawn approximately (dashed).
+  Areas: approximate outlines by The Long Map, sources in each fact box. Labels: Attested = found in ancient evidence; Disputed = scholars disagree; Tradition = Jewish tradition and the Hebrew Bible.
 </footer>
-<div class="sheet" id="sheet"><div class="card"><button class="x" type="button" onclick="closeZ()" aria-label="Close">×</button><div class="kicker" id="kicker"></div><h3 id="zt"></h3><dl id="facts"></dl><div class="area" id="area"></div><div id="pics"></div><button class="play" id="play" type="button" onclick="openStory()" hidden>Play story</button><div class="src" id="src"></div></div></div>
+<div class="pop" id="pop" role="dialog" aria-labelledby="pt" hidden><div class="grab"></div><button class="x" id="popx" type="button" aria-label="Close">×</button><div id="popbody"></div></div>
 <div class="sheet story" id="story">
   <div class="card film">
     <button class="x" type="button" onclick="closeStory()" aria-label="Close">×</button>
     <img class="still" id="still" alt="Story picture" src="images/ridge.jpg"><div class="scene" id="scene">Scene, not a photograph</div>
-    <div class="kicker">Israel · about 1207 BC · Rex</div>
+    <div class="kicker">Draft narration · not every line sourced yet · about 1207 BC</div>
     <div class="reel" id="reel"><div class="reel-inner" id="reel-inner"></div></div>
     <div class="controls"><button class="nav" type="button" onclick="skip(-10)">-10s</button><button class="nav exit" id="pp" type="button" onclick="togglePlay()">Pause</button><button class="nav" type="button" onclick="skip(10)">+10s</button></div>
     <div class="time" id="time">0:00</div>
