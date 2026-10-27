@@ -322,10 +322,40 @@
   body.cine .cap2 .crow .cc.on { background:#f6efdf; color:var(--night); }
   body.cine.idle .cap2 .crow, body.cine.idle .cap2 .bar { opacity:0; pointer-events:none; }
   body.cine.idle #vp, body.cine.idle #map { cursor:none; }
+  /* narrated films: chapter card, chapter strip, the opener's choice (js/app.js) */
+  .chapcard { position:absolute; left:50%; top:16%; transform:translateX(-50%); z-index:3; text-align:center; pointer-events:none; padding:10px 22px 12px; border-radius:10px; background:rgba(30,18,10,.82); border:1px solid rgba(224,189,114,.3); color:#fbf6e8; max-width:calc(100% - 40px); }
+  .chapcard[hidden] { display:none; } .chapcard.in { animation:chapin 3.6s ease forwards; }
+  .chapcard .k { display:block; font:700 10.5px/1.2 var(--sans); letter-spacing:.16em; text-transform:uppercase; color:#e0bd72; }
+  .chapcard .t { display:block; margin-top:4px; font:600 22px/1.25 var(--serif); }
+  @keyframes chapin { 0% { opacity:0; transform:translate(-50%,6px); } 12%,80% { opacity:1; transform:translate(-50%,0); } 100% { opacity:0; } }
+  .choice { position:absolute; inset:0; z-index:2; display:flex; align-items:center; justify-content:center; background:rgba(20,12,6,.42); }
+  .choice[hidden] { display:none; } .choice.in .choicein { animation:capin .5s ease-out; }
+  .choicein { background:rgba(30,18,10,.94); border:1px solid rgba(224,189,114,.35); border-radius:14px; padding:20px 22px 16px; text-align:center; color:#fbf6e8; max-width:min(460px, calc(100% - 32px)); box-shadow:0 14px 40px rgba(0,0,0,.4); }
+  .choicein .q { margin:0 0 14px; font:600 21px/1.3 var(--serif); }
+  .choicein .cbtns { display:flex; flex-wrap:wrap; gap:10px; justify-content:center; } .choicein button { min-height:48px; padding:10px 18px; font-size:15px; }
+  .choicein #choicemap { background:transparent; color:#fbf6e8; border:1px solid rgba(246,239,223,.55); }
+  .choicein .cs { margin:10px 0 0; font:12px/1.35 var(--sans); color:#d9ccb0; } .choicein .cs:empty { display:none; }
+  .cap2 .chaps { display:flex; gap:3px; margin:6px auto 0; width:min(560px,100%); } .cap2 .chaps[hidden] { display:none; }
+  .cap2 .chs { position:relative; min-width:0; min-height:24px; padding:9px 0 0; border:0; background:none; border-radius:0; box-shadow:none; text-align:left; cursor:pointer; }
+  .cap2 .chs::before { content:""; position:absolute; left:0; right:0; top:3px; height:4px; border-radius:2px; background:rgba(120,100,70,.3); }
+  .cap2 .chs i { position:absolute; left:0; top:3px; height:4px; width:0; border-radius:2px; background:var(--accent); }
+  .cap2 .chs span { display:block; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; font:11px/1.2 var(--sans); color:var(--ink2); padding-top:2px; }
+  .cap2 .chs.cur span { font-weight:700; color:var(--ink); }
+  body.cine .cap2 .chaps { padding:3px 10px 4px; border-radius:8px; background:rgba(30,18,10,.85); border:1px solid rgba(217,181,108,.25); box-sizing:border-box; }
+  body.cine .cap2 .chs::before { background:rgba(255,255,255,.22); } body.cine .cap2 .chs span { color:#e6d7b6; text-shadow:0 1px 2px rgba(0,0,0,.7); } body.cine .cap2 .chs.cur span { color:#fff; }
+  body.cine.idle .cap2 .chaps { opacity:0; pointer-events:none; } body.cine .cap2 .chaps { transition:opacity .35s; }
+  .cap2.frame .csrc { display:none; }
+  .resume { display:block; margin:10px 0 2px; min-height:44px; font-weight:600; }
+  .chlist { list-style:none; margin:0; padding:0; } .chlist li { margin:0 0 4px; }
+  .chb { display:flex; width:100%; align-items:center; gap:10px; min-height:40px; padding:6px 10px; text-align:left; font-size:13.5px; }
+  .chb .cn { flex:none; width:20px; height:20px; border-radius:50%; display:grid; place-items:center; font:700 11px/1 var(--sans); background:var(--ink); color:var(--paper-hi); }
+  .chb .ct { flex:1; } .chb .cm { flex:none; font:11.5px/1 var(--sans); color:var(--ink2); font-variant-numeric:tabular-nums; }
+  @media (max-width:430px){ .cap2 .chs span { font-size:9.5px; } .chapcard .t { font-size:18px; } .choicein .q { font-size:18px; } }
+  @media (prefers-reduced-motion: reduce){ .chapcard.in, .choice.in .choicein { animation:none; } }
   body.cc-off .cap2 .ctext, body.cc-off .cap2 .csrc { display:none; }
   @media (max-width:899px){ body.cine .cap2 .ctext { font-size:15.5px; } body.cine .cap2 .crow button { min-width:38px; padding:6px 8px; } }
   /* small phones: one row of controls; the progress bar shows how far along the film is */
-  @media (max-width:430px){ body.cine .cap2 .crow { gap:2px; } body.cine .cap2 .crow button { min-width:36px; padding:6px 6px; } body.cine .cap2 .crow .n { display:none; } }
+  @media (max-width:430px){ body.cine .cap2 .crow { gap:1px; padding:4px 4px; } body.cine .cap2 .crow button { min-width:34px; padding:6px 4px; } body.cine .cap2 .crow .n { display:none; } body.cine .cap2 #capspd { min-width:44px; } }
   @media (prefers-reduced-motion: reduce){
     .intro, .notice, .book, .cover, #vp.cinefx, #vp::before, #vp::after, header, .timeline, .ev, footer, .cap2 .crow { transition:none !important; }
     .cap2.in .ctext { animation:none; }
@@ -440,9 +470,13 @@
     <div><i class="g"></i>A people, no border</div>
   </div>
   <button class="xp" id="xp" type="button" hidden aria-label="Explore progress"><span class="ring0"></span><span id="xpn">0/0</span>&nbsp;explored</button>
+  <div class="chapcard" id="chapcard" hidden aria-live="polite"></div>
+  <div class="choice" id="choice" hidden role="group" aria-label="What next?"><div class="choicein"><p class="q">The world is set. What next?</p>
+    <div class="cbtns"><button type="button" class="play" id="choicego">Continue the story ›</button><button type="button" id="choicemap">Explore the map</button></div><p class="cs" id="choicesub"></p></div></div>
   <div class="cap2 paper" id="cap" hidden aria-live="polite"><p class="ctext" id="captext"></p><div class="csrc" id="capsrc"></div>
     <div class="bar"><i id="capbar"></i></div>
-    <div class="crow"><button type="button" id="capprev" aria-label="Previous step">‹</button><button type="button" id="cappp" aria-label="Pause">❚❚</button><button type="button" id="capnext" aria-label="Next step">›</button><button type="button" id="capspd" aria-label="Speed 1x">1×</button><button type="button" id="capcc" class="cc on" aria-pressed="true" aria-label="Subtitles on">CC</button><button type="button" id="capsnd" class="cc snd on" aria-pressed="true" aria-label="Sound on" title="Sound on"><svg class="ico" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 7.5h3l4-3.5v12l-4-3.5H3z" fill="currentColor"/><path class="w" d="M13 7a4 4 0 0 1 0 6M15.2 4.8a7 7 0 0 1 0 10.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path class="x" d="M13 7.5l5 5M18 7.5l-5 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button><span class="n" id="capn"></span><button type="button" id="capskip">Skip</button><button type="button" id="capx" aria-label="Exit film" title="Exit film">×</button></div></div>
+    <div class="chaps" id="capch" hidden aria-label="Chapters"></div>
+    <div class="crow"><button type="button" id="capprev" aria-label="Previous step">‹</button><button type="button" id="cappp" aria-label="Pause">❚❚</button><button type="button" id="capnext" aria-label="Next step">›</button><button type="button" id="capspd" aria-label="Speed 1x">1×</button><button type="button" id="capcc" class="cc on" aria-pressed="true" aria-label="Subtitles on">CC</button><button type="button" id="capsnd" class="cc snd on" aria-pressed="true" aria-label="Sound on" title="Sound on"><svg class="ico" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 7.5h3l4-3.5v12l-4-3.5H3z" fill="currentColor"/><path class="w" d="M13 7a4 4 0 0 1 0 6M15.2 4.8a7 7 0 0 1 0 10.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path class="x" d="M13 7.5l5 5M18 7.5l-5 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button><button type="button" id="capvoice" class="cc snd voice on" aria-pressed="true" aria-label="Narrator on" title="Narrator on"><svg class="ico" viewBox="0 0 20 20" aria-hidden="true"><circle cx="7.5" cy="6.5" r="3.2" fill="currentColor"/><path d="M1.8 17.5c.4-3.6 2.8-5.6 5.7-5.6s5.3 2 5.7 5.6z" fill="currentColor"/><path class="w" d="M13.6 4.4a3.6 3.6 0 0 1 0 4.8M15.8 2.6a6.4 6.4 0 0 1 0 8.4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path class="x" d="M13.5 4l4.5 4.5M18 4l-4.5 4.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button><span class="n" id="capn"></span><button type="button" id="capskip">Skip</button><button type="button" id="capx" aria-label="Exit film" title="Exit film">×</button></div></div>
   <div class="soonbox" id="soon" hidden><b>Coming soon</b><span id="soont"></span></div>
   <div class="hint">Tap anything · pinch to zoom</div>
 </div>
