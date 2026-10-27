@@ -26,13 +26,16 @@ const D = process.env.SHOTS || 'screens';
     ok(name+' header, title and OG say Story of the Jews', await p.evaluate(()=>document.getElementById('stitle').textContent==='Story of the Jews' && document.getElementById('sbook').textContent==='Book One' && document.title==='The Long Map · Story of the Jews' && /Story of the Jews/.test(document.querySelector('meta[property="og:title"]').content) && /Book Two/.test(document.querySelector('footer .fseries').textContent)));
     ok(name+' per-book accent from story.json', await p.evaluate(()=>document.documentElement.style.getPropertyValue('--accent').trim()==='#b8893a'));
     ok(name+' paper panels and leather buttons', await p.evaluate(()=>document.getElementById('ev').classList.contains('paper') && document.getElementById('pop').classList.contains('paper') && !!document.getElementById('torn')));
-    // 2) the book
+    // 2) the book (on phones it must stay inside the screen at every frame, with no sideways scroll)
+    await p.evaluate(()=>{ window.__bk=[]; const t0=performance.now(); const f=()=>{ const st=document.getElementById('intro').className; if(!/reveal/.test(st)) document.querySelectorAll('.book, .cover .front, .cover .back').forEach(e=>{ const q=e.getBoundingClientRect(); if(q.width) __bk.push([q.left,q.right]); }); __bk.push([0,0,document.documentElement.scrollWidth]); if(performance.now()-t0<3600) requestAnimationFrame(f); }; requestAnimationFrame(f); });
     await tap('#begin');
     if (!rm){
       await p.waitForTimeout(850); if (mobile) await shot('cine_book');
       ok(name+' book opening', await p.evaluate(()=>['opening','open'].includes(__intro.state) && document.getElementById('intro').classList.contains('open')));
       await p.waitForTimeout(800); if (mobile) await shot('cine_book_open');
       await p.waitForTimeout(1900);
+      const bk = await p.evaluate(()=>{ const W=innerWidth; let l=1e9,r=-1e9,sw=0; __bk.forEach(([a,b,c])=>{ if(c) sw=Math.max(sw,c); else { l=Math.min(l,a); r=Math.max(r,b); } }); return {W,l:Math.round(l),r:Math.round(r),sw,n:__bk.length}; });
+      ok(name+' book stays inside the screen while it opens '+JSON.stringify(bk), bk.l>=0 && bk.r<=bk.W && bk.sw<=bk.W);
     } else {
       await p.waitForTimeout(300);
       ok(name+' reduced motion: no book, notice gone at once', await p.evaluate(()=>__intro.state==='hidden' && !document.getElementById('intro').classList.contains('booking')));

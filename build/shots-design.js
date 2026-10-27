@@ -13,7 +13,8 @@ const D = process.env.SHOTS || 'screens', P = process.env.PREFIX || 'design2_';
     await p.goto(url, {waitUntil:'networkidle'}); await p.waitForTimeout(900);
     await shot('notice');
     await p.click('#begin'); await p.waitForTimeout(420); await shot('cover');
-    await p.waitForTimeout(3400);
+    await p.waitForTimeout(420); if (mobile) await shot('book_mid');
+    await p.waitForTimeout(2980);
     await shot('explore');
     if (mobile){ await p.evaluate(()=>scrollTo(0, 700)); await p.waitForTimeout(300); await shot('story'); await p.evaluate(()=>scrollTo(0,0)); }
     await p.evaluate(()=>__app.openObj('jerusalem')); await p.waitForTimeout(900); await shot('factbox');

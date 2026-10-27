@@ -66,7 +66,7 @@ const D = process.env.SHOTS || 'screens';
     await tap(40, 14); await p.waitForTimeout(300);
     s = await st(); ok(name+' tap outside closes', s.open === null);
     // river by tapping the line itself
-    await p.evaluate(()=>scrollTo(0,0));
+    await p.evaluate(()=>scrollTo(0,0)); await p.waitForTimeout(700); // let the map settle after closing
     q = await p.evaluate(() => { const g=[...document.querySelectorAll('g.lobj')].find(e=>e.__data__.id==='jordan');
       for (const pth of g.querySelectorAll('.lhit')) { const L=pth.getTotalLength(); const m=pth.getScreenCTM();
         for (let f=0.1; f<0.95; f+=0.05) { const pt=pth.getPointAtLength(L*f); const x=pt.x*m.a+m.e, y=pt.y*m.d+m.f;
