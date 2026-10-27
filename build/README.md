@@ -30,6 +30,43 @@ Each claim is `[text, label, [source keys]]`. The label is `attested`, `disputed
 - Show scholarly debate neutrally as Disputed, without sneering. Use no loaded or hostile words about any people.
 - Never state an unsourced claim as fact. Give uncertain numbers as ranges, labelled Disputed, with a source.
 
+## Explore progress (`STOP["explore"]`)
+
+- `explore.key`: the curated key objects for a stop (ids from `objects.py`). They get a soft ring until opened, then a check.
+- Progress is kept on the device in `localStorage` under `tlm.explored.<story>.<year>`. "Reset progress" clears it.
+- Flow per year: intro box → free exploration (the "X/12 explored" pill opens the checklist) → Play.
+
+## Play / transitions (`STOP["play"]`)
+
+`play = {to, title, intro, zoneObjects, beats:[...]}`. Beats run one after another. Each beat has one `caption` step plus optional steps:
+
+| step | fields | what it does |
+|---|---|---|
+| `caption` | `text`, `cert` (`attested`/`disputed`/`tradition`/`scene`), `src` | subtitle with badge and sources |
+| `year` | `to` | the year counter tweens to this year |
+| `focus` | `c` [lon,lat], `k` zoom, `hl` ids | camera move + highlights |
+| `migration` | `path`, `label`, `cert` | animated arrow; dashed and "Disputed" when `cert` is disputed |
+| `battle` | `at`, `label`, `cert`, `arrows:[{path, side: egypt/enemy, cert}]` | army arrows, then a pulsing marker |
+| `border` | `fade:[{zone, certainty?}]`, `add:[{zone, certainty, label, labelAt, coords}]` | crossfade of zones |
+
+Optional on a beat: `audio` (path to an mp3), `duration`, `pauseAfter`. Optional on a step: `duration` (ms).
+
+### Pacing rules
+
+1. The narration line drives timing. `make_data.py` writes `duration` = reading time (about 2.5 words per second, at least 4000 ms) and `pauseAfter` = 2000 ms (allowed range 1500–2500) into every beat unless they are set by hand. With `audio`, the beat waits for the audio to end, then the pause.
+2. One main visual event at a time: the camera moves first (`focus`, 1600 ms), then each `migration` (3200 ms), `battle` (3000 ms) and `border` (3000 ms) runs on its own, one after another, with slow easing. The next beat starts only after max(line, visuals) + `pauseAfter`.
+3. The controls are always shown: back one step, pause/play, forward one step, and speed 0.75× / 1× / 1.25×. Tapping the map pauses. All timing runs on one clock, so pause and speed affect everything.
+4. At the end the map stays on the new year's intro. It does not continue by itself.
+5. Captions must work without audio. Keep each transition to about 300–550 words (2–4 minutes read aloud); the build prints the word count.
+
+### Scene-setting captions
+
+`cert: "scene"` (badge "Imagine") is for atmosphere only. The text must start with "Imagine", carry no sources, and assert no new facts. The build checks this. Scene lines are left out of the "What changed" recap. Any factual detail (houses, jars, cisterns, diet, trade) goes in a normal sourced caption.
+
+## Site settings (`data/site.json`)
+
+`donateUrl`: `null` hides the "Support this project" link in the footer. Set it to a full `https://` link to show it. No donation service has been chosen.
+
 ## Test
 
 `build/test-fakta.js` uses Playwright and headless Chromium. It tests 393 px with touch and 1280 px: stepping through the events, opening every object, tap outside, X, chips, and console errors. Run it with `node build/test-fakta.js http://127.0.0.1:8793/ noshots` against a local `python3 -m http.server 8793`. Playwright must be installed.

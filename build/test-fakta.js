@@ -1,6 +1,7 @@
 const { chromium } = require('playwright');
 const url = process.argv[2] || 'http://127.0.0.1:8793/';
 const shots = process.argv[3] !== 'noshots';
+const D = process.env.SHOTS || 'screens';
 (async () => {
   const b = await chromium.launch();
   const errs = [], notes = [];
@@ -17,21 +18,31 @@ const shots = process.argv[3] !== 'noshots';
     const st = () => p.evaluate(() => ({open: __app.open, step: __app.step, K: __app.K, tr: document.querySelector('#map > g').getAttribute('transform'), n: document.getElementById('evn').textContent, title: document.title}));
     let s = await st(); ok(name+' title "'+s.title+'"', s.title.includes('History of the Jews'));
     ok(name+' objects drawn: '+await p.evaluate(()=>document.querySelectorAll('g.obj, g.lobj').length), true);
-    if (!mobile && shots) await p.screenshot({path:(process.env.SHOTS||'screens')+'/faktaruta_desktop_overview.png'});
+    if (!mobile && shots) await p.screenshot({path:D+'/faktaruta_desktop_overview.png'});
+    const toEv = async () => { await p.evaluate(()=>scrollTo(0,0) || scrollTo(0, document.getElementById('ev').getBoundingClientRect().top + scrollY - document.getElementById('vp').offsetHeight - 8)); await p.waitForTimeout(150); };
+    if (shots) await p.screenshot({path:D+'/faktaruta_intro'+(mobile?'':'_desktop')+'.png'});
+    ok(name+' intro has Explore + Start buttons', await p.evaluate(()=>!!document.getElementById('goexplore') && !!document.getElementById('gostory')));
+    ok(name+' explore pill "'+await p.textContent('#xp')+'"', /0\/12/.test(await p.textContent('#xp')));
+    ok(name+' 12 glowing rings', await p.evaluate(()=>document.querySelectorAll('g.key.todo .ring').length) === 12);
     // step through events; map must move each time
     const trs = [s.tr];
     const total = +s.n.split('/')[1];
     for (let i = 1; i < total; i++) {
       await p.click('#evnext'); await p.waitForTimeout(1100);
       s = await st(); trs.push(s.tr);
-      if (i === 1 && mobile && shots) { await p.evaluate(()=>scrollTo(0,0) || scrollTo(0, document.getElementById('ev').getBoundingClientRect().top + scrollY - document.getElementById('vp').offsetHeight - 8)); await p.waitForTimeout(150); await p.screenshot({path:(process.env.SHOTS||'screens')+'/faktaruta_mobile_story_step2.png'}); await p.evaluate(()=>scrollTo(0,0)); }
-      if (s.step === 7 && mobile && shots) { // stele event: big box
-        await p.evaluate(()=>scrollTo(0,0) || scrollTo(0, document.getElementById('ev').getBoundingClientRect().top + scrollY - document.getElementById('vp').offsetHeight - 8)); await p.waitForTimeout(150);
-        await p.screenshot({path:(process.env.SHOTS||'screens')+'/faktaruta_mobile_event_big.png'}); await p.evaluate(()=>scrollTo(0,0));
-      }
+      if (i === 1 && mobile && shots) { await p.evaluate(()=>scrollTo(0,0) || scrollTo(0, document.getElementById('ev').getBoundingClientRect().top + scrollY - document.getElementById('vp').offsetHeight - 8)); await p.waitForTimeout(150); await p.screenshot({path:D+'/faktaruta_mobile_story_step2.png'}); await p.evaluate(()=>scrollTo(0,0)); }
+      if (s.step === 7 && mobile && shots) { await toEv(); await p.screenshot({path:D+'/faktaruta_mobile_event_big.png'}); await p.evaluate(()=>scrollTo(0,0)); }
     }
     ok(name+' stepped to '+s.n+', map moved every step', new Set(trs).size === trs.length);
     ok(name+' next disabled at end', await p.evaluate(()=>document.getElementById('evnext').disabled));
+    ok(name+' last step is Explore with Play', await p.evaluate(()=>!!document.getElementById('playbtn') && document.querySelectorAll('.ck').length === 12));
+    // label collision at medium zoom near Israel: no two visible labels overlap
+    await p.evaluate(()=>{ __app.closeObj(); }); await p.evaluate(()=>window.__flyLab && 0);
+    await p.evaluate(()=>__app.showStep(3)); await p.waitForTimeout(1100);
+    const overlaps = await p.evaluate(() => { const r=[...document.querySelectorAll('g.obj')].filter(g=>g.style.display!=='none'&&!g.classList.contains('nolab')).map(g=>[g.__data__.o.id,g.querySelector('.lab').getBoundingClientRect()]).filter(x=>x[1].width>0);
+      const z=[...document.querySelectorAll('text.zlabel')].filter(t=>t.style.display!=='none').map(t=>['zone:'+t.textContent,t.getBoundingClientRect()]);
+      const all=r.concat(z), out=[]; for(let i=0;i<all.length;i++)for(let j=i+1;j<all.length;j++){const a=all[i][1],b=all[j][1]; if(a.left<b.right-1&&a.right>b.left+1&&a.top<b.bottom-1&&a.bottom>b.top+1) out.push(all[i][0]+'/'+all[j][0]);} return {out, hidden:document.querySelectorAll('g.obj.nolab').length}; });
+    ok(name+' label overlaps near Israel (K='+(await st()).K.toFixed(1)+', hidden '+overlaps.hidden+'): '+JSON.stringify(overlaps.out), overlaps.out.length <= 1);
     // back to step 3 (Canaan) and tap a real city dot (Jerusalem) on screen
     await p.evaluate(()=>__app.showStep(3)); await p.waitForTimeout(1100);
     await p.evaluate(()=>scrollTo(0,0));
@@ -39,7 +50,7 @@ const shots = process.argv[3] !== 'noshots';
     let q = await pos('jerusalem');
     if (q) { await tap(q.x, q.y); await p.waitForTimeout(400); }
     s = await st(); ok(name+' tap Jerusalem dot -> small box: '+s.open, s.open === 'jerusalem');
-    if (mobile && shots) await p.screenshot({path:(process.env.SHOTS||'screens')+'/faktaruta_mobile_city.png'});
+    if (mobile && shots) await p.screenshot({path:D+'/faktaruta_mobile_city.png'});
     await p.click('#popx'); await p.waitForTimeout(200);
     s = await st(); ok(name+' X closes', s.open === null);
     // chip in big box opens object and flies there
@@ -66,18 +77,86 @@ const shots = process.argv[3] !== 'noshots';
     q = await p.evaluate(() => { const r=document.querySelector('text.zl-people').getBoundingClientRect(); return {x:r.x+r.width/2,y:r.y+r.height/2}; });
     await tap(q.x, q.y); await p.waitForTimeout(400);
     s = await st(); ok(name+' tap ISRAEL label -> '+s.open, s.open === 'israelp');
-    if (mobile && shots) await p.screenshot({path:(process.env.SHOTS||'screens')+'/faktaruta_mobile_people.png'});
+    if (mobile && shots) await p.screenshot({path:D+'/faktaruta_mobile_people.png'});
     await p.click('#popx'); await p.waitForTimeout(200);
     // river small box screenshot (Nile, overview)
     await p.evaluate(()=>{ __app.showStep(0); }); await p.waitForTimeout(1100);
     await p.evaluate(()=>__app.openObj('nile', true)); await p.waitForTimeout(1000);
-    if (mobile && shots) await p.screenshot({path:(process.env.SHOTS||'screens')+'/faktaruta_mobile_river.png'});
-    if (!mobile && shots) { await p.evaluate(()=>__app.showStep(7)); await p.waitForTimeout(1100); await p.evaluate(()=>__app.openObj('ashkelon')); await p.waitForTimeout(300); await p.screenshot({path:(process.env.SHOTS||'screens')+'/faktaruta_desktop_event_and_city.png'}); }
+    if (mobile && shots) await p.screenshot({path:D+'/faktaruta_mobile_river.png'});
+    if (!mobile && shots) { await p.evaluate(()=>__app.showStep(7)); await p.waitForTimeout(1100); await p.evaluate(()=>__app.openObj('ashkelon')); await p.waitForTimeout(300); await p.screenshot({path:D+'/faktaruta_desktop_event_and_city.png'}); }
     // every object opens without error
     const bad = await p.evaluate(()=>{ const out=[]; for (const g of document.querySelectorAll('g.obj, g.lobj')) { const id=(g.__data__.o||g.__data__).id; __app.openObj(id); if(__app.open!==id) out.push(id);} __app.closeObj(); return out; });
     ok(name+' all objects open: failures '+JSON.stringify(bad), bad.length===0);
-    // narration still works
-    await p.evaluate(()=>openStory()); await p.waitForTimeout(300); await p.evaluate(()=>closeStory());
+    ok(name+' old narration hidden from main flow', await p.evaluate(()=>!document.getElementById('story') && !document.querySelector('audio')));
+    // ---- explore progress: open 3 key objects from the checklist, persists across reload ----
+    await p.evaluate(()=>{ localStorage.clear(); }); await p.reload({waitUntil:'networkidle'}); await p.waitForTimeout(1000);
+    await p.click('#xp'); await p.waitForTimeout(1100);
+    for (const id of ['israelp','jerusalem','ashkelon']) { await p.evaluate(id=>document.querySelector('.ck[data-o="'+id+'"]').scrollIntoView({block:'center'}), id); await p.click('.ck[data-o="'+id+'"]'); await p.waitForTimeout(350); await p.click('#popx'); await p.waitForTimeout(150); }
+    await p.evaluate(()=>__app.showStep(__app.step)); await p.waitForTimeout(1100);
+    ok(name+' explored '+JSON.stringify(await p.evaluate(()=>__app.explored)), (await p.evaluate(()=>__app.explored.length)) === 3);
+    await p.reload({waitUntil:'networkidle'}); await p.waitForTimeout(1000);
+    ok(name+' progress kept after reload: pill "'+(await p.textContent('#xp')).trim()+'", checks '+await p.evaluate(()=>document.querySelectorAll('g.key.done').length), /3\/12/.test(await p.textContent('#xp')) && await p.evaluate(()=>document.querySelectorAll('g.key.done').length) === 3);
+    await p.click('#xp'); await p.waitForTimeout(1200);
+    ok(name+' checklist shows 3 done', await p.evaluate(()=>document.querySelectorAll('.ck.done').length) === 3);
+    if (shots) { if (mobile) await toEv(); await p.screenshot({path:D+'/faktaruta_progress'+(mobile?'':'_desktop')+'.png'}); await p.evaluate(()=>scrollTo(0,0)); }
+    // ---- Play ----
+    await p.evaluate(()=>document.getElementById('playbtn').scrollIntoView({block:'center'}));
+    if (mobile) await p.tap('#playbtn'); else await p.click('#playbtn');
+    await p.evaluate(()=>scrollTo(0,0)); await p.waitForTimeout(1500);
+    const cap = await p.evaluate(()=>({vis:!document.getElementById('cap').hidden, t:document.getElementById('captext').textContent, b:!!document.querySelector('#captext .cb'), s:document.getElementById('capsrc').textContent, pill:document.getElementById('pill').textContent, play:__app.play}));
+    ok(name+' play started, caption with badge + sources: '+JSON.stringify(cap).slice(0,160), cap.vis && cap.b && cap.s.startsWith('Sources:') && cap.play && cap.play.i === 0);
+    await p.waitForTimeout(1500);
+    if (shots) await p.screenshot({path:D+'/faktaruta_play'+(mobile?'':'_desktop')+'.png'});
+    // pacing: beat 1 (21 words) holds for reading time 8.4 s + 2 s pause, so at ~9 s we are still on it
+    await p.waitForTimeout(6000);
+    ok(name+' pacing: still on beat 1 after 9 s', await p.evaluate(()=>__app.play.i) === 0);
+    const pace = await p.evaluate(()=>fetch('data/stories/jews/1207bc.json').then(r=>r.json()).then(d=>d.play.beats.every(b=>b.duration>=4000 && b.pauseAfter>=1500 && b.pauseAfter<=2500) && d.play.words));
+    ok(name+' every beat has duration + pauseAfter in the JSON; words '+pace, pace >= 300 && pace <= 650);
+    ok(name+' year counter moving: '+await p.textContent('#pill'), /^c\. 1\d{3} BC$/.test(await p.textContent('#pill')));
+    // pause / resume
+    await p.click('#cappp'); const pz = await p.evaluate(()=>__app.play.paused); await p.waitForTimeout(300); await p.click('#cappp');
+    ok(name+' pause/resume', pz === true && (await p.evaluate(()=>__app.play.paused)) === false);
+    await p.evaluate(()=>document.getElementById('map').dispatchEvent(new MouseEvent('click',{bubbles:true})));
+    ok(name+' tapping the map pauses', await p.evaluate(()=>__app.play.paused) === true);
+    await p.click('#cappp');
+    const sp = []; for (let i = 0; i < 3; i++){ await p.click('#capspd'); sp.push(await p.textContent('#capspd')); }
+    ok(name+' speed button cycles '+sp.join(' '), sp.join(' ') === '1.25× 0.75× 1×');
+    ok(name+' controls visible: prev, pause, next, speed', await p.evaluate(()=>['capprev','cappp','capnext','capspd'].every(id=>{const r=document.getElementById(id).getBoundingClientRect(); return r.width>30 && r.height>30;})));
+    // migration beat: arrows drawing + caption
+    await p.evaluate(()=>__app.seek(4)); await p.waitForTimeout(6600);
+    const mig = await p.evaluate(()=>({arrows:document.querySelectorAll('.arrow.mig.unsure').length, lab:[...document.querySelectorAll('.fxlab text')].map(t=>t.textContent), cap:document.getElementById('captext').textContent.slice(0,40)}));
+    ok(name+' migration arrows dashed + Disputed: '+JSON.stringify(mig), mig.arrows === 2 && mig.lab.every(l=>/Disputed/.test(l)));
+    if (shots) await p.screenshot({path:D+'/faktaruta_animation'+(mobile?'':'_desktop')+'.png'});
+    await p.evaluate(()=>__app.seek(6)); await p.waitForTimeout(8800);
+    ok(name+' battle beat: markers '+await p.evaluate(()=>document.querySelectorAll('.battle').length)+', army arrows '+await p.evaluate(()=>document.querySelectorAll('.arrow.army').length), await p.evaluate(()=>document.querySelectorAll('.battle').length===3 && document.querySelectorAll('.arrow.army').length===5));
+    if (shots) await p.screenshot({path:D+'/faktaruta_battle'+(mobile?'':'_desktop')+'.png'});
+    ok(name+' Hatti faded', await p.evaluate(()=>[...document.querySelectorAll('path.z-hatti.zone')].every(e=>e.classList.contains('gone'))));
+    // run to the end quickly
+    await p.evaluate(()=>{ __app.speed = 12; __app.seek(__app.play.n - 6); });
+    await p.waitForFunction(()=>__app.mode === 'soon', null, {timeout:30000});
+    await p.waitForTimeout(1600);
+    const end = await p.evaluate(()=>({big:document.getElementById('big').textContent, soon:document.getElementById('evbody').textContent.includes('Next chapter coming soon'), phil:document.querySelectorAll('path.z-philistia').length, hl:document.querySelectorAll('path.israel.added').length, cap:document.getElementById('cap').hidden, xp:document.getElementById('xp').hidden}));
+    await p.waitForTimeout(2500);
+    ok(name+' stays on the 1150 intro (no auto-continue)', await p.evaluate(()=>__app.mode === 'soon' && !__app.play));
+    ok(name+' recap has no scene lines, scene captions exist in data', await p.evaluate(()=>![...document.querySelectorAll('#evbody .cb')].some(b=>b.textContent==='Imagine')));
+    ok(name+' donate link hidden (donateUrl null)', await p.evaluate(()=>document.getElementById('donate').hidden && getComputedStyle(document.getElementById('donate')).display === 'none'));
+    ok(name+' play ends at c. 1150 coming-soon intro: '+JSON.stringify(end), end.big === 'c. 1150 BC' && end.soon && end.phil === 1 && end.hl === 1 && end.cap && end.xp);
+    if (shots) { if (mobile) await toEv(); await p.screenshot({path:D+'/faktaruta_1150'+(mobile?'':'_desktop')+'.png'}); await p.evaluate(()=>scrollTo(0,0)); }
+    q = await p.evaluate(() => { const t=[...document.querySelectorAll('text.zlabel')].find(t=>t.textContent==='PHILISTIA'); const r=t.getBoundingClientRect(); return {x:r.x+r.width/2,y:r.y+r.height/2}; });
+    await tap(q.x, q.y); await p.waitForTimeout(400);
+    s = await st(); ok(name+' tap PHILISTIA -> '+s.open, s.open === 'philistines');
+    await p.click('#popx'); await p.waitForTimeout(200);
+    // replay then stop -> back at 1207 explore, zones reset
+    await p.evaluate(()=>{ __app.speed = 1; document.getElementById('replay').click(); }); await p.waitForTimeout(800);
+    ok(name+' replay runs', await p.evaluate(()=>__app.play && __app.play.i === 0));
+    await p.click('#capx'); await p.waitForTimeout(1200);
+    ok(name+' stop -> 1207 explore, no added zones', await p.evaluate(()=>__app.mode==='stop' && !!document.getElementById('playbtn') && document.querySelectorAll('.added').length===0 && document.getElementById('pill').textContent==='1207 BC'));
+    // timeline straight to c. 1150 rebuilds the end state
+    await p.evaluate(()=>__app.go(1)); await p.waitForTimeout(1200);
+    ok(name+' timeline to 1150: '+await p.evaluate(()=>__app.mode+' '+document.querySelectorAll('.added').length), await p.evaluate(()=>__app.mode==='soon' && document.querySelectorAll('path.added').length===2));
+    await p.evaluate(()=>__app.go(2)); await p.waitForTimeout(600);
+    ok(name+' planned stop 1000 BC shows coming soon box', await p.evaluate(()=>!document.getElementById('soon').hidden && document.getElementById('ev').hidden));
+    await p.evaluate(()=>__app.go(0)); await p.waitForTimeout(1200);
     await ctx.close();
   }
   await b.close();

@@ -6,7 +6,8 @@ STORY = {
  "from":-1400,"to":2030,
  "stops":[
   {"year":-1207,"label":"1207 BC","title":"Israel is named","era":"data/eras/1207bc.json","file":"data/stories/jews/1207bc.json"},
-  {"year":-1150,"label":"c. 1150 BC","title":"Villages in the hills"},
+  {"year":-1150,"label":"c. 1150 BC","title":"Villages in the hills",
+   "soon":{"title":"Villages in the hills","text":"Next chapter coming soon. The transition you just watched brings the map to about 1150 BC: Egypt's empire in Canaan is ending, the Philistines have settled on the southern coast, and the hill villages of early Israel are growing."}},
   {"year":-1000,"label":"c. 1000 BC","title":"David and Solomon: tradition and evidence"},
   {"year":-930,"label":"c. 930 BC","title":"Israel and Judah"},
   {"year":-722,"label":"722 BC","title":"Assyria takes Samaria"},
@@ -68,6 +69,73 @@ STOP = {
    "why":"These hills, around Shechem, Shiloh, Jerusalem and Hebron, became the heartland of the later kingdoms of Israel and Judah. Jewish tradition remembers this as the time of the Judges: 'In those days there was no king in Israel' (Judges 21:25).",
    "claims":[["About 30 sites and 50 hectares in the 13th century BC; about 250 sites and 220 hectares in late Iron I.",A,["fink2013"]],["Population about 10,000 rising to about 45,000. These figures are calculated from built-up area, so they are rough.",D,["fink2013"]],["Many archaeologists identify these villagers with early Israel. Others caution that pottery and houses alone cannot show who people felt they were.",D,["faust","fink2013","killebrew"]],["Few or no pig bones are found at these hill sites, and some scholars link this to Israelite identity.",D,["faust"]],["The Book of Judges tells of tribes led by judges such as Deborah and Gideon.",T,["bible"]]],
    "src":["fink2013","finkelstein","faust"],"objects":["hills","izbetsartah","shechem","jerusalem","hebron","jordan","deadsea","jezreel"],"focus":{"c":[35.25,31.95],"k":6.5},"hl":["hills","izbetsartah","shechem","jerusalem","hebron"]}
- ],
- "narration":{"audio":"audio/israel.mp3","status":"draft","note":"Draft narration. Not every line is sourced yet; see the event boxes for the evidence."}
+ ]
+}
+
+# ---------- explore progress: the key objects of this stop ----------
+STOP["explore"] = {
+ "key":["israelp","hills","izbetsartah","jerusalem","shechem","jordan","gezer","ashkelon","yenoam","megiddo","egypt","seapeoples"],
+ "text":"Open each key place or people on the map to read its fact box. Unexplored ones glow; explored ones get a check. Your progress is saved on this device. When you are ready, press Play to move on to c. 1150 BC."
+}
+
+# ---------- play: timed transition 1207 BC -> c. 1150 BC ----------
+# A beat runs its steps together; beats run one after another.
+# Step types: caption, focus, migration, border, battle, year (+ optional audio cue on any beat: "audio":"path.mp3").
+# Every caption carries cert + sources. Uncertain movements are dashed and marked Disputed.
+PHILISTIA = [[34.38,31.38],[34.52,31.66],[34.63,31.86],[34.92,31.86],[34.98,31.62],[34.6,31.28],[34.38,31.38]]
+HIGHLANDS = [[34.98,32.55],[35.42,32.55],[35.55,32.15],[35.5,31.6],[35.25,31.35],[34.98,31.42],[34.92,31.9],[34.98,32.55]]
+def cap(text, cert, src): return {"type":"caption","text":text,"cert":cert,"src":src}
+# "scene" captions are scene-setting only: framed as "Imagine ...", they assert no new facts and carry no sources.
+def scene(text): return {"type":"caption","text":text,"cert":"scene","src":[]}
+STOP["play"] = {
+ "to":-1150, "title":"From 1207 BC to c. 1150 BC",
+ "intro":"With subtitles. Pause, step back or forward, change speed, or tap the map to pause at any time.",
+ "zoneObjects":{"philistia":"philistines","highlands":"israelp"},
+ "beats":[
+  {"steps":[{"type":"year","to":-1200},{"type":"focus","c":[34.6,34.0],"k":1.5},
+    cap("In the years after the Israel Stele, the world around Israel fell apart. Historians call it the Late Bronze Age collapse.",A,["cline","kuhrt"])]},
+  {"steps":[{"type":"year","to":-1190},{"type":"focus","c":[35.9,35.3],"k":4.5,"hl":["ugarit"]},
+    {"type":"battle","at":[35.78,35.60],"label":"Ugarit destroyed","cert":A,
+     "arrows":[{"path":[[34.2,35.95],[35.0,35.75],[35.66,35.62]],"side":"enemy","cert":D}]},
+    cap("Around 1190 BC Ugarit, a rich port on the Syrian coast, was destroyed. Its last letters tell of enemy ships off the coast.",A,["kaniewski","cline"])]},
+  {"steps":[cap("The exact year and the attackers are debated; radiocarbon dates from nearby Tell Tweini point to about 1192–1190 BC.",D,["kaniewski"])]},
+  {"steps":[{"type":"year","to":-1185},{"type":"focus","c":[35.0,38.0],"k":2.2,"hl":["carchemish"]},
+    {"type":"border","fade":[{"zone":"hatti"}]},
+    cap("Soon after, the Hittite court left Hattusa and the empire ended. Excavators found little sign of a final battle there. A branch of the royal family held on at Carchemish.",A,["seeher","bryce"])]},
+  {"steps":[{"type":"year","to":-1180},{"type":"focus","c":[31.5,34.2],"k":1.35,"hl":["seapeoples"]},
+    {"type":"migration","label":"By sea","cert":D,"path":[[25.8,37.2],[28.6,36.3],[31.6,36.0],[33.8,35.3],[35.2,34.9],[34.85,33.4],[34.35,32.1],[33.4,31.45],[32.2,31.55]]},
+    {"type":"migration","label":"By land","cert":D,"path":[[28.2,38.4],[31.0,37.8],[34.0,37.1],[35.9,36.4],[36.2,34.7],[35.6,33.4]]},
+    cap("'The foreign countries made a conspiracy in their islands … No land could stand before their arms, from Hatti … on.' So Ramesses III of Egypt had it written at Medinet Habu.",A,["edgerton","mhabu"])]},
+  {"steps":[cap("Modern historians call them the 'Sea Peoples'. Their origins, numbers and part in the collapse are disputed; drought, earthquakes and broken trade also played a role.",D,["cline","kaniewski"])]},
+  {"steps":[{"type":"year","to":-1177},{"type":"focus","c":[33.2,31.9],"k":2.8},
+    {"type":"battle","at":[35.25,33.1],"label":"Land battle in Djahy (place disputed)","cert":D,
+     "arrows":[{"path":[[34.47,31.50],[34.75,32.3],[35.1,32.9]],"side":"egypt","cert":A},{"path":[[35.9,34.4],[35.5,33.7],[35.32,33.25]],"side":"enemy","cert":D}]},
+    {"type":"battle","at":[31.95,31.42],"label":"Sea battle at the Nile mouths","cert":A,
+     "arrows":[{"path":[[31.83,30.80],[31.9,31.25]],"side":"egypt","cert":A},{"path":[[33.0,31.75],[32.4,31.6],[32.05,31.48]],"side":"enemy","cert":D}]},
+    cap("In his year 8 (c. 1177 BC in the usual dating), Ramesses III fought them on land in Djahy and at sea at the mouths of the Nile, and claimed victory. The Peleset, later called Philistines, were among them.",A,["edgerton","mhabu","cline"])]},
+  {"steps":[cap("A later papyrus says he settled the defeated 'in strongholds'. Whether that means Egypt itself placed the Philistines in Canaan is disputed.",D,["harris","killebrew"])]},
+  {"steps":[{"type":"year","to":-1170},{"type":"focus","c":[34.72,31.62],"k":7,"hl":["ashdod","ashkelon","ekron","gath","gaza"]},
+    {"type":"border","add":[{"zone":"philistia","certainty":"unsure","label":"PHILISTIA","labelAt":[34.45,31.95],"coords":PHILISTIA}]},
+    cap("On the southern coast, newcomers made Ashdod, Ashkelon, Ekron and Gath their own. Their pottery, cooking and weaving followed Aegean ways. Ancient DNA from Ashkelon shows people with southern European ancestry who soon mixed with locals.",A,["killebrew","yasur","feldman"])]},
+  {"steps":[cap("When they arrived is debated: about 1175 BC in the usual view, or about 1135 BC in a lower dating.",D,["fink1995","yasur"])]},
+  {"steps":[cap("The Hebrew Bible remembers the Philistines as coming from Caphtor (Amos 9:7), and as Israel's great rival in the days of the Judges, Samson and Saul.",T,["bible"])]},
+  {"steps":[{"type":"year","to":-1160},{"type":"focus","c":[35.2,32.1],"k":4.2,"hl":["bethshean","gaza"]},
+    {"type":"border","fade":[{"zone":"egypt","certainty":"unsure"}]},
+    cap("Egypt kept garrisons in Canaan, such as Beth-Shean, for some decades more. Its rule there ended during the 12th century BC.",A,["weinstein","millek","morris"])]},
+  {"steps":[cap("Whether the end came quickly or slowly, over 75 years or more, is debated.",D,["weinstein","millek"])]},
+  {"steps":[{"type":"year","to":-1150},{"type":"focus","c":[35.2,31.95],"k":5.5,"hl":["hills","izbetsartah","shechem","jerusalem"]},
+    {"type":"border","fade":[{"zone":"israel"}],"add":[{"zone":"highlands","certainty":"people","label":"ISRAEL","labelAt":[34.95,32.62],"coords":HIGHLANDS}]},
+    cap("In the hills, small farming villages kept multiplying. Surveys count about 30 sites in the 13th century BC and about 250 by the end of Iron I, around 1000 BC.",A,["fink2013","faust"])]},
+  {"steps":[scene("Imagine the hills at dawn: rock and scrub, smoke from cooking fires, flocks heading out to graze. Here is what excavations show.")]},
+  {"steps":[{"type":"focus","c":[35.05,32.07],"k":9,"hl":["izbetsartah"]},
+    cap("Most villages were small, often a few dozen households. Some of the earliest, such as Izbet Sartah, were laid out as a ring of houses around an open yard.",A,["finkelstein","faust"])]},
+  {"steps":[cap("A typical home was a pillared house of three or four spaces around a central room. Animals and stores were probably kept on the ground floor, with living space above.",A,["faust","killebrew"])]},
+  {"steps":[cap("Families stored grain in stone-lined pits and in large 'collared-rim' jars, and cut cisterns into the rock to keep winter rain for the dry summer. On steeper slopes, terraces held the soil.",A,["finkelstein","killebrew"])]},
+  {"steps":[cap("They grew wheat and barley, tended olives and vines, and herded sheep and goats. Pig bones are rare at these hill sites.",A,["faust","fink2013"])]},
+  {"steps":[{"type":"focus","c":[35.0,32.3],"k":4.4},
+    cap("Down on the coast and the trade roads, the long-distance trade in copper, tin and fine goods that had fed the palaces had faltered.",A,["cline"])]},
+  {"steps":[cap("For Israel, the world nearby had changed: the empire that named it in stone was withdrawing, the Philistines were new neighbours on the coast, and the hill villages kept growing.",A,["millek","killebrew","fink2013"])]},
+  {"steps":[scene("Imagine a winter evening in one of these houses, rain on the roof and the animals shifting below. We do not know these villagers' names. Their houses, jars and terraces are what they left us.")]},
+  {"steps":[cap("In Jewish tradition this is the age of the Judges, when 'there was no king in Israel' (Judges 21:25) and leaders rose tribe by tribe.",T,["bible"])]}
+ ]
 }

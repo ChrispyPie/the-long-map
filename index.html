@@ -51,7 +51,7 @@
   .mk.cur:not(.live)::after { background:#8d836f; }
   .tick { position:absolute; top:28px; transform:translateX(-50%); font-size:10px; color:#7f7866; white-space:nowrap; }
   footer { padding:6px 12px 14px; font:11px/1.4 system-ui, sans-serif; color:#8d836f; }
-  footer a { color:#cbbfa2; }
+  footer a { color:#cbbfa2; } footer .donate { display:inline-block; margin-left:6px; } footer .donate[hidden] { display:none; }
   .sheet { position:fixed; inset:0; background:rgba(6,10,5,.72); display:none; align-items:end; justify-content:center; padding:12px; z-index:5; }
   .sheet.open { display:flex; }
   .card { position:relative; width:min(560px,100%); background:#1c2418; border:1px solid #3c4632; border-radius:16px; padding:14px 40px 14px 14px; max-height:78vh; overflow:auto; box-sizing:border-box; }
@@ -66,15 +66,6 @@
   .shot{width:100%;border-radius:8px;margin-top:10px;display:block} .cap{margin:4px 0 0;color:#cbbfa2;font:12px/1.35 system-ui,sans-serif}
   .src { margin-top:10px; font:12px/1.4 system-ui, sans-serif; color:#cbbfa2; }
   .src b { color:#f3ecd9; } .src ol { margin:4px 0 0; padding-left:18px; }
-  .scene{position:absolute;left:8px;top:46px;background:rgba(12,16,11,.72);color:#f3ecd9;font:11px/1.3 system-ui,sans-serif;padding:4px 6px;border-radius:6px;max-width:75%}
-  .story { z-index:8; align-items:stretch; padding:0; background:#0c100b; }
-  .film { width:100%; height:100%; max-width:none; max-height:none; border:0; border-radius:0; background:#0c100b; padding:0; display:flex; flex-direction:column; }
-  .still { width:100%; height:42vh; object-fit:cover; border-radius:0; margin:0; }
-  .film .kicker { padding:12px 16px 0; }
-  .controls { display:flex; gap:8px; padding:0 16px 8px; }
-  .nav { flex:1; background:#1c2418; color:#f3ecd9; border:1px solid #3c4632; }
-  .nav.exit { background:#e2b45a; color:#14210f; border-color:#e2b45a; }
-  .reel{flex:1;overflow:hidden;position:relative;margin:8px 0} .reel-inner{position:absolute;left:16px;right:16px;font-size:22px;line-height:1.45} .w{color:#8d836f} .w.on{color:#e2b45a} .time{text-align:center;color:#cbbfa2;font:12px/1 system-ui,sans-serif;padding:0 0 10px}
 
   .sub2 { color:#e2b45a; font:700 12px/1.2 system-ui, sans-serif; letter-spacing:.04em; }
   /* map objects */
@@ -99,7 +90,7 @@
   .zone.hl { fill-opacity:.5; stroke-width:2.4; } .israel.hl { fill:#f0a020; }
   /* certainty badges */
   .cb { display:inline-block; font:700 10px/1 system-ui, sans-serif; letter-spacing:.04em; text-transform:uppercase; padding:3px 6px; border-radius:99px; vertical-align:2px; white-space:nowrap; }
-  .cb-attested { background:#2f5a34; color:#d8f0d0; } .cb-disputed { background:#6a4a12; color:#ffe3a8; } .cb-tradition { background:#3c3a6a; color:#e0dcff; }
+  .cb-attested { background:#2f5a34; color:#d8f0d0; } .cb-disputed { background:#6a4a12; color:#ffe3a8; } .cb-tradition { background:#3c3a6a; color:#e0dcff; } .cb-scene { background:#43473f; color:#e6e2d6; font-style:italic; }
   .ic { width:16px; height:16px; fill:#e2b45a; stroke:#e2b45a; flex:none; }
   /* small fact box */
   .pop { position:fixed; left:0; right:0; bottom:0; z-index:6; background:#1c2418; border:1px solid #3c4632; border-radius:16px 16px 0 0; box-shadow:0 -8px 30px rgba(0,0,0,.45); max-height:56vh; overflow:auto; padding:12px 14px 18px; box-sizing:border-box; font-family:system-ui, sans-serif; }
@@ -129,6 +120,52 @@
   .chip { display:inline-flex; align-items:center; gap:6px; min-height:40px; padding:8px 12px; font:600 13px/1 system-ui, sans-serif; border-radius:99px; background:#10160e; }
   .legend2 { margin-top:12px; font-size:12px; color:#cbbfa2; line-height:2; }
   .next { margin-top:12px; padding:10px; border:1px dashed #3c4632; border-radius:8px; color:#cbbfa2; }
+  /* explore progress */
+  .xp { position:absolute; left:8px; top:8px; z-index:2; display:flex; align-items:center; gap:6px; min-height:36px; padding:6px 10px; border-radius:99px; background:rgba(28,36,24,.92); border:1px solid #3c4632; color:#f3ecd9; font:700 12px/1 system-ui, sans-serif; }
+  .xp[hidden] { display:none; } .xp .ring0 { width:10px; height:10px; border-radius:50%; box-shadow:0 0 0 2px #e2b45a; } .xp.all .ring0 { background:#7cc47f; box-shadow:0 0 0 2px #7cc47f; }
+  .key { pointer-events:none; }
+  .key .ring { fill:none; stroke:#ffd27a; stroke-width:2; stroke-opacity:.9; filter:drop-shadow(0 0 3px rgba(255,200,90,.9)); animation:glow 2.4s ease-in-out infinite; transform-box:fill-box; transform-origin:center; }
+  @keyframes glow { 0%,100% { stroke-opacity:.35; transform:scale(.85); } 50% { stroke-opacity:.95; transform:scale(1.1); } }
+  .key .chk { fill:#2f7a3a; stroke:#efe6cc; stroke-width:1.2; } .key .chkm { fill:none; stroke:#fff; stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; }
+  .obj.nolab .lab { visibility:hidden; }
+  .checklist { list-style:none; margin:4px 0 6px; padding:0; display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+  .ck { width:100%; display:flex; align-items:center; gap:7px; min-height:44px; padding:6px 8px; text-align:left; font:600 13px/1.2 system-ui, sans-serif; background:#10160e; border-radius:10px; }
+  .ck .box { flex:none; width:18px; height:18px; border-radius:50%; border:2px solid #e2b45a; box-shadow:0 0 6px rgba(226,180,90,.6); display:flex; align-items:center; justify-content:center; font-size:12px; color:#fff; box-sizing:border-box; }
+  .ck.done .box { background:#2f7a3a; border-color:#2f7a3a; box-shadow:none; } .ck.done .nm { color:#cbbfa2; }
+  .sr { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
+  .cta { display:flex; flex-wrap:wrap; gap:8px; margin:12px 0 4px; } .cta button { min-height:44px; } .cta .play { margin:0; }
+  .play.big { width:100%; min-height:48px; font-size:15px; margin-top:10px; }
+  .linkish { border:0; padding:8px 0; color:#cbbfa2; font-weight:600; font-size:12px; text-decoration:underline; background:none; }
+  .soonflag { display:inline-block; margin:2px 0 8px; padding:5px 10px; border-radius:99px; border:1px dashed #e2b45a; color:#e2b45a; font:700 12px/1 system-ui, sans-serif; letter-spacing:.04em; text-transform:uppercase; }
+  .mk.half::after { background:transparent; box-shadow:inset 0 0 0 2px #e2b45a; }
+  /* play: caption overlay and map effects */
+  .cap2 { position:absolute; left:8px; right:8px; bottom:8px; z-index:2; background:rgba(16,22,14,.94); border:1px solid #3c4632; border-radius:12px; padding:9px 11px 8px; font:14px/1.4 system-ui, sans-serif; color:#f3ecd9; box-shadow:0 6px 20px rgba(0,0,0,.4); }
+  .cap2.below { position:relative; left:auto; right:auto; bottom:auto; margin:8px 0 0; }
+  .nolabt { visibility:hidden; }
+  .cap2.paused .bar i { background:#8d8466; }
+  #map .old { opacity:.4; transition:opacity .6s; } #map .old text { visibility:hidden; } #map .old .pulse { display:none; }
+  .cap2[hidden] { display:none; } .cap2.in .ctext { animation:capin .5s ease-out; }
+  @keyframes capin { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
+  .cap2 .ctext { margin:0; } .cap2 .csrc { margin-top:4px; font-size:11px; color:#cbbfa2; }
+  .cap2 .crow { display:flex; align-items:center; gap:6px; margin-top:6px; } .cap2 .crow button { min-width:40px; min-height:36px; padding:6px 10px; font-size:13px; }
+  .cap2 .crow .n { flex:1; text-align:center; font-size:11px; color:#cbbfa2; }
+  .cap2 .bar { height:2px; background:#2c3626; border-radius:2px; overflow:hidden; margin-top:6px; } .cap2 .bar i { display:block; height:100%; width:0; background:#e2b45a; }
+  body.playing .legend, body.playing .hint { display:none; }
+  .ev.dim { opacity:.55; }
+  .fx { pointer-events:none; }
+  .arrow .shaft { fill:none; stroke-width:3; vector-effect:non-scaling-stroke; stroke-linecap:round; }
+  .arrow.mig .shaft { stroke:#8a1f1f; } .arrow.mig .tip { fill:#8a1f1f; }
+  .arrow.unsure .shaft { stroke-dasharray:7 5; }
+  .arrow.side-egypt .shaft { stroke:#1f4f8a; stroke-width:3.5; } .arrow.side-egypt .tip { fill:#1f4f8a; }
+  .arrow.side-enemy .shaft { stroke:#8a1f1f; } .arrow.side-enemy .tip { fill:#8a1f1f; }
+  .fxlab text, .battle .blab { font:700 11px/1 system-ui, sans-serif; fill:#5a1010; paint-order:stroke; stroke:#efe6cc; stroke-width:3px; stroke-linejoin:round; text-anchor:middle; }
+  .battle .blab { text-anchor:start; fill:#3a1a00; }
+  .battle .core { fill:#b3261e; stroke:#fff; stroke-width:1.5; } .battle.unsure .core { stroke-dasharray:2 2; }
+  .battle .swords { stroke:#fff; stroke-width:1.8; stroke-linecap:round; }
+  .battle .pulse { fill:#b3261e; fill-opacity:.35; transform-box:fill-box; transform-origin:center; animation:pulse 1.6s ease-out infinite; }
+  @keyframes pulse { from { transform:scale(.4); opacity:1; } to { transform:scale(1.8); opacity:0; } }
+  .z-philistia { fill:#b0607a; stroke:#7a2f48; } .zone.added { fill-opacity:.32; }
+  .gone { stroke-dasharray:3 4; }
   @media (max-width:899px){
     .layout { display:flex; flex-direction:column; } .mapcol { display:contents; }
     .layout .viewport { order:1; position:sticky; top:0; z-index:3; height:44vh; min-height:280px; box-shadow:0 6px 14px rgba(0,0,0,.4); }
@@ -164,6 +201,10 @@
     <div><i class="d"></i>Extent uncertain</div>
     <div><i class="g"></i>A people, no border</div>
   </div>
+  <button class="xp" id="xp" type="button" hidden aria-label="Explore progress"><span class="ring0"></span><span id="xpn">0/0</span>&nbsp;explored</button>
+  <div class="cap2" id="cap" hidden aria-live="polite"><p class="ctext" id="captext"></p><div class="csrc" id="capsrc"></div>
+    <div class="bar"><i id="capbar"></i></div>
+    <div class="crow"><button type="button" id="capprev" aria-label="Previous step">‹</button><button type="button" id="cappp" aria-label="Pause">❚❚</button><button type="button" id="capnext" aria-label="Next step">›</button><button type="button" id="capspd" aria-label="Speed 1x">1×</button><span class="n" id="capn"></span><button type="button" id="capskip">Skip</button><button type="button" id="capx" aria-label="Stop">×</button></div></div>
   <div class="soonbox" id="soon" hidden><b>Coming soon</b><span id="soont"></span></div>
   <div class="hint">Tap anything · pinch to zoom</div>
 </div>
@@ -183,20 +224,10 @@
 </div>
 <footer>
   Map data: <a href="https://www.naturalearthdata.com/">Natural Earth</a> (public domain). Modern coastlines and rivers. Orontes and routes drawn approximately (dashed).
-  Areas: approximate outlines by The Long Map, sources in each fact box. Labels: Attested = found in ancient evidence; Disputed = scholars disagree; Tradition = Jewish tradition and the Hebrew Bible.
+  Areas: approximate outlines by The Long Map, sources in each fact box. Labels: Attested = found in ancient evidence; Disputed = scholars disagree; Tradition = Jewish tradition and the Hebrew Bible. Imagine = scene-setting that adds no facts.
+  <a id="donate" class="donate" href="#" rel="noopener" target="_blank" hidden>Support this project</a>
 </footer>
 <div class="pop" id="pop" role="dialog" aria-labelledby="pt" hidden><div class="grab"></div><button class="x" id="popx" type="button" aria-label="Close">×</button><div id="popbody"></div></div>
-<div class="sheet story" id="story">
-  <div class="card film">
-    <button class="x" type="button" onclick="closeStory()" aria-label="Close">×</button>
-    <img class="still" id="still" alt="Story picture" src="images/ridge.jpg"><div class="scene" id="scene">Scene, not a photograph</div>
-    <div class="kicker">Draft narration · not every line sourced yet · about 1207 BC</div>
-    <div class="reel" id="reel"><div class="reel-inner" id="reel-inner"></div></div>
-    <div class="controls"><button class="nav" type="button" onclick="skip(-10)">-10s</button><button class="nav exit" id="pp" type="button" onclick="togglePlay()">Pause</button><button class="nav" type="button" onclick="skip(10)">+10s</button></div>
-    <div class="time" id="time">0:00</div>
-    <audio id="narr" preload="none" src="audio/israel.mp3"></audio>
-  </div>
-</div>
 <script src="js/d3-lite.min.js"></script>
 <script src="js/app.js"></script>
 </body>

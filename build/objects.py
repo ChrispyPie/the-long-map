@@ -128,3 +128,17 @@ o("libyans","people","Libyans (Libu)",{"at":[25.6,30.9]},2,"Peoples west of Egyp
 o("seapeoples","people","'Sea Peoples'",{"at":[28.5,33.0]},2,"Modern name for groups named in Egyptian texts: in Merneptah's year 5, Ekwesh, Teresh, Lukka, Sherden and Shekelesh fought with the Libyans.",["kitchen4","cline","yasur"],
   facts=[("Named in Merneptah's Great Karnak Inscription.",A,["kitchen4"]),("Where they came from and why they moved is disputed.",D,["cline","yasur"]),("Map position is symbolic only.",A,["cline"])])
 o("arameans","people","Arameans",{"at":[40.6,35.3]},2,"Not yet named in 1207 BC. First clearly named c. 1112 BC by Tiglath-pileser I of Assyria. Shown as a reminder of who comes next.",["aram"],cert=D)
+
+# ---------- added for the 1207 -> c. 1150 BC transition ----------
+o("ashdod","city","Ashdod",{"at":[34.66,31.76]},3,"Coastal city. Canaanite in the Late Bronze Age; in the 12th century BC it became one of the main Philistine cities.",["killebrew","yasur"],people="Canaanites, later Philistines")
+o("ekron","city","Ekron",{"at":[34.85,31.78]},3,"Tel Miqne. A small Canaanite town that grew into a large Philistine city in the 12th century BC.",["killebrew","yasur"],people="Canaanites, later Philistines",alt="Tel Miqne")
+o("gath","city","Gath",{"at":[34.85,31.70]},3,"Tell es-Safi. Canaanite city, later one of the Philistine cities.",["killebrew"],people="Canaanites, later Philistines",alt="Tell es-Safi")
+o("medinethabu","site","Medinet Habu",{"at":[32.60,25.72]},3,"Mortuary temple of Ramesses III in western Thebes. Its walls show his year 8 battles against the 'Sea Peoples' on land and at sea.",["mhabu","edgerton"],
+  facts=[("The reliefs name the Peleset, Tjeker, Shekelesh, Denyen and Weshesh.",A,["edgerton"]),("Year 8 of Ramesses III is c. 1177 BC in the usual chronology; dates differ by a few years.",D,["cline"])])
+o("philistines","people","Philistines",{"zone":"philistia"},2,"A people who settled on the southern coast of Canaan in the 12th century BC. Egyptian texts call them Peleset. Their pottery, cooking and weaving show Aegean links.",["killebrew","yasur","feldman"],
+  people="Philistines (Egyptian Peleset)",
+  facts=[("The Peleset are named among Ramesses III's enemies at Medinet Habu.",A,["edgerton"]),
+         ("Aegean-style pottery appears at Ashdod, Ekron, Ashkelon and Gath.",A,["killebrew","yasur"]),
+         ("Ancient DNA from Ashkelon shows newcomers with southern European ancestry in the early Iron Age, soon mixed with the local population.",A,["feldman"]),
+         ("Whether they settled around 1175 BC or around 1135 BC is disputed.",D,["fink1995","yasur"]),
+         ("The Hebrew Bible remembers the Philistines as coming from Caphtor (Amos 9:7; Jeremiah 47:4).",T,["bible"])])
