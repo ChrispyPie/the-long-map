@@ -2,8 +2,9 @@
 # where: {"at":[lon,lat]} point | {"river":"Nile"} | {"lake":"Dead Sea"} | {"line":[[lon,lat],...]} | {"zone":"egypt"} | {} (no map position)
 A,D,T = "attested","disputed","tradition"
 O = []
-def o(id,type,name,where,rank,desc,src,cert=A,people=None,pop=None,facts=(),alt=None):
-    O.append(dict(id=id,type=type,name=name,alt=alt,where=where,rank=rank,desc=desc,people=people,pop=pop,facts=[list(f) for f in facts],src=src,cert=cert))
+def o(id,type,name,where,rank,desc,src,cert=A,people=None,pop=None,facts=(),alt=None,since=None):
+    # since: first stop year on whose map the object is drawn (None = every stop)
+    O.append(dict(id=id,type=type,name=name,alt=alt,where=where,rank=rank,desc=desc,people=people,pop=pop,facts=[list(f) for f in facts],src=src,cert=cert,since=since))
 
 # ---------- Egypt ----------
 o("thebes","city","Thebes",{"at":[32.64,25.70]},1,"Religious capital of New Kingdom Egypt, centre of the god Amun (Karnak, Luxor). The Merneptah Stele was found in Merneptah's mortuary temple on the west bank.",["petrie1897","kuhrt"],people="Egyptians",alt="Waset",
@@ -37,6 +38,19 @@ o("lachish","city","Lachish",{"at":[34.849,31.565]},3,"Major Canaanite city in t
 o("izbetsartah","site","Izbet Sartah",{"at":[34.97,32.10]},3,"Small Iron I village on the hill-country edge. A pottery sherd with an early alphabet (abecedary) was found here.",["finkelstein","faust"],
   facts=[("Founded around the late 13th or 12th century BC (Iron I).",D,["finkelstein"])])
 o("timna","site","Timna",{"at":[34.96,29.78]},3,"Copper mines in the Arava valley, worked under Egyptian control in the 13th–12th centuries BC.",["killebrew"],cert=D)
+# ---------- added for the c. 1150 BC stop (coordinates: Wikipedia / openbible.info, noted per line) ----------
+# since=-1150: drawn from the c. 1150 BC map on, so the 1207 BC map stays as it was
+o("shiloh","site","Shiloh",{"at": [35.2895, 32.0556]},3,"Hill-country sanctuary town. In tradition the Ark was kept here (1 Samuel 1–4). Iron I settlement burned in the second half of the 11th century BC.",["finkshiloh1993", "finkpiasetzky2006"],alt="Khirbet Seilun / Tel Shiloh",since=-1150)  # Wikipedia 'Shiloh (biblical city)', 32.055556 N, 35.289528 E
+o("gibeah","site","Gibeah (Tell el-Ful?)",{"at": [35.231, 31.823]},3,"Saul's home town in tradition. Long identified with Tell el-Ful; the identification is disputed.",["fink2011ful"],cert=D,alt="Tell el-Ful",since=-1150)  # openbible.info / Wikipedia 'Gibeah', c. 31.823 N, 35.231 E
+o("qeiyafa","site","Khirbet Qeiyafa",{"at": [34.957, 31.696]},3,"Short-lived fortified town above the Valley of Elah, destroyed c. 1000 BC. Who built it is debated.",["garfinkel2012", "garfinkel2015", "finkfantalkin2012"],since=-1150)  # Wikipedia, 31.6964 N, 34.9572 E
+o("dan","site","Dan",{"at": [35.652, 33.249]},3,"City in the far north. A 9th-century BC Aramaic victory stele found here names the 'House of David'.",["biran1993", "biran1995"],alt="Tel Dan",since=-1150)  # Wikipedia 'Dan (ancient city)', 33.249 N, 35.652 E
+o("gilboa","region","Mount Gilboa",{"at": [35.414, 32.434]},3,"Ridge above the Jezreel and Jordan valleys. In tradition, where Saul and Jonathan fell (1 Samuel 31).",["bible"],since=-1150)  # Wikipedia, 32.4339 N, 35.4144 E
+o("bethlehem","city","Bethlehem",{"at": [35.206, 31.704]},3,"Town south of Jerusalem. In tradition, David's home town (1 Samuel 16; Ruth).",["bible"],since=-1150)  # Wikipedia, 31.7044 N, 35.2064 E (modern town centre)
+o("aphek","site","Aphek",{"at": [34.93, 32.105]},3,"Town at the springs of the Yarkon. In tradition, the Philistine camp before the battle where the Ark was taken (1 Samuel 4).",["bible"],alt="Tel Afek / Antipatris",since=-1150)  # Wikipedia 'Antipatris', 32.105 N, 34.9304 E
+o("bethshemesh","site","Beth-Shemesh",{"at": [34.975, 31.751]},3,"Border town between the hills and Philistia. In tradition, where the Ark came back (1 Samuel 6).",["bible"],alt="Tel Beit Shemesh",since=-1150)  # Wikipedia, 31.7506 N, 34.975 E
+o("kiriathjearim","site","Kiriath-jearim",{"at": [35.104, 31.809]},3,"Hilltop town west of Jerusalem. In tradition, where the Ark stayed for many years (1 Samuel 7).",["bible"],alt="Deir el-Azar",since=-1150)  # openbible.info 'Deir el Azar', 31.80896 N, 35.10378 E
+o("telqasile","site","Tell Qasile",{"at": [34.794, 32.101]},3,"Philistine town on the Yarkon, now in Tel Aviv, with a temple rebuilt several times.",["mazar1980"],since=-1150)  # Wikipedia, 32.1014 N, 34.7941 E
+o("dor","city","Dor",{"at": [34.9175, 32.6175]},3,"Harbour town on the Carmel coast. The Report of Wenamun calls it a town of the Tjeker.",["lichtheim1976"],alt="Tel Dor",since=-1150)  # Wikipedia 'Tel Dor', 32.6175 N, 34.9175 E
 # ---------- Phoenician coast & Syria ----------
 o("tyre","city","Tyre",{"at":[35.19,33.27]},3,"Island port city on the Levantine coast, known from the Amarna letters.",["moran","vdm"],people="Canaanites (later called Phoenicians)")
 o("sidon","city","Sidon",{"at":[35.37,33.56]},3,"Coastal port city, rival of Tyre.",["moran","vdm"],people="Canaanites (later called Phoenicians)")
