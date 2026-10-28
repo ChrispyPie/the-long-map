@@ -103,7 +103,7 @@ const D = process.env.SHOTS || 'screens';
     await p.waitForTimeout(1600);
     c = await p.evaluate(()=>({mode: __app.mode, cine: __app.cine, hdr: getComputedStyle(document.querySelector('header')).opacity, ev: !document.getElementById('ev').hidden && getComputedStyle(document.getElementById('ev')).opacity,
       vp: document.getElementById('vp').getBoundingClientRect().height, H: innerHeight, pill: document.getElementById('pill').textContent, flag: !!document.querySelector('.soonflag'), ph: !!document.getElementById('vpph'), fs: !!document.fullscreenElement }));
-    ok(name+' end: zoomed out to explore UI on '+c.pill+' '+JSON.stringify(c), c.mode==='soon' && c.cine===null && c.hdr==='1' && c.ev==='1' && c.vp < c.H - 50 && /1150/.test(c.pill) && c.flag && !c.ph && !c.fs);
+    ok(name+' end: zoomed out to explore UI on '+c.pill+' '+JSON.stringify(c), c.mode==='stop' && c.cine===null && c.hdr==='1' && c.ev==='1' && c.vp < c.H - 50 && /1150/.test(c.pill) && !c.flag && !c.ph && !c.fs);
     if (!rm) ok(name+' end: zoom-out is animated (mid height '+Math.round(zo.vp)+')', zo.vp < c.H);
     if (mobile && !rm) shot('cine_zoomout');
     await p.waitForTimeout(400); if (mobile && !rm) await shot('cine_zoomout');
@@ -111,8 +111,10 @@ const D = process.env.SHOTS || 'screens';
     ok(name+' end: map objects clickable again', await p.evaluate(()=>{ const g=[...document.querySelectorAll('g.obj')].find(e=>e.style.display!=='none'); if(!g) return false; g.querySelector('.hit').dispatchEvent(new MouseEvent('click',{bubbles:true})); return !!__app.open; }));
     await p.evaluate(()=>__app.closeObj());
     // exit button mid-film goes back to explore
-    await p.evaluate(()=>document.getElementById('replay').scrollIntoView({block:'center'}));
-    await tap('#replay'); await p.waitForTimeout(2200);
+    // the end lands on the live c. 1150 stop; go back to 1207 and start its Play again
+    await p.evaluate(()=>__app.go(0)); await p.waitForTimeout(1400); await p.evaluate(()=>__app.showStep(9)); await p.waitForTimeout(1200);
+    await p.evaluate(()=>document.getElementById('playbtn').scrollIntoView({block:'center'}));
+    await tap('#playbtn'); await p.waitForTimeout(2200);
     ok(name+' replay enters the film again', await p.evaluate(()=>!!(__app.cine && __app.cine.full)));
     await p.evaluate(()=>document.body.classList.remove('idle'));
     await tap('#capx'); await p.waitForTimeout(1600);
