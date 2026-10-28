@@ -1,4 +1,5 @@
 import narration_jews_1207 as NAR
+import narration_jews_1150 as NAR1150
 A,D,T = "attested","disputed","tradition"
 STORY = {
  "id":"jews","title":"Story of the Jews","site":"The Long Map",
@@ -10,9 +11,11 @@ STORY = {
  "from":-1400,"to":2030,
  "stops":[
   {"year":-1207,"label":"1207 BC","title":"Israel is named","era":"data/eras/1207bc.json","file":"data/stories/jews/1207bc.json"},
-  {"year":-1150,"label":"c. 1150 BC","title":"Villages in the hills",
-   "soon":{"title":"Villages in the hills","text":"Next chapter coming soon. The transition you just watched brings the map to about 1150 BC: Egypt's empire in Canaan is ending, the Philistines have settled on the southern coast, and the hill villages of early Israel are growing."}},
-  {"year":-1000,"label":"c. 1000 BC","title":"David and Solomon: tradition and evidence"},
+  {"year":-1150,"label":"c. 1150 BC","title":"Villages in the hills","era":"data/eras/1150bc.json","file":"data/stories/jews/1150bc.json"},
+  {"year":-1000,"label":"c. 1000 BC","title":"David and Solomon: tradition and evidence",
+   # reached at the end of the c. 1150 BC Play; hl/focus: what the map shows there
+   "soon":{"title":"David and Solomon: tradition and evidence","text":"Next chapter coming soon. The transition you just watched brings the map to about 1000 BC: the Philistine cities still hold the coast, Khirbet Qeiyafa has just been destroyed, and in the Hebrew Bible David is king in Jerusalem. How large his kingdom was is debated, so the map draws no border for it.",
+     "hl":["jerusalem","qeiyafa","hebron","bethlehem","philistines","gath"],"focus":{"c":[35.05,31.8],"k":5.2}}},
   {"year":-930,"label":"c. 930 BC","title":"Israel and Judah"},
   {"year":-722,"label":"722 BC","title":"Assyria takes Samaria"},
   {"year":-586,"label":"586 BC","title":"The First Temple destroyed"},
@@ -90,11 +93,33 @@ STOP["explore"] = {
 # Every caption carries cert + sources. Uncertain movements are dashed and marked Disputed.
 STOP["play"] = {
  "to":-1150, "title":"From 1207 BC to c. 1150 BC",
- "intro":"Plays full screen like a short narrated film, with subtitles (CC). Pause, step back or forward, change speed, or tap the picture to pause at any time. Stop whenever you like: it remembers your chapter.",
+ "intro":"Plays full screen like a short narrated film, with subtitles (CC). Pause, step back or forward, or change speed at any time. Stop whenever you like: it remembers your chapter.",
  "zoneObjects":{"philistia":"philistines","highlands":"israelp"},
  # sound (js/app.js, assets/sfx/README.md): the scene's ambient loop; battle, migration, border and year
  # steps get a default effect; "sfx" overrides it (null = none) and "sfxHold" (ms) lets it play out
  "ambient":"desert",
  # the narrated beats, one recorded line each (build/narration_jews_1207.py, audio from build/narrate.py)
  "beats":NAR.clean(NAR.PLAY)
+}
+
+
+# ---------- c. 1150 BC: villages in the hills (opening film + Play to c. 1000 BC, build/narration_jews_1150.py) ----------
+# No big fact boxes (events) yet: this stop is told by its two films. The map is the end state of the
+# 1207 BC Play (data/eras/1150bc.json, built in make_data.py). David's kingdom gets no border.
+STOP1150 = {
+ "story":"jews","year":-1150,"label":"c. 1150 BC","title":"Villages in the hills",
+ "keyObjects":["israelp","hills","shiloh","philistines","ashdod","ekron","gath","jerusalem","telqasile","dor"],
+ "transitionIn":{"text":"About 1150 BC. Egypt's empire is gone from Canaan. Philistine cities lie on the coast, Israelite villages in the hills, and Jewish tradition remembers this as the age of the Judges.",
+   "title":"c. 1150 BC: villages, judges and the first kings","ambient":"desert","beats":NAR1150.clean(NAR1150.INTRO_BEATS)},
+ "transitionOut":{"to":-1000,"text":"Next: the Philistine cities, Shiloh and the Judges, Saul and David. Tradition and archaeology are told side by side, and where scholars disagree, each view is given."},
+ "events":[],
+ "explore":{
+  "key":["israelp","hills","shiloh","philistines","ashdod","ashkelon","ekron","gath","gaza","telqasile","dor","jerusalem"],
+  "text":"Open each key place or people on the map to read its fact box. Unexplored ones glow; explored ones get a check. Your progress is saved on this device. When you are ready, press Play to move on to c. 1000 BC."},
+ "play":{
+  "to":-1000, "title":"From c. 1150 BC to c. 1000 BC",
+  "intro":"Plays full screen like a short narrated film, with subtitles (CC). Pause, step back or forward, or change speed at any time. Stop whenever you like: it remembers your chapter.",
+  "zoneObjects":{"philistia":"philistines","israel":"israelp"},
+  "ambient":"desert",
+  "beats":NAR1150.clean(NAR1150.PLAY)}
 }

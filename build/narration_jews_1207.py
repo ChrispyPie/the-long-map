@@ -135,7 +135,7 @@ PLAY = [
            ["Whether that means Egypt itself placed the Philistines in Canaan is debated.",D,["killebrew","harris"]]]),
  B("On the southern coast of Canaan, newcomers made four towns their own. Ashdod, Ashkelon, Ekron and Gath.", A, ["killebrew","yasur"],
    vis=[yr(-1170), fo([34.72,31.62],7,["ashdod","ashkelon","ekron","gath"]),
-        {"type":"border","add":[{"zone":"philistia","certainty":"unsure","label":"PHILISTIA","labelAt":[34.45,31.95],"coords":PHIL}],"sfx":"border"}]),
+        {"type":"border","add":[{"zone":"philistia","certainty":"unsure","label":"PHILISTIA","labelAt":[34.55,31.72],"coords":PHIL}],"sfx":"border"}]),
  B("They brought their own ways. Their painted pottery followed Aegean styles. They cooked on open hearths, and wove with loom weights shaped like spools.", A, ["yasur","killebrew"]),
  B("They also ate a good deal of pork, unlike the villagers in the hills.", A, ["faust","killebrew"]),
  B("Ancient DNA from Ashkelon shows that some of the early settlers had ancestry from southern Europe. Within about two centuries, their families had mixed with the people of the land.", A, ["feldman"]),

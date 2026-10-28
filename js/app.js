@@ -71,9 +71,14 @@ let cullRaf = 0;
 function cullLabels(){ if (!cullRaf) cullRaf = requestAnimationFrame(() => { cullRaf = 0; cullNow(); }); }
 function cullNow(){
   const boxes = [], pad = 1, hit = b => boxes.some(q => b.left < q.right - pad && b.right > q.left + pad && b.top < q.bottom - pad && b.bottom > q.top + pad);
-  gZones.selectAll('text.zlabel').each(function(){
-    if (this.style.display === 'none' || +(getComputedStyle(this).opacity) < .5) return;
-    const r = this.getBoundingClientRect(); if (r.width) boxes.push(r);
+  // zone labels among themselves: the people label (ISRAEL) first; a zone label that would sit on top of
+  // another one (PHILISTIA next to ISRAEL when zoomed far out) hides until there is room
+  const zl = gZones.selectAll('text.zlabel').nodes().sort((a, b) => b.classList.contains('zl-people') - a.classList.contains('zl-people'));
+  zl.forEach(t => {
+    t.classList.remove('zcull');
+    if (t.style.display === 'none' || +(getComputedStyle(t).opacity) < .5) return;
+    const r = t.getBoundingClientRect(); if (!r.width) return;
+    if (hit(r)) t.classList.add('zcull'); else boxes.push(r);
   });
   // transition labels (arrows, battles): newest first, they win over map labels
   [...document.querySelectorAll('#map .fxlab text, #map .battle .blab')].reverse().forEach(t => {
@@ -123,10 +128,12 @@ function placeObjects(){
     else if (w.zone) o.zone = w.zone;
   });
 }
+// an object with "since" is drawn only from that stop's map on (e.g. sites added with c. 1150 BC)
+const onMap = o => !o.since || (STOP && STOP.year >= o.since);
 function drawObjects(){
   gLines.selectAll('*').remove(); gPts.selectAll('*').remove();
   // rivers and lakes: wide invisible hit path over the real line
-  const lineObjs = OBJS.filter(o => o.geo);
+  const lineObjs = OBJS.filter(o => o.geo && onMap(o));
   lineObjs.forEach(o => {
     const feats = Array.isArray(o.geo) ? o.geo : [o.geo];
     const g = gLines.append('g').attr('class', 'lobj t-' + o.type).datum(o);
@@ -136,7 +143,7 @@ function drawObjects(){
   });
   // area labels (regions, seas, peoples, rivers) underneath, so city and site dots always win the tap
   const top = t => (t === 'city' || t === 'site') ? 1 : 0;
-  const pts = OBJS.filter(o => o.pt).map(o => ({o, pt:o.pt})).sort((a,b) => top(a.o.type) - top(b.o.type));
+  const pts = OBJS.filter(o => o.pt && onMap(o)).map(o => ({o, pt:o.pt})).sort((a,b) => top(a.o.type) - top(b.o.type));
   const g = gPts.selectAll('g.obj').data(pts, d => d.o.id).join('g').attr('class', d => `obj t-${d.o.type} r-${d.o.rank}`);
   const inner = g.append('g').attr('class','inner');
   inner.append('circle').attr('class','hit tap').attr('r', d => top(d.o.type) ? 15 : 12).on('click', (e, d) => { e.stopPropagation(); openObj(d.o.id); });
@@ -177,7 +184,7 @@ function drawZones(era){
   g.selectAll('path.israel').data(people).join('path').attr('class','israel tap').on('click', (e, f) => open(e, f.properties.zone));
   const ids = [...new Set(feats.map(f => f.properties.zone))];
   g.selectAll('text.zlabel').data(ids.map(id => ({id, c: (era.labelAt||{})[id] || centroidOf(feats.filter(f => f.properties.zone === id))}))).join('text')
-    .attr('class', d => 'zlabel tap' + (d.id === 'israel' ? ' zl-people' : '')).text(d => zoneObj(d.id).name.replace(/ \(.*\)/,''))
+    .attr('class', d => 'zlabel tap' + (d.id === 'israel' ? ' zl-people' : '')).text(d => (era.zoneLabels || {})[d.id] || zoneObj(d.id).name.replace(/ \(.*\)/,''))
     .attr('x', d => projection(d.c)[0]).attr('y', d => projection(d.c)[1])
     .on('click', (e, d) => open(e, d.id));
   // generous tap target for the small "people" area
@@ -185,12 +192,16 @@ function drawZones(era){
     .attr('r', 1).on('click', (e, d) => open(e, d.id));
   redrawZones();
 }
-// the ISRAEL label sits in the hill country among the sites; a tap on the word itself opens Israel even
-// where a site's (larger) tap circle reaches under it (rivers and roads keep their own taps)
+// zone labels (ISRAEL in the hill country, PHILISTIA on the coast) sit among the sites; a tap on the word
+// itself opens its zone even where a site's (larger) tap circle or another zone's tap area reaches under it
+// (rivers and roads keep their own taps)
 svg.node().addEventListener('click', e => {
-  const t = gZones.select('text.zl-people').node(); if (!t || CINE || !(e.target.classList && e.target.classList.contains('hit'))) return;
-  const r = t.getBoundingClientRect(); if (!r.width || getComputedStyle(t).display === 'none' || +getComputedStyle(t).opacity === 0) return;
-  if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom){ e.stopPropagation(); e.preventDefault(); openObj(ERA.zoneObjects.israel); }
+  const c = e.target.classList; if (CINE || !c || !(c.contains('hit') || c.contains('zhit') || c.contains('israel') || c.contains('zone'))) return;
+  for (const t of gZones.selectAll('text.zlabel').nodes()){
+    const r = t.getBoundingClientRect(); if (!r.width || getComputedStyle(t).display === 'none' || +getComputedStyle(t).opacity === 0 || t.classList.contains('gone') || t.classList.contains('zcull')) continue;
+    const z = t.__data__ && ERA.zoneObjects[t.__data__.id];
+    if (z && e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom){ e.stopPropagation(); e.preventDefault(); openObj(z); return; }
+  }
 }, true);
 function redrawZones(){
   gZones.selectAll('path').attr('d', path);
@@ -292,7 +303,7 @@ function showStep(i, fly = true){
         `<p class="lead">${esc(STORY.intro)}</p><p>${esc(tinText())}</p>` +
         (tinBeats() ? `<div class="cta"><button type="button" class="play" id="gostory">▶ Watch the opening · ${minsOf(reelChapters('intro')[0].ms)}</button><button type="button" id="goexplore">Explore the map</button></div>` +
             resumeBtn('intro', 'goresume') + chapterList('intro') +
-            `<p class="cap"><button type="button" class="linkish" id="goread">Or read it as fact boxes ›</button></p>`
+            (STOP.events.length ? `<p class="cap"><button type="button" class="linkish" id="goread">Or read it as fact boxes ›</button></p>` : '')
           : `<div class="cta"><button type="button" class="play" id="gostory">Start the story ›</button><button type="button" id="goexplore">Explore the map</button></div>`) +
         `<div class="sub">Key places and peoples</div>${chips(STOP.keyObjects)}` +
         `<div class="legend2">${badge('attested')} found in ancient evidence · ${badge('disputed')} scholars disagree · ${badge('tradition')} Jewish tradition and the Hebrew Bible</div>`;
@@ -469,7 +480,7 @@ const STEP = {
       if (!f.certainty){ const t = gZones.selectAll('text.zlabel').filter(z => z.id === f.zone).classed('gone', true).style('pointer-events','none'); ms ? fade(t, 0, ms) : t.style('opacity', 0); }
     });
     (x.add || []).forEach(a => {
-      const feat = rewind({type:'Feature', properties:{zone:a.zone, certainty:a.certainty, part:'Drawn for c. 1150 BC: extent uncertain'}, geometry:{type:'Polygon', coordinates:[a.coords]}});
+      const feat = rewind({type:'Feature', properties:{zone:a.zone, certainty:a.certainty, part:`Drawn for ${playToLabel()}: extent uncertain`}, geometry:{type:'Polygon', coordinates:[a.coords]}});
       FXZ.push(feat);
       const g = gZones.select('g');
       const el = a.certainty === 'people' ? g.append('path').attr('class','israel tap added') : g.append('path').attr('class', `zone tap unsure added z-${a.zone}`);
@@ -595,8 +606,11 @@ function showChoice(i){
   const c = $('choice'); c.hidden = false; c.classList.remove('in'); void c.offsetWidth; c.classList.add('in'); wake(); placeChoice();
   const nxt = chapterAt('intro', i + 1);
   $('choicego').textContent = 'Continue the story ›';
-  $('choicesub').textContent = nxt && nxt.i === i + 1 ? `Chapter ${nxt.n}: ${nxt.title} · ${mmss(reelChapters('intro').filter(x => x.n >= nxt.n).reduce((s, x) => s + x.ms, 0))}` : '';
-  $('choicego').onclick = e => { e.stopPropagation(); if (!PLAY) return; hideChoice(); PLAY.wait = false; if (PLAY.paused) playPause(false); runBeat(i + 1); };
+  // an opener that ends on its choice (c. 1150 BC): Continue goes straight on into Play
+  const intoPlay = i + 1 >= PLAY.beats.length && STOP.play;
+  $('choicesub').textContent = intoPlay ? `Play: ${STOP.play.title} · ${mmss(playTotal())}` : nxt && nxt.i === i + 1 ? `Chapter ${nxt.n}: ${nxt.title} · ${mmss(reelChapters('intro').filter(x => x.n >= nxt.n).reduce((s, x) => s + x.ms, 0))}` : '';
+  $('choicego').onclick = e => { e.stopPropagation(); if (!PLAY) return; hideChoice(); PLAY.wait = false; if (PLAY.paused) playPause(false);
+    if (intoPlay){ resumeSet('intro', 0); playStart('play'); } else runBeat(i + 1); };
   $('choicemap').onclick = e => { e.stopPropagation(); if (!PLAY) return; const r = PLAY.reel; playStop(false); resumeSet(r, i + 1); };
   setTimeout(() => { if (!c.hidden) $('choicego').focus({preventScroll: true}); }, 50);
 }
@@ -661,13 +675,15 @@ function playStop(toEnd){
   if (!toEnd){ resetMap(); YEAR = null; $('big').textContent = STOP.label; $('pill').textContent = STOP.label; drawKeys(); out.then(() => { if (!PLAY) showStep(steps().length - 1); }); }
   return out;
 }
+const playToLabel = () => { const s = STOP && STOP.play && STORY.stops.find(s => s.year === STOP.play.to); return s ? s.label : ''; };
 function playEnd(){
-  // the transition ends on the new year's intro and stays there
+  // the transition ends on the new year's intro and stays there (no auto-continue)
   resumeSet('play', 0);
   const to = STOP.play.to;
   const k = STORY.stops.findIndex(s => s.year === to);
-  // zoom back out to the explore view first, then land on the new year's intro
-  playStop(true).then(() => { if (!PLAY) arriveSoon(k, false); });
+  // zoom back out to the explore view first, then land on the new year: its intro when the stop is built,
+  // otherwise the 'coming soon' end state
+  playStop(true).then(() => { if (PLAY) return; STORY.stops[k].file ? go(k) : arriveSoon(k, false); });
 }
 // ---------- cinematic mode: the narrated part as a small film ----------
 // The map viewport grows from its place in the page to the full screen (Fullscreen API where it exists,
@@ -867,11 +883,12 @@ function arriveSoon(k, rebuild){
   const s = STORY.stops[k];
   cur = k; MODE = 'soon';
   if (rebuild){ resetMap(); Object.assign(ERA.zoneObjects, STOP.play.zoneObjects); PLAY = {beats: STOP.play.beats, clockOn: false, anims: [], events: []}; STOP.play.beats.forEach((b, j) => applyInstant(j)); PLAY = null; }
-  setHighlight(['hills','izbetsartah','philistines','ashdod','ashkelon','ekron','gath']);
+  setHighlight(s.soon.hl || []);
   // the end state keeps the new borders; arrows and battle markers belong to the transition only
   gFx.selectAll('*').interrupt().transition().duration(rebuild ? 0 : 700).style('opacity', 0).remove();
   gFxTop.selectAll('*').transition().duration(rebuild ? 0 : 700).style('opacity', 0).remove();
-  flyTo([35.0, 31.95], 4.6, rebuild ? 0 : 1400);
+  const f = s.soon.focus || {c: [35.0, 31.95], k: 4.6};
+  flyTo(f.c, f.k, rebuild ? 0 : 1400);
   timelineState(s);
   $('chapter').textContent = s.title; $('ev').hidden = false; $('soon').hidden = true;
   const recap = STOP.play.beats.map(b => b.steps.find(x => x.type === 'caption')).filter(c => c && c.cert !== 'scene' && c.cert !== 'frame');

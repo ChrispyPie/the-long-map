@@ -1,4 +1,240 @@
 {
+"assets/narration/jews-1150-in-01.mp3": {
+"ms": 6322,
+"sha": "94a530c0d59f"
+},
+"assets/narration/jews-1150-in-02.mp3": {
+"ms": 8882,
+"sha": "34b6942ccd0d"
+},
+"assets/narration/jews-1150-in-03.mp3": {
+"ms": 3866,
+"sha": "c06e26c944f7"
+},
+"assets/narration/jews-1150-in-04.mp3": {
+"ms": 7445,
+"sha": "fd265c5daf0e"
+},
+"assets/narration/jews-1150-in-05.mp3": {
+"ms": 7445,
+"sha": "5b60e7f4c7f1"
+},
+"assets/narration/jews-1150-in-06.mp3": {
+"ms": 12278,
+"sha": "850a0499af28"
+},
+"assets/narration/jews-1150-in-07.mp3": {
+"ms": 6896,
+"sha": "0e469ff5c86a"
+},
+"assets/narration/jews-1150-play-01.mp3": {
+"ms": 11964,
+"sha": "80397af74f54"
+},
+"assets/narration/jews-1150-play-02.mp3": {
+"ms": 12591,
+"sha": "c7427558d1ad"
+},
+"assets/narration/jews-1150-play-03.mp3": {
+"ms": 12696,
+"sha": "d6b9ca2ed553"
+},
+"assets/narration/jews-1150-play-04.mp3": {
+"ms": 9247,
+"sha": "6bcf5ae1584b"
+},
+"assets/narration/jews-1150-play-05.mp3": {
+"ms": 9535,
+"sha": "305b15768853"
+},
+"assets/narration/jews-1150-play-06.mp3": {
+"ms": 14550,
+"sha": "436968545d99"
+},
+"assets/narration/jews-1150-play-07.mp3": {
+"ms": 16980,
+"sha": "4b4a183b2d9a"
+},
+"assets/narration/jews-1150-play-08.mp3": {
+"ms": 10710,
+"sha": "3eefc8828aae"
+},
+"assets/narration/jews-1150-play-09.mp3": {
+"ms": 11389,
+"sha": "91e70fe0e5cf"
+},
+"assets/narration/jews-1150-play-10.mp3": {
+"ms": 10188,
+"sha": "e03d547866ab"
+},
+"assets/narration/jews-1150-play-11.mp3": {
+"ms": 15726,
+"sha": "67606a9a9c57"
+},
+"assets/narration/jews-1150-play-12.mp3": {
+"ms": 8647,
+"sha": "3526d8ff2bef"
+},
+"assets/narration/jews-1150-play-13.mp3": {
+"ms": 8647,
+"sha": "83725aa7f5ff"
+},
+"assets/narration/jews-1150-play-14.mp3": {
+"ms": 10057,
+"sha": "93f18cd99baf"
+},
+"assets/narration/jews-1150-play-15.mp3": {
+"ms": 14472,
+"sha": "3cd0972b66c5"
+},
+"assets/narration/jews-1150-play-16.mp3": {
+"ms": 11128,
+"sha": "2ec995f96393"
+},
+"assets/narration/jews-1150-play-17.mp3": {
+"ms": 9665,
+"sha": "cac781afb7a7"
+},
+"assets/narration/jews-1150-play-18.mp3": {
+"ms": 9587,
+"sha": "0ebadb1d169f"
+},
+"assets/narration/jews-1150-play-19.mp3": {
+"ms": 7915,
+"sha": "3751d7786a83"
+},
+"assets/narration/jews-1150-play-20.mp3": {
+"ms": 14968,
+"sha": "14284fdc8e1d"
+},
+"assets/narration/jews-1150-play-21.mp3": {
+"ms": 10318,
+"sha": "88a08555bd36"
+},
+"assets/narration/jews-1150-play-22.mp3": {
+"ms": 8333,
+"sha": "56d17859d4c8"
+},
+"assets/narration/jews-1150-play-23.mp3": {
+"ms": 6557,
+"sha": "8c16a47f9e54"
+},
+"assets/narration/jews-1150-play-24.mp3": {
+"ms": 11076,
+"sha": "ec3757ebcd22"
+},
+"assets/narration/jews-1150-play-25.mp3": {
+"ms": 10423,
+"sha": "709d7eed9795"
+},
+"assets/narration/jews-1150-play-26.mp3": {
+"ms": 12408,
+"sha": "4a1e494fc8ea"
+},
+"assets/narration/jews-1150-play-27.mp3": {
+"ms": 9770,
+"sha": "305c7ef9f436"
+},
+"assets/narration/jews-1150-play-28.mp3": {
+"ms": 8829,
+"sha": "a9246900f590"
+},
+"assets/narration/jews-1150-play-29.mp3": {
+"ms": 10005,
+"sha": "217975f3b921"
+},
+"assets/narration/jews-1150-play-30.mp3": {
+"ms": 10240,
+"sha": "8b52c3fa85ee"
+},
+"assets/narration/jews-1150-play-31.mp3": {
+"ms": 4859,
+"sha": "82d99fabf825"
+},
+"assets/narration/jews-1150-play-32.mp3": {
+"ms": 13166,
+"sha": "70953f181394"
+},
+"assets/narration/jews-1150-play-33.mp3": {
+"ms": 11624,
+"sha": "2527c59a8df5"
+},
+"assets/narration/jews-1150-play-34.mp3": {
+"ms": 12042,
+"sha": "dddda3d26c5a"
+},
+"assets/narration/jews-1150-play-35.mp3": {
+"ms": 13166,
+"sha": "4540723fd4e4"
+},
+"assets/narration/jews-1150-play-36.mp3": {
+"ms": 8516,
+"sha": "3f52b7dddd25"
+},
+"assets/narration/jews-1150-play-37.mp3": {
+"ms": 9117,
+"sha": "a3d64ac59df4"
+},
+"assets/narration/jews-1150-play-38.mp3": {
+"ms": 12565,
+"sha": "147a96d50e73"
+},
+"assets/narration/jews-1150-play-39.mp3": {
+"ms": 7262,
+"sha": "00ba977ca359"
+},
+"assets/narration/jews-1150-play-40.mp3": {
+"ms": 6557,
+"sha": "996f9d5d5963"
+},
+"assets/narration/jews-1150-play-41.mp3": {
+"ms": 8829,
+"sha": "0fd864979cd7"
+},
+"assets/narration/jews-1150-play-42.mp3": {
+"ms": 16980,
+"sha": "2d25f9142b75"
+},
+"assets/narration/jews-1150-play-43.mp3": {
+"ms": 16405,
+"sha": "0e5ab3b88d98"
+},
+"assets/narration/jews-1150-play-44.mp3": {
+"ms": 12513,
+"sha": "5f86607b3aff"
+},
+"assets/narration/jews-1150-play-45.mp3": {
+"ms": 12591,
+"sha": "ba56cebe80b1"
+},
+"assets/narration/jews-1150-play-46.mp3": {
+"ms": 13113,
+"sha": "01d8075e5765"
+},
+"assets/narration/jews-1150-play-47.mp3": {
+"ms": 5721,
+"sha": "9e8abb94dcb0"
+},
+"assets/narration/jews-1150-play-48.mp3": {
+"ms": 15752,
+"sha": "4ced989394ce"
+},
+"assets/narration/jews-1150-play-49.mp3": {
+"ms": 11990,
+"sha": "f1e1e7031a2b"
+},
+"assets/narration/jews-1150-play-50.mp3": {
+"ms": 8934,
+"sha": "23a778d51b6d"
+},
+"assets/narration/jews-1150-play-51.mp3": {
+"ms": 8411,
+"sha": "8ff170fe0be1"
+},
+"assets/narration/jews-1150-play-52.mp3": {
+"ms": 15334,
+"sha": "db4037087dd6"
+},
 "assets/narration/jews-1207-in-01.mp3": {
 "ms": 3736,
 "sha": "6e0db509c210"

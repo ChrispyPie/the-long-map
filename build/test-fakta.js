@@ -137,29 +137,36 @@ const D = process.env.SHOTS || 'screens';
     ok(name+' Hatti faded', await p.evaluate(()=>[...document.querySelectorAll('path.z-hatti.zone')].every(e=>e.classList.contains('gone'))));
     // run to the end quickly
     await p.evaluate(()=>{ __app.speed = 12; __app.seek(__app.play.n - 6); });
-    await p.waitForFunction(()=>__app.mode === 'soon', null, {timeout:30000});
+    await p.waitForFunction(()=>__app.mode === 'stop' && !__app.play && /1150/.test(document.getElementById('pill').textContent), null, {timeout:30000});
     await p.waitForTimeout(1600);
-    const end = await p.evaluate(()=>({big:document.getElementById('big').textContent, soon:document.getElementById('evbody').textContent.includes('Next chapter coming soon'), phil:document.querySelectorAll('path.z-philistia').length, hl:document.querySelectorAll('path.israel.added').length, cap:document.getElementById('cap').hidden, xp:document.getElementById('xp').hidden}));
+    const end = await p.evaluate(()=>({big:document.getElementById('big').textContent, flag:!!document.querySelector('.soonflag'), phil:document.querySelectorAll('path.z-philistia').length, isr:document.querySelectorAll('path.israel').length, added:document.querySelectorAll('path.added').length, hatti:document.querySelectorAll('path.z-hatti').length, cap:document.getElementById('cap').hidden, xp:document.getElementById('xp').hidden}));
     await p.waitForTimeout(2500);
-    ok(name+' stays on the 1150 intro (no auto-continue)', await p.evaluate(()=>__app.mode === 'soon' && !__app.play));
+    ok(name+' stays on the 1150 intro (no auto-continue)', await p.evaluate(()=>__app.mode === 'stop' && !__app.play && /1150/.test(document.getElementById('pill').textContent)));
     ok(name+' recap has no scene lines, scene captions exist in data', await p.evaluate(()=>![...document.querySelectorAll('#evbody .cb')].some(b=>b.textContent==='Imagine')));
     ok(name+' donate link hidden (donateUrl null)', await p.evaluate(()=>document.getElementById('donate').hidden && getComputedStyle(document.getElementById('donate')).display === 'none'));
-    ok(name+' play ends at c. 1150 coming-soon intro: '+JSON.stringify(end), end.big === 'c. 1150 BC' && end.soon && end.phil === 1 && end.hl === 1 && end.cap && end.xp);
+    ok(name+' play ends at the live c. 1150 stop (its own map, no soon flag): '+JSON.stringify(end), end.big === 'c. 1150 BC' && !end.flag && end.phil >= 1 && end.isr >= 1 && end.added === 0 && end.hatti === 0 && end.cap && !end.xp);
     if (shots) { if (mobile) await toEv(); await p.screenshot({path:D+'/faktaruta_1150'+(mobile?'':'_desktop')+'.png'}); await p.evaluate(()=>scrollTo(0,0)); }
+    // visible zone labels never overlap (PHILISTIA hides next to ISRAEL when zoomed far out)
+    ok(name+' zone labels do not overlap', await p.evaluate(()=>{ const r=[...document.querySelectorAll('text.zlabel')].filter(t=>getComputedStyle(t).visibility!=='hidden' && getComputedStyle(t).display!=='none' && +getComputedStyle(t).opacity>.5).map(t=>t.getBoundingClientRect()).filter(b=>b.width);
+      return r.every((a,i)=>r.every((b,j)=>i>=j || a.right<=b.left+1 || b.right<=a.left+1 || a.bottom<=b.top+1 || b.bottom<=a.top+1)); }));
+    if (await p.evaluate(()=>[...document.querySelectorAll('text.zlabel')].find(t=>t.textContent==='PHILISTIA').classList.contains('zcull'))) { await p.evaluate(()=>__zoomTest()); await p.waitForTimeout(1200); }
+    ok(name+' PHILISTIA label shown when zoomed in', await p.evaluate(()=>!document.querySelector('text.zlabel.zcull')));
     q = await p.evaluate(() => { const t=[...document.querySelectorAll('text.zlabel')].find(t=>t.textContent==='PHILISTIA'); const r=t.getBoundingClientRect(); return {x:r.x+r.width/2,y:r.y+r.height/2}; });
     await tap(q.x, q.y); await p.waitForTimeout(400);
     s = await st(); ok(name+' tap PHILISTIA -> '+s.open, s.open === 'philistines');
     await p.click('#popx'); await p.waitForTimeout(200);
-    // replay then stop -> back at 1207 explore, zones reset
-    await p.evaluate(()=>{ __app.speed = 1; document.getElementById('replay').click(); }); await p.waitForTimeout(800);
+    // back to 1207, replay its Play, then stop -> 1207 explore, zones reset
+    await p.evaluate(()=>{ __app.speed = 1; __app.go(0); }); await p.waitForTimeout(1200); await p.evaluate(()=>__app.playStart('play', 0)); await p.waitForTimeout(800);
     ok(name+' replay runs', await p.evaluate(()=>__app.play && __app.play.i === 0));
     await ctl('#capx'); await p.waitForTimeout(1200);
     ok(name+' stop -> 1207 explore, no added zones', await p.evaluate(()=>__app.mode==='stop' && !!document.getElementById('playbtn') && document.querySelectorAll('.added').length===0 && document.getElementById('pill').textContent==='1207 BC'));
-    // timeline straight to c. 1150 rebuilds the end state
+    // timeline straight to c. 1150: the live stop with its own map (base features, nothing 'added')
     await p.evaluate(()=>__app.go(1)); await p.waitForTimeout(1200);
-    ok(name+' timeline to 1150: '+await p.evaluate(()=>__app.mode+' '+document.querySelectorAll('.added').length), await p.evaluate(()=>__app.mode==='soon' && document.querySelectorAll('path.added').length===2));
-    await p.evaluate(()=>__app.go(2)); await p.waitForTimeout(600);
-    ok(name+' planned stop 1000 BC shows coming soon box', await p.evaluate(()=>!document.getElementById('soon').hidden && document.getElementById('ev').hidden));
+    ok(name+' timeline to 1150: '+await p.evaluate(()=>__app.mode+' '+document.querySelectorAll('.added').length), await p.evaluate(()=>__app.mode==='stop' && document.querySelectorAll('path.added').length===0 && document.querySelectorAll('path.z-philistia').length>=1 && document.querySelectorAll('path.z-hatti').length===0));
+    await p.evaluate(()=>__app.go(2)); await p.waitForTimeout(1200);
+    ok(name+' timeline to c. 1000 BC: the end of the 1150 Play, coming soon', await p.evaluate(()=>__app.mode==='soon' && /1000/.test(document.getElementById('pill').textContent) && !!document.querySelector('.soonflag')));
+    await p.evaluate(()=>__app.go(3)); await p.waitForTimeout(600);
+    ok(name+' planned stop c. 930 BC shows coming soon box', await p.evaluate(()=>!document.getElementById('soon').hidden && document.getElementById('ev').hidden));
     await p.evaluate(()=>__app.go(0)); await p.waitForTimeout(1200);
     await ctx.close();
   }
