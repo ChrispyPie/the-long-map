@@ -128,6 +128,13 @@ try { var t = localStorage.getItem('tlm.textsize'); if (/^(s|m|l|xl)$/.test(t)) 
   .t-route .lab { fill:#6a3a1a; font-size:calc(10px * var(--tsm)); }
   .obj.hl .lab { fill:#7a3d00; font-weight:700; }
   .obj.hl .dot { fill:#b5651d; }
+  /* in a film: the place the narrator names gets a soft pulsing ring and a larger label */
+  .obj .ring { display:none; fill:rgba(240,190,90,.22); stroke:#b5651d; stroke-width:1.6; pointer-events:none; transform-box:fill-box; transform-origin:center; }
+  body.playing .obj.hl .ring { display:inline; animation:placering 2.6s ease-in-out infinite; }
+  body.playing .obj.hl .lab { font-size:calc(13.5px * var(--tsm)); stroke-width:3.2px; transform:translateX(5px); }
+  body.playing .obj.hl.t-region .lab { font-size:calc(11px * var(--tsm)); transform:none; }
+  @keyframes placering { 0%,100% { transform:scale(.8); stroke-opacity:.95; } 50% { transform:scale(1.25); stroke-opacity:.45; } }
+  @media (prefers-reduced-motion: reduce){ body.playing .obj.hl .ring { animation:none; } }
   .obj.sel .dot { fill:var(--accent-map); stroke:#1c2418; stroke-width:1.5; }
   .obj.sel .lab { fill:#000; font-weight:700; }
   .route { fill:none; stroke:#7a4a22; stroke-width:1.6; stroke-dasharray:4 3; vector-effect:non-scaling-stroke; }
@@ -353,6 +360,8 @@ try { var t = localStorage.getItem('tlm.textsize'); if (/^(s|m|l|xl)$/.test(t)) 
   body.cine.idle .cap2 .chaps { opacity:0; pointer-events:none; } body.cine .cap2 .chaps { transition:opacity .35s; }
   .cap2.frame .csrc { display:none; }
   .resume { display:block; margin:10px 0 2px; min-height:44px; font-weight:600; }
+  .resumebox { margin:8px 0 6px; } .resumebox .resume { width:100%; margin:0; box-shadow:inset 0 0 0 2px var(--accent-foil), 0 1px 3px rgba(0,0,0,.35); }
+  .linkish.over { display:block; padding:4px 0 6px; font-size:calc(12px * var(--ts)); } .plist .linkish.over { margin:-1px 0 2px auto; }
   .chlist { list-style:none; margin:0; padding:0; } .chlist li { margin:0 0 4px; }
   .chb { display:flex; width:100%; align-items:center; gap:10px; min-height:40px; padding:6px 10px; text-align:left; font-size:calc(13.5px * var(--ts)); }
   .chb .cn { flex:none; width:20px; height:20px; border-radius:50%; display:grid; place-items:center; font:700 11px/1 var(--sans); background:var(--ink); color:var(--paper-hi); }
@@ -362,6 +371,7 @@ try { var t = localStorage.getItem('tlm.textsize'); if (/^(s|m|l|xl)$/.test(t)) 
   @media (max-width:380px){ .choicein { padding:16px 14px 12px; } .choicein .cbtns { flex-direction:column; align-items:center; } }
   @media (prefers-reduced-motion: reduce){ .chapcard.in, .choice.in .choicein { animation:none; } }
   body.cc-off .cap2 .ctext, body.cc-off .cap2 .csrc { display:none; }
+  #revtag { position:absolute; right:10px; top:-21px; padding:1px 7px; border-radius:6px; background:rgba(40,28,16,.78); color:#f3e6c8; font:600 11px/17px ui-monospace, Menlo, Consolas, monospace; letter-spacing:.02em; pointer-events:none; white-space:nowrap; }
   @media (max-width:899px){ body.cine .cap2 .ctext { font-size:calc(15.5px * var(--ts)); } body.cine .cap2 .crow button { min-width:38px; padding:6px 8px; } }
   /* small phones: one row of controls; the progress bar shows how far along the film is */
   @media (max-width:430px){ body.cine .cap2 .crow { gap:1px; padding:4px 4px; } body.cine .cap2 .crow button { min-width:34px; padding:6px 4px; } body.cine .cap2 .crow .n { display:none; } body.cine .cap2 #capspd { min-width:44px; } }
