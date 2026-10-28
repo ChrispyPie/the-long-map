@@ -1,6 +1,6 @@
 // The opener's choice ("The world is set. What next?") must be fully visible and tappable on every screen:
 // both buttons inside the screen, not covered by the subtitle, chapter strip, controls, year or letterbox.
-// Usage: node build/test-choice.js [url] [noshots]; SHOTS=dir for choice_<w>x<h>.png screenshots.
+// Usage: node build/test-choice.js [url] [noshots]; TS=s|m|l|xl for a saved text size; SHOTS=dir for choice_<w>x<h>.png screenshots.
 const { chromium } = require('playwright');
 const url = process.argv[2] || 'http://127.0.0.1:8793/';
 const shots = process.argv[3] !== 'noshots';
@@ -21,6 +21,7 @@ const israelCheck = p => p.evaluate(() => {
   for (const [vw, vh, mobile] of VIEWS){
     const name = vw + 'x' + vh;
     const ctx = await b.newContext({viewport: {width: vw, height: vh}, deviceScaleFactor: 2, isMobile: !!mobile, hasTouch: !!mobile});
+    if (process.env.TS) await ctx.addInitScript(t => localStorage.setItem('tlm.textsize', t), process.env.TS); // TS=xl runs the suite at a saved text size
     await ctx.addInitScript(() => { localStorage.setItem('tlm.notice.v1', 'seen'); localStorage.setItem('tlm.voice', 'off'); localStorage.setItem('tlm.snd', 'off'); });
     const p = await ctx.newPage();
     p.on('pageerror', e => errs.push(name + ' pageerror: ' + e.message));

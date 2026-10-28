@@ -35,7 +35,13 @@
     later(3400, done);
   }
   begin.addEventListener('click', start);
-  intro.addEventListener('keydown', e => { if (e.key === 'Tab' && state === 'notice'){ e.preventDefault(); begin.focus(); } });
+  // keep the keyboard inside the notice: the text size buttons above it, then Begin adventure
+  intro.addEventListener('keydown', e => {
+    if (e.key !== 'Tab' || state !== 'notice') return;
+    e.preventDefault();
+    const f = [...intro.querySelectorAll('.ts button'), begin], i = f.indexOf(document.activeElement);
+    f[(i < 0 ? f.length - 1 : i + (e.shiftKey ? f.length - 1 : 1)) % f.length].focus();
+  });
   ['about', 'about2'].forEach(id => { const b = $(id); if (b) b.addEventListener('click', e => { e.stopPropagation(); show(); }); });
   if (!seen()) show();
   window.__intro = { show, start, get state(){ return state; }, KEY };

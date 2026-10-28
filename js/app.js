@@ -58,7 +58,7 @@ function scaleMarks(){
   gPts.selectAll('g.obj')
     .style('display', d => (K >= showAt(d.o.rank, d.o.type) || d.hl) ? null : 'none')
     .each(function(){ d3.select(this).select('.inner').attr('transform', `scale(${1/K})`); });
-  gZones.selectAll('text.zlabel').style('font-size', (10/K) + 'px').style('stroke-width', (2/K) + 'px').style('display', K > 9 ? 'none' : null);
+  gZones.selectAll('text.zlabel').style('font-size', (10*TSM()/K) + 'px').style('stroke-width', (2/K) + 'px').style('display', K > 9 ? 'none' : null);
   gZones.selectAll('.israel').attr('filter', K < 3 ? null : 'url(#soft)');
   gKey.selectAll('g.key').attr('transform', d => { const p = projection(d.pt); return `translate(${p[0]},${p[1]}) scale(${1/K})`; });
   root.selectAll('g.fxm').attr('transform', d => { const p = projection(d.pt); return `translate(${p[0]},${p[1]}) scale(${1/K})`; });
@@ -677,6 +677,9 @@ function drawChapters(){
 const NARROW = () => matchMedia('(max-width:899px)').matches;
 function placeCap(){ const c = $('cap'), vp = $('vp'); if (NARROW() && !CINE){ if (c.parentNode === vp) vp.after(c); c.classList.add('below'); } else { if (c.parentNode !== vp) vp.append(c); c.classList.remove('below'); } }
 addEventListener('resize', () => { if (PLAY) placeCap(); placeChoice(); });
+// text size (js/textsize.js): map labels follow the gentler map scale; relabel and re-place the film panels
+function TSM(){ const v = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tsm')); return v > 0 ? v : 1; }
+addEventListener('tlm:textsize', () => { scaleMarks(); placeChoice(); requestAnimationFrame(placeChoice); });
 function setPP(quiet){ const p = PLAY && PLAY.paused; $('cappp').textContent = p ? '▶' : '❚❚'; $('cappp').setAttribute('aria-label', p ? 'Play' : 'Pause'); $('cap').classList.toggle('paused', !!p); if (!quiet || (!idleT && !document.body.classList.contains('idle'))) wake(); }
 function playPause(force){
   if (!PLAY) return;
@@ -934,7 +937,7 @@ const fmt = y => y < 0 ? (-y) + ' BC' : 'AD ' + y;
 function buildTrack(){
   const tr = d3.select('#track');
   const pos = y => (100 * (y - STORY.from) / (STORY.to - STORY.from)) + '%';
-  [-1000,-500,1,500,1000,1500,2000].forEach(y => tr.append('div').attr('class','tick').style('left', pos(y)).text(y === 1 ? 'AD 1' : fmt(y)));
+  [-1000,-500,1,500,1000,1500,2000].forEach(y => tr.append('div').attr('class', y === 2000 ? 'tick tend' : 'tick').style('left', pos(y)).text(y === 1 ? 'AD 1' : fmt(y)));
   tr.selectAll('button.mk').data(STORY.stops).join('button')
     .attr('class', d => 'mk' + (d.file ? ' live' : d.soon ? ' half' : '')).attr('type','button')
     .attr('aria-label', d => d.label + (d.file ? '' : ', coming soon'))

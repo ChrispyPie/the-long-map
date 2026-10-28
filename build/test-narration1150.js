@@ -46,6 +46,7 @@ const ROOT = process.env.ROOT || path.join(__dirname, '..');
   const b = await chromium.launch({args: ['--autoplay-policy=no-user-gesture-required']});
   for (const [name, vw, vh, mobile] of [['mobile', 390, 844, true], ['desktop', 1280, 800, false]]) {
     const ctx = await b.newContext({viewport: {width: vw, height: vh}, deviceScaleFactor: 2, isMobile: mobile, hasTouch: mobile});
+    if (process.env.TS) await ctx.addInitScript(t => localStorage.setItem('tlm.textsize', t), process.env.TS); // TS=xl runs the suite at a saved text size
     await ctx.addInitScript(() => localStorage.setItem('tlm.notice.v1', 'seen'));
     const p = await ctx.newPage();
     try {
