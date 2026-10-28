@@ -7,6 +7,8 @@ Outputs:
   data/stories/jews/story.json   the 'Story of the Jews' story: title, intro, stops
   data/stories/jews/1207bc.json  events (big fact boxes) for the 1207 BC stop, told from Israel's perspective
   data/stories/jews/1150bc.json  the c. 1150 BC stop: opening film, explore keys and Play to c. 1000 BC
+  data/eras/1000bc.json          c. 1000 BC: the c. 1150 BC layer + dashed Ammon, Moab and Edom
+  data/stories/jews/1000bc.json  the c. 1000 BC stop ("Chapter 3"): opening film, fact boxes, explore keys and Play to c. 930 BC
 """
 import json, os, sys
 sys.path.insert(0, os.path.dirname(__file__))
@@ -126,9 +128,21 @@ l1150 = {k: v for k, v in labelAt.items() if k != "hatti"}; l1150["israel"] = AD
 # the same words the Play wrote on the map, so the label does not change at the hand-over
 zl1150 = {"israel": ADD["highlands"]["label"], "philistia": ph["label"]}
 era1150 = {"year":-1150,"label":"c. 1150 BC","zones":{"type":"FeatureCollection","features":f1150},"zoneObjects":z1150,"labelAt":l1150,"zoneLabels":zl1150,"note":NOTE}
-stop = story_jews.STOP; stop1150 = story_jews.STOP1150
+# c. 1000 BC: the c. 1150 BC map (no border for David or Solomon) plus the neighbours east of the Jordan,
+# dashed because their extent around 1000 BC is uncertain. The Play draws the split of c. 930 BC itself.
+NEIGH = {
+ "ammon":([[35.62,32.30],[35.95,32.38],[36.25,32.18],[36.25,31.85],[36.0,31.72],[35.72,31.78],[35.6,32.0],[35.62,32.30]],"Ammon, around Rabbah (drawn for c. 1000 BC; extent uncertain)",[36.02,32.06],"AMMON"),
+ "moab":([[35.6,31.7],[35.95,31.7],[36.12,31.4],[36.0,31.06],[35.62,31.06],[35.58,31.4],[35.6,31.7]],"Moab, the plateau east of the Dead Sea (drawn for c. 1000 BC; extent uncertain)",[35.86,31.33],"MOAB"),
+ "edom":([[35.42,31.0],[35.9,30.98],[35.85,30.3],[35.45,29.95],[35.17,30.25],[35.25,30.75],[35.42,31.0]],"Edom, the highlands and Arabah south-east of the Dead Sea (drawn for c. 1000 BC; extent uncertain)",[35.58,30.5],"EDOM")}
+f1000 = [dict(f) for f in f1150] + [{"type":"Feature","properties":{"zone":z,"certainty":"unsure","part":p},"geometry":{"type":"Polygon","coordinates":[c]}} for z,(c,p,_,_) in NEIGH.items()]
+z1000 = dict(z1150, ammon="ammon", moab="moab", edom="edom")
+l1000 = dict(l1150, **{z: v[2] for z, v in NEIGH.items()})
+zl1000 = dict(zl1150, **{z: v[3] for z, v in NEIGH.items()})
+era1000 = {"year":-1000,"label":"c. 1000 BC","zones":{"type":"FeatureCollection","features":f1000},"zoneObjects":z1000,"labelAt":l1000,"zoneLabels":zl1000,"note":NOTE}
+stop = story_jews.STOP; stop1150 = story_jews.STOP1150; stop1000 = story_jews.STOP1000
 check_stop(stop, era, "jews-1207")
 check_stop(stop1150, era1150, "jews-1150")
+check_stop(stop1000, era1000, "jews-1000")
 def w(p, d):
     os.makedirs(os.path.dirname(p), exist_ok=True)
     json.dump(d, open(p,"w"), ensure_ascii=False, separators=(",",":"))
@@ -137,10 +151,12 @@ w("data/sources.json", src)
 w("data/objects/near-east.json", {"library":"near-east","note":"Shared by all stories. Each object is one small fact box.","objects":objs})
 w("data/eras/1207bc.json", era)
 w("data/eras/1150bc.json", era1150)
+w("data/eras/1000bc.json", era1000)
 w("data/stories/jews/story.json", story_jews.STORY)
 w("data/stories/jews/1207bc.json", stop)
 w("data/stories/jews/1150bc.json", stop1150)
-for st in (stop, stop1150):
+w("data/stories/jews/1000bc.json", stop1000)
+for st in (stop, stop1150, stop1000):
     play, tin = st["play"], st["transitionIn"]
     print(st["label"], "events", len(st["events"]), "play beats", len(play["beats"]), "words", play["words"], "voice min", round(sum(b.get("audioMs", b["duration"])+b["pauseAfter"] for b in play["beats"])/60000, 1),
           "opening beats", len(tin["beats"]) if isinstance(tin, dict) else 0, "explore keys", len(st["explore"]["key"]))

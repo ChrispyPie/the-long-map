@@ -160,7 +160,12 @@ DAVID = [
    vis=[fo([34.957,31.696],10,["qeiyafa"])]),
  B("Large or small, in the Bible the House of David rules Jerusalem for about four hundred years. And in Jewish tradition, David's name became a lasting hope, of a future king who brings peace.", T, ["bible"], ref="2 Samuel 7:16; 2 Kings 25; Isaiah 11:1–9",
    vis=[fo([35.1,31.9],5.5,["jerusalem"])],
-   note="Closing line of the stop. Warm, hopeful, let it settle."),
+   note="Warm, hopeful, let it settle."),
+ # teaser for the next chapter (added 28 Oct 2026; every chapter ends on a hook)
+ B("But the story goes on. In the Bible, David's son Solomon builds a temple in Jerusalem, and after him the kingdom splits in two. That is our next chapter.", T, ["bible"], ref="1 Kings 6–8; 1 Kings 12",
+   vis=[fo([35.25,32.0],5,["jerusalem","shechem"])],
+   claims=[["In the Bible, David's son Solomon builds a temple in Jerusalem, and after him the kingdom splits in two.", T, ["bible"]]],
+   note="Closing line of the chapter. A hook: lighter, a little forward-leaning, then let it settle."),
 ]
 DAVID[0]["chapter"] = "David: tradition and evidence"
 PLAY = COAST + SHILOH + SAUL + DAVID
