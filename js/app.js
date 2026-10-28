@@ -389,7 +389,7 @@ function partList(){
   const here = ps.findIndex(x => x.k === cur), nx = ps[here + 1];
   // the next part is preloaded, so a tap starts its film at once
   if (nx){ getJSON(nx.s.file).catch(() => {}); getJSON(nx.s.era).catch(() => {}); }
-  return `<div class="sub">Parts</div><ol class="chlist parts">` + ps.map((x, n) => {
+  return `<div class="sub">Parts</div><ol class="plist parts">` + ps.map((x, n) => {
     const me = x.k === cur, next = nx && x.k === nx.k && partDone(STOP.year);
     const tag = me ? 'You are here' : next ? 'Continue ▶' : partDone(x.s.year) ? '✓ Watched' : 'Start ▶';
     return `<li><button type="button" class="chb part${me ? ' here' : ''}${next ? ' gonext' : ''}" data-part="${x.k}"${me ? ' aria-current="true"' : ''}>` +
