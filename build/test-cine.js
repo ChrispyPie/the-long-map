@@ -75,12 +75,12 @@ const D = process.env.SHOTS || 'screens';
     ok(name+' controls auto-hide after a few seconds '+JSON.stringify(c), c.idle && !c.paused);
     if (!mobile){ await p.mouse.move(300, 300); await p.mouse.move(320, 310); await p.waitForTimeout(100);
       ok(name+' mouse move brings controls back, keeps playing', await p.evaluate(()=>!document.body.classList.contains('idle') && !__app.play.paused)); await p.waitForTimeout(3300); }
-    // tap = show controls + pause
+    // a tap only shows the controls, it never pauses; pause only with the button
     if (mobile) await p.touchscreen.tap(200, 300); else await p.mouse.click(640, 300);
     await p.waitForTimeout(250);
     c = await p.evaluate(()=>({idle: document.body.classList.contains('idle'), paused: __app.play.paused, open: __app.open}));
-    ok(name+' tap shows controls and pauses '+JSON.stringify(c), !c.idle && c.paused && c.open === null);
-    await p.waitForTimeout(3400);
+    ok(name+' tap shows controls and keeps playing '+JSON.stringify(c), !c.idle && !c.paused && c.open === null);
+    await tap('#cappp'); await p.waitForTimeout(3400);
     ok(name+' paused: controls stay visible', await p.evaluate(()=>!document.body.classList.contains('idle')));
     // CC toggle, remembered
     await tap('#capcc'); await p.waitForTimeout(200);

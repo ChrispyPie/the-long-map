@@ -26,7 +26,7 @@ Credits used: **649** in total, from the `character-cost` header of each request
   A step can set `"sfx"` to another clip name, or to `null` for none.
 - **Ambient:** each scene has an ambient loop (`play.ambient`, or a beat's `"ambient"`): `desert` by default, and `river` at the Nile.
 - **Levels:** while a line is narrated, all sound sits about 18 dB down. In the pause after the line it rises to about -6 dB over about 1.4 s, then ducks back when the next line starts.
-- **`sfxHold` (ms, at most 4000):** on a battle, migration or border step, this stretches the pause so the sound can play out.
+- **`sfxHold` (ms, at most 4000):** on a battle, migration or border step, this stretches the pause so the sound can play out. The pause is capped at 2 s, so only a few scenes get a longer breath.
   It runs on the same clock as the rest of the film, so it follows the speed setting, and Skip cuts it. It applies only while sound is on.
 - **When audio starts:** nothing loads or plays until a user gesture (BEGIN ADVENTURE, Play or the sound button).
   The sound button next to CC is remembered (`tlm.snd`). With reduced motion, sound is off by default.

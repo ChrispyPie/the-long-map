@@ -84,6 +84,8 @@ INTRO = [
 SEA=[[25.8,37.2],[28.6,36.3],[31.6,36.0],[33.8,35.3],[35.2,34.9],[34.85,33.4],[34.35,32.1],[33.4,31.45],[32.2,31.55]]
 LAND=[[28.2,38.4],[31.0,37.8],[34.0,37.1],[35.9,36.4],[36.2,34.7],[35.6,33.4]]
 PHIL=[[34.38,31.38],[34.52,31.66],[34.63,31.86],[34.92,31.86],[34.98,31.62],[34.6,31.28],[34.38,31.38]]
+# where the label ISRAEL sits: inside the central hill country, between the "Central hill country" mark and Shechem
+ISRAEL_LABEL=[35.21,32.1]
 HIGH=[[34.98,32.55],[35.42,32.55],[35.55,32.15],[35.5,31.6],[35.25,31.35],[34.98,31.42],[34.92,31.9],[34.98,32.55]]
 PLAY = [
  B("In the years after Merneptah's stone, the old world of palaces began to fall. Historians call it the Late Bronze Age collapse.", A, ["cline","kuhrt"],
@@ -145,7 +147,7 @@ PLAY = [
  B("Whether the end came quickly, or slowly over seventy-five years or more, is still debated.", D, ["weinstein","millek"]),
  B("And in the hills, something new was growing. Small farming villages spread across the central hill country, where few people had lived before.", A, ["fink2013","finkelstein"],
    vis=[yr(-1150), fo([35.2,31.95],5.5,["hills","izbetsartah","shechem","jerusalem"]),
-        {"type":"border","fade":[{"zone":"israel"}],"add":[{"zone":"highlands","certainty":"people","label":"ISRAEL","labelAt":[34.95,32.62],"coords":HIGH}],"sfx":"border"}],
+        {"type":"border","fade":[{"zone":"israel"}],"add":[{"zone":"highlands","certainty":"people","label":"ISRAEL","labelAt":ISRAEL_LABEL,"coords":HIGH}],"sfx":"border"}],
    amb="desert"),
  B("Surveys count about thirty sites there in the thirteenth century BC, and about two hundred and fifty by around one thousand BC.", A, ["fink2013"]),
  B("Many archaeologists see these villagers as early Israel. Others caution that houses and pottery alone cannot tell us what people called themselves.", D, ["faust","fink2013","killebrew"],
