@@ -105,6 +105,45 @@ Each stop's script lives in its own module (`build/narration_jews_1207.py`, `bui
 
 **Recording.** `ELEVENLABS_API_KEY=… python3 build/narrate.py` records every line whose text changed (voice Grant Gravitas `VC6vCXhVaI8BZefRtXZV`, `eleven_multilingual_v2`, narrator settings at speed 1.0, mono 22.05 kHz 32 kbps), with request stitching (`previous_request_ids`, `next_text`) so the lines sound continuous. Files: `assets/narration/<reel>-NN.mp3` and `assets/narration/index.json` (`{file: {ms, sha}}`, `sha` = first 12 hex of the SHA-1 of the spoken text). The key is read from the environment only and is never written anywhere. `make_data.py` attaches `audio` and `audioMs` to each beat and refuses a line whose text no longer matches its recording; `TLM_ALLOW_SILENT=1` builds anyway, without the voice for those lines.
 
+## Vignettes (`build/vignettes.py`)
+
+Small illustrated cards that pop up over the film while the narrator describes something (a house, a jar, a
+harbour). Each entry ties one WebP in `images/vignettes/` to the narrated line that starts with `line`;
+`make_data.py` checks it matches exactly one beat and writes `beat.vignette = {src, alt, caption?, beats?}`.
+The film shows the card once the camera has settled, beside the place in focus (never over it, the subtitles
+or the year), with a slow Ken Burns drift that freezes on pause (none with reduced motion). It fades when a
+later beat moves the camera, brings its own card, or after `beats` lines (default 3). Pictures load two beats
+ahead; one that fails is left out and the film goes on. Style for new pictures: warm sepia ink-and-watercolor
+on aged parchment, ~640 px WebP under 150 kB, no text, nothing modern, no faces of named people; caption says
+"impression" when the picture is not a real find. Test: `node build/test-vignettes.js http://127.0.0.1:PORT/`.
+
+| Reel | Line | Picture |
+|---|---|---|
+| Chapter 1 (1207 BC) opener | Imagine those hills in the evening… | `c1-hills-evening.webp` |
+| Chapter 1 (1207 BC) opener | Egypt lived by its river… | `c1-nile-flood.webp` |
+| Chapter 1 (1207 BC) opener | We know Israel's name because of a stone… | `c1-stele.webp` |
+| Chapter 1 (1207 BC) Play | On the Syrian coast stood Ugarit… | `c1-ugarit-port.webp` |
+| Chapter 1 (1207 BC) Play | Then he fought them at sea… | `c1-sea-battle.webp` |
+| Chapter 1 (1207 BC) Play | They brought their own ways… | `c1-philistine-crafts.webp` |
+| Chapter 1 (1207 BC) Play | Most villages were small… | `c1-village-ring.webp` |
+| Chapter 1 (1207 BC) Play | A typical home was a pillared house… | `c1-pillared-house.webp` |
+| Chapter 1 (1207 BC) Play | Families stored grain in pits… | `c1-jars-cistern.webp` |
+| Chapter 1 (1207 BC) Play | On steeper slopes, terraces held the soil… | `c1-terraces.webp` |
+| Chapter 1 (1207 BC) Play | Bread was the staple food… | `c1-grinding.webp` |
+| Chapter 1 (1207 BC) Play | On a hilltop in the north of these hills… | `c1-bronze-bull.webp` |
+| Chapter 2 (1150 BC) Play | Excavations at Ashkelon, Ashdod, Ekron and Gath… | `c2-philistine-city.webp` |
+| Chapter 2 (1150 BC) Play | Over time their pottery changed… | `c2-bichrome.webp` |
+| Chapter 2 (1150 BC) Play | Further north, at Tell Qasile… | `c2-qasile-temple.webp` |
+| Chapter 2 (1150 BC) Play | Imagine the harbour towns in those years… | `c2-harbour.webp` |
+| Chapter 2 (1150 BC) Play | An Egyptian tale shows how far its fame had fallen… | `c2-byblos-cedar.webp` |
+| Chapter 2 (1150 BC) Play | Excavations at Shiloh found a settlement… | `c2-shiloh-storeroom.webp` |
+| Chapter 2 (1150 BC) Play | Imagine the news reaching a hill village… | `c2-runner.webp` |
+| Chapter 2 (1150 BC) Play | The Bible's David is a hero with flaws… | `c2-elah-valley.webp` |
+| Chapter 2 (1150 BC) Play | Archaeology has added new evidence… | `c2-qeiyafa.webp` |
+| Chapter 2 (1150 BC) Play | Among its finds were a pottery sherd… | `c2-ostracon.webp` |
+| Chapter 2 (1150 BC) Play | The first mention of David outside the Bible… | `c2-dan-stele.webp` |
+| Chapter 2 (1150 BC) Play | Imagine the gate at Qeiyafa at dawn… | `c2-qeiyafa-dawn.webp` |
+
 ## Test
 
 `build/test-fakta.js` uses Playwright and headless Chromium. It tests 393 px with touch and 1280 px: stepping through the events, opening every object, tap outside, X, chips, and console errors. It presets the About notice as seen. `build/test-cine.js` tests the notice, the book, cinematic mode, CC, auto-hide, tap-to-pause, the zoom-out and the reduced-motion path at 393 px (touch) and 1280 px. `build/test-sfx.js` tests the sound effects and `build/test-narration.js` the narration (recordings, opener length, the choice, chapters and the strip, resume, the narrator button, `display`, frame lines, Bible refs). Run each with `node build/test-<name>.js http://127.0.0.1:8793/ noshots` against a local `python3 -m http.server 8793`. Playwright must be installed.

@@ -11,7 +11,7 @@ Outputs:
 import json, os, sys
 sys.path.insert(0, os.path.dirname(__file__))
 import re
-import sources, objects, story_jews, narrate
+import sources, objects, story_jews, narrate, vignettes
 src = sources.export()
 objs = objects.O
 ids = {o["id"] for o in objs}
@@ -93,6 +93,14 @@ def check_stop(stop, era, reel_prefix):
                 assert SILENT_OK, f"{stop['label']} {where} beat {n}: no recording for this text, run build/narrate.py (or TLM_ALLOW_SILENT=1)"
                 print("warning: no voice for", stop["label"], where, "beat", n)
         (play if where == "play" else tin)["words"] = words
+    # vignettes (build/vignettes.py): a picture card on the beat whose line starts with "line"
+    for where, beats, _ in reels:
+        for v in vignettes.VIGNETTES.get(reel_prefix, {}).get(where, []):
+            hit = [b for b in beats if next(x for x in b["steps"] if x["type"]=="caption")["text"].startswith(v["line"])]
+            assert len(hit) == 1, f"vignette {v['src']}: line {v['line']!r} matches {len(hit)} beats in {stop['label']} {where}"
+            assert os.path.exists(v["src"]) and v["src"].endswith(".webp") and os.path.getsize(v["src"]) < 150_000, f"vignette {v['src']}: missing, not WebP or too big"
+            assert v.get("alt"), f"vignette {v['src']}: alt text"
+            hit[0]["vignette"] = {k: v[k] for k in ("src", "alt", "caption", "beats") if k in v}
 NOTE = "Outlines are approximate. Drawn by The Long Map from the sources in each fact box, not traced from one published map. Solid = core area well documented. Dashed = extent uncertain. Coastline and rivers are modern."
 zmap = {"egypt":"egypt","hatti":"hatti","assyria":"assyria","babylon":"babylon_s","elam":"elam","israel":"israelp"}
 labelAt = {k: c.get("labelAt") for k,c in era1207.get("cards",{}).items()} or era1207.get("labelAt")
