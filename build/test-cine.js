@@ -77,7 +77,11 @@ const D = process.env.SHOTS || 'screens';
     if (!mobile){ await p.mouse.move(300, 300); await p.mouse.move(320, 310); await p.waitForTimeout(100);
       ok(name+' mouse move brings controls back, keeps playing', await p.evaluate(()=>!document.body.classList.contains('idle') && !__app.play.paused)); await p.waitForTimeout(3300); }
     // a tap only shows the controls, it never pauses; pause only with the button
-    if (mobile) await p.touchscreen.tap(200, 300); else await p.mouse.click(640, 300);
+    { // on the map, beside any picture card (a tap on the card enlarges it instead)
+      const vg = await p.evaluate(()=>{ const e = document.getElementById('vig'); if (e.hidden) return null; const r = e.getBoundingClientRect(); return [r.left-4, r.top-4, r.right+4, r.bottom+4]; });
+      const pts = mobile ? [[200,300],[200,520],[60,520],[330,520]] : [[640,300],[640,560],[150,560],[1100,560]];
+      const [x, y] = pts.find(([x, y]) => !vg || x < vg[0] || x > vg[2] || y < vg[1] || y > vg[3]);
+      if (mobile) await p.touchscreen.tap(x, y); else await p.mouse.click(x, y); }
     await p.waitForTimeout(250);
     c = await p.evaluate(()=>({idle: document.body.classList.contains('idle'), paused: __app.play.paused, open: __app.open}));
     ok(name+' tap shows controls and keeps playing '+JSON.stringify(c), !c.idle && !c.paused && c.open === null);

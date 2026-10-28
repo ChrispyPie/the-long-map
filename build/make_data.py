@@ -99,10 +99,25 @@ def check_stop(stop, era, reel_prefix):
     for where, beats, _ in reels:
         for v in vignettes.VIGNETTES.get(reel_prefix, {}).get(where, []):
             hit = [b for b in beats if next(x for x in b["steps"] if x["type"]=="caption")["text"].startswith(v["line"])]
-            assert len(hit) == 1, f"vignette {v['src']}: line {v['line']!r} matches {len(hit)} beats in {stop['label']} {where}"
-            assert os.path.exists(v["src"]) and v["src"].endswith(".webp") and os.path.getsize(v["src"]) < 150_000, f"vignette {v['src']}: missing, not WebP or too big"
-            assert v.get("alt"), f"vignette {v['src']}: alt text"
-            hit[0]["vignette"] = {k: v[k] for k in ("src", "alt", "caption", "beats") if k in v}
+            name = v.get("src") or v["images"][0]["src"]
+            assert len(hit) == 1, f"vignette {name}: line {v['line']!r} matches {len(hit)} beats in {stop['label']} {where}"
+            FX = {"smoke", "fire", "waves", "birds", "dust", "clouds"}
+            def pic(p):
+                assert os.path.exists(p["src"]) and p["src"].endswith(".webp") and os.path.getsize(p["src"]) < 150_000, f"vignette {p['src']}: missing, not WebP or too big"
+                assert p.get("alt"), f"vignette {p['src']}: alt text"
+                fx = p.get("fx"); fx = [fx] if isinstance(fx, str) else (fx or [])
+                assert set(fx) <= FX and not (fx and p.get("photo")), f"vignette {p['src']}: bad fx (or fx on a photo)"
+                out = {k: p[k] for k in ("src", "alt", "caption", "photo") if k in p}
+                if fx: out["fx"] = " ".join(fx)
+                return out
+            if "images" in v:
+                assert len(v["images"]) == 2 and "src" not in v, f"vignette {name}: images must be a pair"
+                vg = {"images": [pic(p) for p in v["images"]]}
+                vg.update({k: v[k] for k in ("caption", "beats") if k in v})
+            else:
+                vg = pic(v)
+                if "beats" in v: vg["beats"] = v["beats"]
+            hit[0]["vignette"] = vg
 NOTE = "Outlines are approximate. Drawn by The Long Map from the sources in each fact box, not traced from one published map. Solid = core area well documented. Dashed = extent uncertain. Coastline and rivers are modern."
 zmap = {"egypt":"egypt","hatti":"hatti","assyria":"assyria","babylon":"babylon_s","elam":"elam","israel":"israelp"}
 labelAt = {k: c.get("labelAt") for k,c in era1207.get("cards",{}).items()} or era1207.get("labelAt")

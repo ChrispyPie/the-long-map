@@ -11,11 +11,11 @@ const ROOT = process.env.ROOT || path.join(__dirname, '..');
   const notes = [], errs = [];
   const ok = (n, c) => notes.push((c ? 'PASS ' : 'FAIL ') + n);
   const J = f => JSON.parse(fs.readFileSync(path.join(ROOT, f), 'utf8'));
-  const d1 = J('data/stories/jews/1207bc.json'), d2 = J('data/stories/jews/1150bc.json');
+  const d1 = J('data/stories/jews/1207bc.json'), d2 = J('data/stories/jews/1150bc.json'), d3 = J('data/stories/jews/1000bc.json');
   const vs = (bs) => bs.map((b, i) => [i, b]).filter(([, b]) => b.vignette);
-  const reels = {'1207 opener': d1.transitionIn.beats, '1207 play': d1.play.beats, '1150 opener': d2.transitionIn.beats, '1150 play': d2.play.beats};
+  const reels = {'1207 opener': d1.transitionIn.beats, '1207 play': d1.play.beats, '1150 opener': d2.transitionIn.beats, '1150 play': d2.play.beats, '1000 opener': d3.transitionIn.beats, '1000 play': d3.play.beats};
   let all = [];
-  for (const [k, bs] of Object.entries(reels)) all = all.concat(vs(bs).map(([i, b]) => ({k, i, v: b.vignette})));
+  for (const [k, bs] of Object.entries(reels)) all = all.concat(vs(bs).flatMap(([i, b]) => (b.vignette.images || [b.vignette]).map(v => ({k, i, v}))));   // a pair counts as its two pictures
   ok('vignettes: ' + all.length + ' (' + Object.entries(reels).map(([k, bs]) => k + ' ' + vs(bs).length).join(', ') + ')', all.length >= 20);
   ok('every vignette has a small WebP and alt text', all.every(({v}) => /^images\/vignettes\/[a-z0-9-]+\.webp$/.test(v.src) && fs.existsSync(path.join(ROOT, v.src)) && fs.statSync(path.join(ROOT, v.src)).size < 150000 && v.alt && v.alt.length > 10));
   ok('no picture used twice', new Set(all.map(x => x.v.src)).size === all.length);
@@ -25,7 +25,7 @@ const ROOT = process.env.ROOT || path.join(__dirname, '..');
     const ct = document.getElementById('captext'), cr = ct.getBoundingClientRect(), cy = document.getElementById('cyear').getBoundingClientRect(), vp = document.getElementById('vp').getBoundingClientRect();
     return {shown: !e.hidden && e.classList.contains('in') && getComputedStyle(e).visibility !== 'hidden', hidden: e.hidden, src: im.getAttribute('src'), loaded: im.complete && im.naturalWidth > 0,
       r: [r.left, r.top, r.right, r.bottom].map(Math.round), cap: ct.offsetHeight ? [cr.left, cr.top, cr.right, cr.bottom].map(Math.round) : null, cy: [cy.left, cy.top, cy.right, cy.bottom].map(Math.round),
-      vp: [vp.left, vp.top, vp.right, vp.bottom].map(Math.round), paused: e.classList.contains('paused'), anim: getComputedStyle(im).animationName, play: getComputedStyle(im).animationPlayState,
+      vp: [vp.left, vp.top, vp.right, vp.bottom].map(Math.round), paused: e.classList.contains('paused'), photo: im.classList.contains('photo'), anim: getComputedStyle(im).animationName, play: getComputedStyle(im).animationPlayState,
       i: __app.play && __app.play.i }; });
   const hit = (a, c) => c && a[0] < c[2] && a[2] > c[0] && a[1] < c[3] && a[3] > c[1];
   const startAt = async (p, stopYear, reel, i) => {
@@ -51,6 +51,7 @@ const ROOT = process.env.ROOT || path.join(__dirname, '..');
         ok(`${name} ${y} ${r} ${i}: card in, picture loaded ${s.src} ${JSON.stringify(s.r)}`, s.shown && s.loaded && s.i === i);
         ok(`${name} ${y} ${r} ${i}: inside the film, clear of the focus point, subtitles and year`, s.r[0] >= s.vp[0] && s.r[2] <= s.vp[2] && s.r[1] >= s.vp[1] && s.r[3] <= s.vp[3] && !hit(s.r, fbox) && !hit(s.r, s.cap) && !hit(s.r, s.cy) && (s.r[2] - s.r[0]) >= 130);
         if (reduced) ok(name + ' reduced motion: no Ken Burns drift (' + s.anim + ')', s.anim === 'none');
+        else if (s.photo) ok(`${name} a museum-plate photo stays still (${s.anim})`, s.anim === 'none');
         else ok(`${name} Ken Burns runs (${s.anim})`, /^vigkb/.test(s.anim) && s.play === 'running');
       }
       if (!reduced){
@@ -67,9 +68,11 @@ const ROOT = process.env.ROOT || path.join(__dirname, '..');
         // the next beat that moves the camera fades it
         await startAt(p, -1207, 'play', 34);
         await p.waitForFunction(() => !document.getElementById('vig').hidden, null, {timeout: 8000}).catch(() => {});
+        // a beat with no card of its own and none in the 3 lines before it
+        const NOCARD = d1.play.beats.findIndex((x, k) => k > 0 && !d1.play.beats.slice(Math.max(0, k - 3), k + 1).some(y => y.vignette));
         const nextFocus = d1.play.beats.findIndex((x, k) => k > 34 && (x.vignette || x.steps.some(s => s.type === 'focus')));
         await p.evaluate(n => __app.seek(n), nextFocus); await p.waitForTimeout(150);
-        await p.evaluate(n => __app.seek(n), 1); await p.waitForTimeout(900);
+        await p.evaluate(n => __app.seek(n), NOCARD); await p.waitForTimeout(900);
         s = await V(p); ok(name + ' moving on to a beat without a card hides it', s.hidden);
         // the failed picture (c1-terraces, play 37): left out, the film goes on
         await startAt(p, -1207, 'play', 37); await p.waitForTimeout(3500);

@@ -80,19 +80,19 @@ const url = process.argv[2] || 'http://127.0.0.1:8852/';
       t = await p.evaluate(() => ({txt: document.getElementById('revtag').textContent, cp: window.__cp, tag: document.getElementById('revtag').dataset.tag, left: document.querySelectorAll('#cap textarea').length}));
       ok(`${name} fallback without navigator.clipboard copies (${t.cp})`, t.txt === 'Kopierat ✓' && /^Ch\d/.test(t.cp || '') && t.left === 0);
       if (name === 'phone') await p.screenshot({path: '/tmp/vz-phone-copied.png'});
-      // the picture's time runs out while it is enlarged: it fades out and the next one is a normal card
+      // the picture's time runs out while it is enlarged: it closes, and the next one (most lines have one now) is a normal card
       await p.evaluate(() => __app.seek(34)); await waitVig(); await p.waitForTimeout(700);
       await tap(...mid(await R('#vig'))); await p.waitForTimeout(400);
       const zi = (await st()).i;
       await p.evaluate(() => { __app.speed = 4; });
-      await p.waitForFunction(() => document.getElementById('vig').hidden, null, {timeout: 60000});
-      s = await st(); ok(`${name} enlarged picture closes by itself when its time is up (beat ${zi} -> ${s.i})`, s.hidden && !s.zoom && !(await p.evaluate(() => document.getElementById('vp').classList.contains('vigzoom'))) && !s.paused);
+      await p.waitForFunction(zi => !document.getElementById('vig').classList.contains('zoom') && __app.play && __app.play.i !== zi, zi, {timeout: 60000});
+      s = await st(); ok(`${name} enlarged picture closes by itself when its time is up (beat ${zi} -> ${s.i})`, !s.zoom && !(await p.evaluate(() => document.getElementById('vp').classList.contains('vigzoom'))) && !s.paused);
       await p.evaluate(() => { __app.speed = 1; __app.seek(34); }); await waitVig(); await p.waitForTimeout(700);
       ok(name + ' next picture comes as a normal card', !(await st()).zoom);
       // a jump (Scenes / next line) while enlarged closes it at once
       await tap(...mid(await R('#vig'))); await p.waitForTimeout(300);
       await p.evaluate(() => __app.seek(36)); await p.waitForTimeout(200);
-      s = await st(); ok(name + ' a jump while enlarged closes it at once', s.hidden && !s.zoom);
+      s = await st(); ok(name + ' a jump while enlarged closes it at once', !s.zoom && s.i === 36 && !(await p.evaluate(() => document.getElementById('vp').classList.contains('vigzoom'))));
     } catch(e){ errs.push(name + ': ' + e.message); }
     await ctx.close();
   }

@@ -370,6 +370,43 @@ try { var t = localStorage.getItem('tlm.textsize'); if (/^(s|m|l|xl)$/.test(t)) 
   @keyframes vigkb2 { from { transform:scale(1.03) translate(2%,2%); } to { transform:scale(1.13) translate(-2%,0); } }
   @keyframes vigkb3 { from { transform:scale(1.12) translate(-3%,2%); } to { transform:scale(1.04) translate(2%,-1%); } }
   @media (prefers-reduced-motion: reduce){ .vig, .vig.out { transform:none; transition:opacity .3s; } .vig.in img, .vig.in[data-kb] img { animation:none; transform:none; } }
+  /* a pair: two pictures side by side in one card, never stacked; each is as tall as the other and taps to enlarge on its own */
+  .vig .vigin { position:relative; }
+  .vig.pair .vigin { display:flex; gap:3px; background:rgba(74,46,23,.55); }
+  .vig.pair .vigin img { flex:var(--ar) 1 0; width:0; min-width:0; }
+  .vig.pair.in img, .vig.pair.in[data-kb] img { animation:none; transform:none; }   /* no slow pan in a pair: one picture must not spill over the other */
+  .vig .vigin img[hidden] { display:none; }
+  .vig.pair.zoom[data-zi="0"] .vigin img[data-i="1"], .vig.pair.zoom[data-zi="1"] .vigin img[data-i="0"] { display:none; }
+  .vig.pair.zoom .vigin img { flex:1 1 auto; width:100%; }
+  .vig.in img.photo, .vig.in[data-kb] img.photo { animation:none; transform:none; }   /* photos stay still */
+  /* fx (js/app.js vigFx): subtle code-drawn motion on an illustration; transform and opacity only */
+  .vigfx { position:absolute; top:0; bottom:0; left:0; width:100%; overflow:hidden; pointer-events:none; }
+  .vigfx[hidden], .vig.pair.zoom[data-zi="1"] .vigfx { display:none; }
+  .vig.pair.zoom[data-zi="0"] .vigfx { left:0 !important; width:100% !important; }
+  .vigfx > div { position:absolute; inset:0; } .vigfx i { position:absolute; display:block; will-change:transform, opacity; }
+  .vig.paused .vigfx i, .vig:not(.in) .vigfx i { animation-play-state:paused; }
+  .fx-smoke i { left:38%; bottom:30%; width:22%; aspect-ratio:1; border-radius:50%; background:radial-gradient(closest-side, rgba(250,244,230,.5), rgba(250,244,230,0)); opacity:0; animation:fxsmoke 7s ease-in infinite; }
+  .fx-smoke i:nth-child(2) { left:52%; animation-delay:-2.4s; } .fx-smoke i:nth-child(3) { left:30%; animation-delay:-4.8s; }
+  @keyframes fxsmoke { 0% { transform:translate(0,0) scale(.5); opacity:0; } 20% { opacity:.55; } 100% { transform:translate(12%,-170%) scale(1.6); opacity:0; } }
+  .fx-fire i { left:20%; right:20%; bottom:0; height:70%; border-radius:50%; background:radial-gradient(closest-side, rgba(255,170,60,.28), rgba(255,140,40,0)); mix-blend-mode:screen; animation:fxfire 1.7s ease-in-out infinite alternate; }
+  .fx-fire i:nth-child(2) { left:30%; right:30%; height:50%; animation-duration:1.1s; animation-delay:-.5s; }
+  @keyframes fxfire { 0% { opacity:.35; transform:scale(.96); } 45% { opacity:.9; } 70% { opacity:.55; transform:scale(1.04); } 100% { opacity:1; transform:scale(1); } }
+  .fx-waves i { left:-20%; width:140%; bottom:4%; height:22%; opacity:.5; background:repeating-linear-gradient(100deg, rgba(255,250,236,0) 0 18px, rgba(255,250,236,.35) 22px, rgba(255,250,236,0) 26px 44px); -webkit-mask:linear-gradient(transparent, #000 40%, #000 70%, transparent); mask:linear-gradient(transparent, #000 40%, #000 70%, transparent); animation:fxwave 6s ease-in-out infinite alternate; }
+  .fx-waves i:nth-child(2) { bottom:16%; height:14%; opacity:.35; animation-duration:8s; animation-direction:alternate-reverse; }
+  @keyframes fxwave { from { transform:translateX(-4%); } to { transform:translateX(4%); } }
+  .fx-birds i { top:12%; left:-8%; width:5%; aspect-ratio:2; background:no-repeat center/contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 10'%3E%3Cpath d='M1 6 Q5 1 10 6 Q15 1 19 6' fill='none' stroke='%233b2412' stroke-width='1.4' stroke-linecap='round'/%3E%3C/svg%3E"); opacity:.75; animation:fxbird 15s linear infinite; }
+  .fx-birds i:nth-child(2) { top:18%; width:4%; animation-delay:-5s; animation-duration:18s; } .fx-birds i:nth-child(3) { top:8%; width:3.5%; animation-delay:-10s; animation-duration:21s; }
+  @keyframes fxbird { 0% { transform:translate(0,0); } 25% { transform:translate(560%,-40%); } 50% { transform:translate(1120%,20%); } 75% { transform:translate(1680%,-30%); } 100% { transform:translate(2300%,10%); } }
+  .fx-dust i { bottom:8%; left:-6%; width:3px; height:3px; border-radius:50%; background:rgba(120,84,44,.55); animation:fxdust 9s linear infinite; }
+  .fx-dust i:nth-child(2) { bottom:18%; animation-delay:-1.5s; animation-duration:11s; } .fx-dust i:nth-child(3) { bottom:26%; animation-delay:-3s; }
+  .fx-dust i:nth-child(4) { bottom:12%; animation-delay:-4.5s; animation-duration:12s; } .fx-dust i:nth-child(5) { bottom:22%; animation-delay:-6s; } .fx-dust i:nth-child(6) { bottom:4%; animation-delay:-7.5s; animation-duration:10s; }
+  .fx-dust i:first-child { width:60%; height:18%; bottom:0; border-radius:50%; background:radial-gradient(closest-side, rgba(214,182,128,.4), rgba(214,182,128,0)); animation:fxhaze 10s ease-in-out infinite alternate; }
+  @keyframes fxdust { 0% { transform:translate(0,0); opacity:0; } 10% { opacity:.8; } 90% { opacity:.6; } 100% { transform:translate(110vw,-30px); opacity:0; } }
+  @keyframes fxhaze { from { transform:translateX(0); } to { transform:translateX(70%); } }
+  .fx-clouds i { top:4%; left:-40%; width:45%; height:22%; border-radius:50%; background:radial-gradient(closest-side, rgba(255,250,238,.55), rgba(255,250,238,0)); animation:fxcloud 28s linear infinite; }
+  .fx-clouds i:nth-child(2) { top:14%; width:35%; animation-delay:-14s; animation-duration:34s; }
+  @keyframes fxcloud { from { transform:translateX(0); } to { transform:translateX(330%); } }
+  @media (prefers-reduced-motion: reduce){ .vigfx { display:none !important; } }
   /* a tap on the picture enlarges it to fit the free picture (js/app.js vigZoom), a second tap or a tap beside it shrinks it back */
   .vig.in { pointer-events:auto; cursor:zoom-in; -webkit-tap-highlight-color:transparent; }
   .vig.zoom { cursor:zoom-out; padding:4px 4px 0; box-shadow:0 0 0 100vmax rgba(14,8,4,.6), 0 14px 40px rgba(0,0,0,.6); }
