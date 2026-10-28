@@ -659,6 +659,7 @@ function runBeat(i){
   // 2) camera moves first, 3) then one visual event at a time
   let t = t0; const f = b.steps.find(x => x.type === 'focus');
   if (f){ STEP.focus(f, dur(f)); t += dur(f) + GAP; }
+  vigBeat(i, b, f ? t0 + dur(f) * 0.75 : t0 + 250);
   b.steps.filter(x => VISUAL.includes(x.type)).forEach(x => { at(t, () => { STEP[x.type](x, dur(x)); sndShot(sfxOf(x)); }); t += dur(x) + GAP; });
   // 4) wait for the line to finish (reading time, or the audio), 5) then the pause
   const lineEnd = Math.max(t0 + lineMs(b), t);
@@ -676,7 +677,7 @@ function seek(i){
   if (!PLAY) return;
   i = Math.max(0, Math.min(PLAY.beats.length - 1, i));
   gZones.selectAll('*').interrupt(); svg.interrupt(); PLAY.anims = []; PLAY.events = [];
-  resetMap(); YEAR = STOP.year; PLAY.lastFocus = null;
+  resetMap(); YEAR = STOP.year; PLAY.lastFocus = null; vigHide(true);
   PLAY.clockOn = false; for (let j = 0; j < i; j++) applyInstant(j); PLAY.clockOn = true;
   if (!PLAY.beats[i].steps.some(x => x.type === 'focus') && PLAY.lastFocus){ const f = PLAY.lastFocus; setHighlight(f.hl || []); flyFocus(f, 600); }
   runBeat(i);
@@ -694,6 +695,7 @@ async function playStart(reel = 'play', from = 0){
   if (PLAY){ cancelAnimationFrame(PLAY.raf); if (PLAY.audio) PLAY.audio.pause(); }
   const beats = reelBeats(reel); from = Math.max(0, Math.min(beats.length - 1, +from || 0));
   PLAY = {reel, beats, from, i: 0, paused: false, clock: 0, clockOn: true, anims: [], events: []};
+  vigHide(true); vigPreload(from);
   document.body.classList.toggle('reel-intro', reel === 'intro');
   document.body.classList.add('playing'); placeCap(); $('cap').hidden = false; drawKeys();
   if (NARROW()) scrollTo({top:0, behavior:'smooth'});
@@ -707,7 +709,7 @@ async function playStart(reel = 'play', from = 0){
 function showChoice(i){
   // while the choice is up the subtitle, source line, progress bar and chapter strip step aside;
   // the panel sits between the year and the controls, and scrolls if a screen is very short
-  document.body.classList.add('choosing');
+  document.body.classList.add('choosing'); vigHide();
   const c = $('choice'); c.hidden = false; c.classList.remove('in'); void c.offsetWidth; c.classList.add('in'); wake(); placeChoice();
   const nxt = chapterAt('intro', i + 1);
   $('choicego').textContent = 'Continue the story ›';
@@ -761,7 +763,7 @@ addEventListener('resize', () => { if (PLAY) placeCap(); placeChoice(); });
 // text size (js/textsize.js): map labels follow the gentler map scale; relabel and re-place the film panels
 function TSM(){ const v = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tsm')); return v > 0 ? v : 1; }
 addEventListener('tlm:textsize', () => { scaleMarks(); placeChoice(); requestAnimationFrame(placeChoice); });
-function setPP(quiet){ const p = PLAY && PLAY.paused; $('cappp').textContent = p ? '▶' : '❚❚'; $('cappp').setAttribute('aria-label', p ? 'Play' : 'Pause'); $('cap').classList.toggle('paused', !!p); if (!quiet || (!idleT && !document.body.classList.contains('idle'))) wake(); }
+function setPP(quiet){ const p = PLAY && PLAY.paused; $('cappp').textContent = p ? '▶' : '❚❚'; $('cappp').setAttribute('aria-label', p ? 'Play' : 'Pause'); $('cap').classList.toggle('paused', !!p); $('vig').classList.toggle('paused', !!p); if (!quiet || (!idleT && !document.body.classList.contains('idle'))) wake(); }
 function playPause(force){
   if (!PLAY) return;
   PLAY.paused = force === undefined ? !PLAY.paused : force;
@@ -778,7 +780,7 @@ function playStop(toEnd){
   if (SND.ctx && SND.ctx.state === 'suspended' && SND.on) SND.ctx.resume().catch(() => {});
   sndStop(0.8);
   PLAY = null; document.body.classList.remove('playing', 'reel-intro'); $('cap').hidden = true; $('ev').classList.remove('dim');
-  hideChoice(); $('chapcard').hidden = true; clearTimeout(chapT);
+  hideChoice(); vigHide(true); $('chapcard').hidden = true; clearTimeout(chapT);
   const out = exitCine();
   if (!toEnd){ resetMap(); YEAR = null; $('big').textContent = STOP.label; $('pill').textContent = STOP.label; drawKeys(); out.then(() => { if (!PLAY) showStep(steps().length - 1); }); }
   return out;
@@ -793,6 +795,78 @@ function playEnd(){
   // otherwise the 'coming soon' end state
   playStop(true).then(() => { if (PLAY) return; if (STORY.stops[k].file){ ARRIVE = k; go(k); } else arriveSoon(k, false); });
 }
+// ---------- vignettes: a picture card over the map while the narrator describes something ----------
+// beat.vignette = {src, alt, caption?, beats?} comes from build/vignettes.py. The card appears once the
+// camera has settled, beside the place in focus (never on it, never on the subtitles or the year), drifts
+// slowly (Ken Burns, frozen while paused, none with reduced motion) and fades when a later beat moves the
+// camera, brings its own card, or after `beats` lines (default 3). Pictures load two beats ahead; one that
+// fails to load is simply left out, the film never waits for it.
+const VIG = {img: {}, cur: null, n: 0, t: 0};
+const VIG_BEATS = 3;
+function vigLoad(v){
+  let r = VIG.img[v.src];
+  if (!r){ const im = new Image(); r = VIG.img[v.src] = {im, ok: null, cb: []}; im.decoding = 'async';
+    im.onload = () => { r.ok = true; r.cb.splice(0).forEach(f => f()); }; im.onerror = () => { r.ok = false; r.cb = []; }; im.src = v.src; }
+  return r;
+}
+function vigPreload(i){ if (!PLAY) return; for (let j = i; j <= i + 2; j++){ const b = PLAY.beats[j]; if (b && b.vignette) vigLoad(b.vignette); } }
+function vigHide(now){
+  const el = $('vig'); VIG.cur = null; clearTimeout(VIG.t); if (!el) return;
+  el.classList.remove('in');
+  if (now || el.hidden || REDUCED()){ el.hidden = true; el.classList.remove('out'); return; }
+  el.classList.add('out'); VIG.t = setTimeout(() => { if (!VIG.cur){ el.hidden = true; el.classList.remove('out'); } }, 650);
+}
+// called when beat i starts; at = clock time the camera has (nearly) settled
+function vigBeat(i, b, at_){
+  const c = VIG.cur;
+  if (c && (b.vignette || b.steps.some(x => x.type === 'focus') || i >= c.i + (c.v.beats || VIG_BEATS) || i < c.i)) vigHide();
+  vigPreload(i + 1);
+  const v = b.vignette; if (!v) return;
+  const r = vigLoad(v); if (r.ok === false) return;
+  at(at_, () => { if (!PLAY || PLAY.i !== i) return; const show = () => { if (PLAY && PLAY.i === i && r.ok) vigShow(v, i, r.im); }; r.ok ? show() : r.cb.push(show); });
+}
+function vigShow(v, i, im){
+  const el = $('vig'); if (!el) return;
+  clearTimeout(VIG.t); VIG.cur = {v, i}; VIG.n++;
+  const img = el.querySelector('img'); img.src = im.src; img.alt = v.alt || '';
+  img.style.setProperty('--ar', im.naturalWidth && im.naturalHeight ? im.naturalWidth / im.naturalHeight : 4 / 3);
+  el.dataset.kb = String(VIG.n % 4);
+  const cp = el.querySelector('figcaption'); cp.textContent = v.caption || ''; cp.hidden = !v.caption;
+  el.classList.remove('in', 'out'); el.hidden = false; vigPlace(); void el.offsetWidth; el.classList.add('in');
+  el.classList.toggle('paused', !!PLAY.paused);
+}
+// the largest card that fits to the right, left, above or below the focus point
+function vigPlace(){
+  const el = $('vig'); if (!el || el.hidden || !VIG.cur) return;
+  const vp = $('vp').getBoundingClientRect(), W = vp.width, H = vp.height, narrow = W < 600;
+  const cy = $('cyear'), cap = $('cap'), pad = 10, gap = narrow ? 34 : 48;
+  // where flyTo puts the place in focus (the camera may still be landing when the card comes in)
+  const px = W / 2, py = H / 2 - (CINE && CINE.full ? Math.min(H * .16, (cap.offsetHeight || 0) / 2) : 0);
+  let top = Math.max(pad, cy && cy.offsetHeight ? cy.getBoundingClientRect().bottom - vp.top + 8 : Math.min(H * .06, 46) + 8);
+  let bot = H - (CINE ? Math.min(H * .06, 46) : 0) - pad;
+  if (cap && !cap.hidden && cap.offsetHeight && cap.parentNode === $('vp')){ const r = cap.getBoundingClientRect(); bot = Math.min(bot, r.top - vp.top - 8); }
+  const ar = parseFloat(el.querySelector('img').style.getPropertyValue('--ar')) || 4 / 3;
+  const capH = () => (VIG.cur.v.caption ? 22 * TSM() : 0) + 12;   // caption line + frame padding
+  const maxW = narrow ? Math.min(W * .8, 330) : Math.min(Math.max(W * .3, 240), 400);
+  const fit = (w, h) => Math.max(0, Math.min(maxW, w - 12, (h - capH()) * ar + 12));
+  const cand = [
+    {s: 'r', w: fit(W - pad - (px + gap), bot - top), x0: px + gap, y: 'mid'},
+    {s: 'l', w: fit(px - gap - pad, bot - top), x1: px - gap, y: 'mid'},
+    {s: 'a', w: fit(W - 2 * pad, py - gap - top), y1: py - gap},
+    {s: 'b', w: fit(W - 2 * pad, bot - (py + gap)), y0: py + gap}
+  ].sort((a, b) => b.w - a.w);
+  const c = cand[0];
+  if (c.w < 130){ el.style.visibility = 'hidden'; return; }   // no room on this screen: leave it out
+  el.style.visibility = '';
+  const w = Math.round(c.w), h = Math.round((w - 12) / ar + capH());
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  let x, y;
+  if (c.s === 'r' || c.s === 'l'){ x = c.s === 'r' ? c.x0 : c.x1 - w; y = clamp(py - h * .6, top, bot - h); }
+  else { x = clamp(px - w / 2, pad, W - pad - w); y = c.s === 'a' ? c.y1 - h : c.y0; y = clamp(y, top, bot - h); }
+  el.style.width = w + 'px'; el.style.left = Math.round(x) + 'px'; el.style.top = Math.round(y) + 'px'; el.dataset.side = c.s;
+}
+addEventListener('resize', () => requestAnimationFrame(vigPlace));
+addEventListener('tlm:textsize', () => requestAnimationFrame(vigPlace));
 // ---------- cinematic mode: the narrated part as a small film ----------
 // The map viewport grows from its place in the page to the full screen (Fullscreen API where it exists,
 // otherwise a fixed full-viewport layer, e.g. iPhone Safari), the page chrome fades, subtitles (CC) sit
@@ -803,7 +877,7 @@ let CINE = null, CC = true, idleT = 0;
 try { CC = localStorage.getItem('tlm.cc') !== 'off'; } catch(e){}
 function setCC(on){
   CC = !!on; try { localStorage.setItem('tlm.cc', CC ? 'on' : 'off'); } catch(e){}
-  document.body.classList.toggle('cc-off', !CC);
+  document.body.classList.toggle('cc-off', !CC); requestAnimationFrame(vigPlace);
   const b = $('capcc'); b.setAttribute('aria-pressed', String(CC)); b.setAttribute('aria-label', CC ? 'Subtitles on' : 'Subtitles off'); b.classList.toggle('on', CC);
 }
 setCC(CC);
