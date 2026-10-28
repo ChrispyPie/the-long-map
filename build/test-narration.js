@@ -54,7 +54,7 @@ const ROOT = process.env.ROOT || path.join(__dirname, '..');
     ok(name+' the narrator speaks line 1 '+(v.src || '').split('/').pop(), v.on && v.playing && /jews-1207-in-01\.mp3$/.test(v.src));
     ok(name+' no <audio> element in the page', await p.evaluate(() => document.querySelectorAll('audio').length === 0));
     const fr = await p.evaluate(() => ({b: !!document.querySelector('#captext .cb'), s: document.getElementById('capsrc').textContent, t: document.getElementById('captext').textContent, card: !document.getElementById('chapcard').hidden && document.getElementById('chapcard').textContent}));
-    ok(name+' frame line: no badge, no sources, chapter card '+JSON.stringify(fr).slice(0, 140), !fr.b && fr.s === '' && fr.t.length > 10 && /Chapter 1 of 3/.test(fr.card));
+    ok(name+' frame line: no badge, no sources, chapter card '+JSON.stringify(fr).slice(0, 140), !fr.b && fr.s === '' && fr.t.length > 10 && /Scene 1 of 3/.test(fr.card));
     // timing follows the recording: plan = audio + pause, and the reading time when the voice is off
     const tm = await p.evaluate(() => { const a = __app.plan(0); __app.setVoice(false); const r = __app.plan(0); __app.setVoice(true); return {a, r}; });
     ok(name+' beat 1 plan follows the recording ('+tm.a+' ms with voice, '+tm.r+' ms without)', tm.a === IN[0].audioMs + IN[0].pauseAfter && tm.r === IN[0].duration + IN[0].pauseAfter);
@@ -74,12 +74,12 @@ const ROOT = process.env.ROOT || path.join(__dirname, '..');
     await p.waitForFunction(() => __app.play && __app.play.choice, null, {timeout: 25000}).catch(() => {});
     await p.waitForTimeout(2500); pl = await P();
     const ch = await p.evaluate(() => { const r = id => { const e = document.getElementById(id).getBoundingClientRect(); return e.width > 80 && e.height >= 44 && e.bottom <= innerHeight && e.top >= 0; }; return {go: r('choicego'), map: r('choicemap'), q: document.querySelector('#choice .q').textContent, sub: document.getElementById('choicesub').textContent}; });
-    ok(name+' choice shown and the film waits: '+JSON.stringify(pl)+' '+JSON.stringify(ch), pl.i === iChoice && pl.hold && pl.choice && ch.go && ch.map && /Chapter 2/.test(ch.sub));
+    ok(name+' choice shown and the film waits: '+JSON.stringify(pl)+' '+JSON.stringify(ch), pl.i === iChoice && pl.hold && pl.choice && ch.go && ch.map && /Scene 2/.test(ch.sub));
     const row1 = await p.evaluate(() => { const bs = [...document.querySelectorAll('.cap2 .crow button')].map(e => e.getBoundingClientRect()); return {rows: new Set(bs.map(x => Math.round(x.top))).size, r: Math.max(...bs.map(x => x.right)), W: innerWidth}; });
     ok(name+' controls on one row at 1.25x too '+JSON.stringify(row1), row1.rows === 1 && row1.r <= row1.W);
     if (shots){ await wake(); await p.screenshot({path: D+'/narr_choice'+(mobile ? '' : '_desktop')+'.png'}); }
     await tap('#choicego'); await p.waitForTimeout(700); pl = await P();
-    ok(name+' Continue the story: chapter 2 begins '+JSON.stringify(pl), pl.i === iChoice + 1 && pl.chapter === 2 && !pl.choice && /Chapter 2 of 3/.test(await p.textContent('#chapcard')));
+    ok(name+' Continue the story: chapter 2 begins '+JSON.stringify(pl), pl.i === iChoice + 1 && pl.chapter === 2 && !pl.choice && /Scene 2 of 3/.test(await p.textContent('#chapcard')));
     // chapter strip: one segment per chapter, a click jumps there
     await wake();
     const segs = await p.evaluate(() => [...document.querySelectorAll('#capch .chs')].map(e => ({t: e.textContent, w: Math.round(e.getBoundingClientRect().width), cur: e.classList.contains('cur')})));
@@ -90,7 +90,7 @@ const ROOT = process.env.ROOT || path.join(__dirname, '..');
     await p.evaluate(() => document.getElementById('capx').click()); await p.waitForTimeout(1800);
     ok(name+' resume saved at chapter 3', await p.evaluate(() => __app.resume('intro')) === chIn[2].i);
     await p.evaluate(() => __app.showStep(0)); await p.waitForTimeout(700);
-    ok(name+' intro panel offers Resume at chapter 3', /Resume at chapter 3/.test(await p.evaluate(() => (document.getElementById('goresume') || {}).textContent || '')));
+    ok(name+' intro panel offers Resume of this chapter at its scene 3 line', /Resume Chapter 1 at \d+:\d\d · /.test(await p.evaluate(() => (document.getElementById('goresume') || {}).textContent || '')));
     await tap('#goresume'); await p.waitForTimeout(2200); pl = await P();
     ok(name+' resume plays from chapter 3 '+JSON.stringify(pl), pl && pl.reel === 'intro' && pl.i === chIn[2].i);
     // Skip in the opener goes to the map
@@ -104,7 +104,7 @@ const ROOT = process.env.ROOT || path.join(__dirname, '..');
     ok(name+' Explore the map: film closed, Explore step, chapter 2 to resume', await p.evaluate(i => __app.play === null && __app.step === 9 && __app.resume('intro') === i, iChoice + 1));
     // Play: four chapters of about 2-3 minutes, markers, Bible reference after the sources
     const exp = await p.evaluate(() => ({btn: document.getElementById('playbtn') && document.querySelector('#playbtn + .cap').textContent, ch: document.querySelectorAll('#evbody .chlist .chb').length}));
-    ok(name+' explore panel: '+JSON.stringify(exp).slice(0, 120), /in 4 chapters/.test(exp.btn) && exp.ch === 4);
+    ok(name+' explore panel: '+JSON.stringify(exp).slice(0, 120), /in 4 scenes/.test(exp.btn) && exp.ch === 4);
     if (shots) await panelShot('#playbtn', 'narr_explore_panel');
     await p.evaluate(() => __app.speed = 1);
     await tap('#playbtn'); await p.waitForTimeout(2500);
@@ -113,7 +113,7 @@ const ROOT = process.env.ROOT || path.join(__dirname, '..');
     ok(name+' Play voiced: '+((await p.evaluate(() => __app.voice.src)) || '').split('/').pop(), /jews-1207-play-01\.mp3$/.test(await p.evaluate(() => __app.voice.src)));
     await wake(); await p.evaluate(() => document.querySelectorAll('#capch .chs')[2].click()); await p.waitForTimeout(900);
     pl = await P();
-    ok(name+' Play strip: chapter 3 '+JSON.stringify(pl)+' card '+await p.textContent('#chapcard'), pl.i === chP[2].i && pl.chapter === 3 && /Chapter 3 of 4/.test(await p.textContent('#chapcard')));
+    ok(name+' Play strip: chapter 3 '+JSON.stringify(pl)+' card '+await p.textContent('#chapcard'), pl.i === chP[2].i && pl.chapter === 3 && /Scene 3 of 4/.test(await p.textContent('#chapcard')));
     if (shots){ await wake(); await p.waitForTimeout(400); await p.screenshot({path: D+'/narr_chapters'+(mobile ? '' : '_desktop')+'.png'}); }
     const row = await p.evaluate(() => { const bs = [...document.querySelectorAll('.cap2 .crow button')].map(e => e.getBoundingClientRect()); return {rows: new Set(bs.map(x => Math.round(x.top))).size, r: Math.max(...bs.map(x => x.right)), W: innerWidth}; });
     ok(name+' controls with the narrator button still on one row '+JSON.stringify(row), row.rows === 1 && row.r <= row.W);
@@ -121,9 +121,9 @@ const ROOT = process.env.ROOT || path.join(__dirname, '..');
     const rs = await p.textContent('#capsrc'), wantRef = PL[iRef].steps.find(x => x.ref).ref;
     ok(name+' Bible reference after the sources: '+rs, rs.startsWith('Sources:') && rs.endsWith(' · ' + wantRef));
     await p.keyboard.press('Escape'); await p.waitForTimeout(1500);
-    ok(name+' Escape keeps the Play chapter (2, where the Amos line is) for later', await p.evaluate(() => __app.play === null && __app.resume('play') === 10) && /Resume at chapter 2: The Sea Peoples/.test(await p.evaluate(() => (document.getElementById('playresume') || {}).textContent || '')));
+    ok(name+' Escape keeps the Play line (the Amos line, scene 2) for later', await p.evaluate(i => __app.play === null && __app.resume('play') === i && __app.pos().i === i, iRef) && /Resume Chapter 1 at \d+:\d\d · The Sea Peoples/.test(await p.evaluate(() => (document.getElementById('xpresume') || {}).textContent || '')));
     await p.reload({waitUntil:'networkidle'}); await p.waitForTimeout(800);
-    ok(name+' resume survives a reload', await p.evaluate(() => __app.showStep(9) || true) && (await p.waitForTimeout(800), /Resume at chapter 2/.test(await p.evaluate(() => (document.getElementById('playresume') || {}).textContent || ''))));
+    ok(name+' resume survives a reload', await p.evaluate(() => __app.showStep(9) || true) && (await p.waitForTimeout(800), /Resume Chapter 1 at/.test(await p.evaluate(() => (document.getElementById('xpresume') || {}).textContent || ''))));
     } catch(e){ ok(name+' crashed: '+e.message.split('\n')[0], false); }
     await ctx.close();
   }
