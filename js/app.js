@@ -7,6 +7,7 @@ const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;
 const STORY_URL = 'data/stories/jews/story.json';
 let STORY = null, STOP = null, ERA = null, SRC = {}, OBJ = {}, OBJS = [];
 let cur = 0, step = 0, K = 1, openId = null, MODE = 'stop', SPEED = 1;
+let ARRIVE = -1;   // the stop just reached by the end of the previous chapter's Play (shows "Continue to Chapter N")
 const cache = {};
 // frame = the film's own framing lines (title, how to read the labels, the choice): shown without a badge
 const CERT = {attested:'Attested', disputed:'Disputed', tradition:'Tradition', scene:'Imagine', frame:''};
@@ -59,7 +60,8 @@ function scaleMarks(){
     .style('display', d => (K >= showAt(d.o.rank, d.o.type) || d.hl) ? null : 'none')
     .each(function(){ d3.select(this).select('.inner').attr('transform', `scale(${1/K})`); });
   gZones.selectAll('text.zlabel').style('font-size', (10*TSM()/K) + 'px').style('stroke-width', (2/K) + 'px').style('display', K > 9 ? 'none' : null);
-  gZones.selectAll('.israel').attr('filter', K < 3 ? null : 'url(#soft)');
+  // the soft edge is for a people without a border; the two kingdoms after the split (c. 930 BC) keep a sharp, dashed edge
+  gZones.selectAll('.israel').attr('filter', function(){ return K < 3 || this.matches('.z-israel, .z-judah') ? null : 'url(#soft)'; });
   gKey.selectAll('g.key').attr('transform', d => { const p = projection(d.pt); return `translate(${p[0]},${p[1]}) scale(${1/K})`; });
   root.selectAll('g.fxm').attr('transform', d => { const p = projection(d.pt); return `translate(${p[0]},${p[1]}) scale(${1/K})`; });
   root.selectAll('g.tip').attr('transform', d => { const a = projection(d.a), b = projection(d.b); const ang = Math.atan2(b[1]-a[1], b[0]-a[0]) * 180 / Math.PI; return `translate(${b[0]},${b[1]}) rotate(${ang}) scale(${1/K})`; });
@@ -306,7 +308,10 @@ function showStep(i, fly = true){
   const e = S[step], last = step === S.length - 1;
   let h;
   if (e.intro){
-    h = `<div class="kicker">${esc(STORY.title)} · ${esc(STOP.label)}</div><h2>${esc(STOP.title)}</h2>` + partList() +
+    // just arrived here from the previous chapter's Play: one big button straight into this chapter
+    const arr = ARRIVE === cur && chapNo(cur);
+    h = `<div class="kicker">${esc(STORY.title)} · ${esc(STOP.label)}</div><h2>${esc(STOP.title)}</h2>` +
+        (arr ? `<div class="cta arrive"><button type="button" class="play big" id="gonextch" data-part="${cur}" data-how="${posGet(STOP.year) ? 'resume' : 'over'}">Continue to Chapter ${arr} ▶</button></div>` : '') + partList() +
         `<p class="lead">${esc(STORY.intro)}</p><p>${esc(tinText())}</p>` +
         (tinBeats() ? `<div class="cta"><button type="button" class="play" id="gostory">▶ Watch the opening · ${minsOf(reelChapters('intro')[0].ms)}</button><button type="button" id="goexplore">Explore the map</button></div>` +
             resumeHere('goresume') + chapterList('intro') +
@@ -582,7 +587,7 @@ const STEP = {
       const feat = rewind({type:'Feature', properties:{zone:a.zone, certainty:a.certainty, part:`Drawn for ${playToLabel()}: extent uncertain`}, geometry:{type:'Polygon', coordinates:[a.coords]}});
       FXZ.push(feat);
       const g = gZones.select('g');
-      const el = a.certainty === 'people' ? g.append('path').attr('class','israel tap added') : g.append('path').attr('class', `zone tap unsure added z-${a.zone}`);
+      const el = a.certainty === 'people' ? g.append('path').attr('class',`israel tap added z-${a.zone}`) : g.append('path').attr('class', `zone tap unsure added z-${a.zone}`);
       el.datum(feat).attr('d', path).on('click', e => { e.stopPropagation(); openObj(ERA.zoneObjects[a.zone]); });
       const t = g.append('text').datum({id:a.zone, c:a.labelAt}).attr('class', 'zlabel tap added' + (a.certainty === 'people' ? ' zl-people' : '')).text(a.label)
         .on('click', e => { e.stopPropagation(); openObj(ERA.zoneObjects[a.zone]); });
@@ -678,7 +683,7 @@ function seek(i){
 }
 async function playStart(reel = 'play', from = 0){
   if (typeof reel !== 'string') reel = 'play';
-  sndEnsure(); // inside the Play click: the browser allows audio from here on
+  ARRIVE = -1; sndEnsure(); // inside the Play click: the browser allows audio from here on
   // the narrated part runs as a small film: the map grows to fill the screen first
   const film = enterCine();
   if (MODE !== 'stop') await go(liveBefore(cur));
@@ -786,7 +791,7 @@ function playEnd(){
   const k = STORY.stops.findIndex(s => s.year === to);
   // zoom back out to the explore view first, then land on the new year: its intro when the stop is built,
   // otherwise the 'coming soon' end state
-  playStop(true).then(() => { if (PLAY) return; STORY.stops[k].file ? go(k) : arriveSoon(k, false); });
+  playStop(true).then(() => { if (PLAY) return; if (STORY.stops[k].file){ ARRIVE = k; go(k); } else arriveSoon(k, false); });
 }
 // ---------- cinematic mode: the narrated part as a small film ----------
 // The map viewport grows from its place in the page to the full screen (Fullscreen API where it exists,
@@ -1029,6 +1034,7 @@ function timelineState(s){
 async function go(i){
   if (PLAY) playStop(true);
   cur = Math.max(0, Math.min(STORY.stops.length - 1, i));
+  if (cur !== ARRIVE) ARRIVE = -1;
   const s = STORY.stops[cur];
   timelineState(s);
   $('soon').hidden = true; $('soont').textContent = s.label + ' · ' + s.title;

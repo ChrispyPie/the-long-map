@@ -1,5 +1,6 @@
 import narration_jews_1207 as NAR
 import narration_jews_1150 as NAR1150
+import narration_jews_1000 as NAR1000
 A,D,T = "attested","disputed","tradition"
 STORY = {
  "id":"jews","title":"Story of the Jews","site":"The Long Map",
@@ -12,11 +13,11 @@ STORY = {
  "stops":[
   {"year":-1207,"label":"1207 BC","title":"Israel is named","era":"data/eras/1207bc.json","file":"data/stories/jews/1207bc.json"},
   {"year":-1150,"label":"c. 1150 BC","title":"Villages in the hills","era":"data/eras/1150bc.json","file":"data/stories/jews/1150bc.json"},
-  {"year":-1000,"label":"c. 1000 BC","title":"David and Solomon: tradition and evidence",
-   # reached at the end of the c. 1150 BC Play; hl/focus: what the map shows there
-   "soon":{"title":"David and Solomon: tradition and evidence","text":"Next chapter coming soon. The transition you just watched brings the map to about 1000 BC: the Philistine cities still hold the coast, Khirbet Qeiyafa has just been destroyed, and in the Hebrew Bible David is king in Jerusalem. How large his kingdom was is debated, so the map draws no border for it.",
-     "hl":["jerusalem","qeiyafa","hebron","bethlehem","philistines","gath"],"focus":{"c":[35.05,31.8],"k":5.2}}},
-  {"year":-930,"label":"c. 930 BC","title":"Israel and Judah"},
+  {"year":-1000,"label":"c. 1000 BC","title":"David and Solomon: tradition and evidence","era":"data/eras/1000bc.json","file":"data/stories/jews/1000bc.json"},
+  {"year":-930,"label":"c. 930 BC","title":"Israel and Judah",
+   # reached at the end of the c. 1000 BC Play (Chapter 3 ends on Shishak and the Karnak list); hl/focus: what the map shows there
+   "soon":{"title":"Israel and Judah","text":"Next chapter coming soon. The map now shows two kingdoms in the hills: Israel in the north, ruled from Shechem, and Judah in the south, ruled from Jerusalem by the House of David. In the Bible, Pharaoh Shishak marches north into the land. On a wall at Karnak, Egypt carved its own list of the places he took. Whether Jerusalem is on it is where the next chapter begins.",
+     "hl":["jerusalem","shechem","bethel","dan","israelp","judah"],"focus":{"c":[35.2,32.0],"k":4.6}}},
   {"year":-722,"label":"722 BC","title":"Assyria takes Samaria"},
   {"year":-586,"label":"586 BC","title":"The First Temple destroyed"},
   {"year":-538,"label":"538 BC","title":"Return under Persia"},
@@ -122,4 +123,52 @@ STOP1150 = {
   "zoneObjects":{"philistia":"philistines","israel":"israelp"},
   "ambient":"desert",
   "beats":NAR1150.clean(NAR1150.PLAY)}
+}
+
+
+# ---------- c. 1000 BC: David and Solomon (Chapter 3: opening film + Play to c. 930 BC, build/narration_jews_1000.py) ----------
+# The map is the end state of the c. 1150 BC Play plus dashed Ammon, Moab and Edom (data/eras/1000bc.json, make_data.py).
+# No border for David or Solomon. The Play draws the split of c. 930 BC (ISRAEL north, JUDAH south) and ends on a teaser.
+STOP1000 = {
+ "story":"jews","year":-1000,"label":"c. 1000 BC","title":"David and Solomon: tradition and evidence",
+ "keyObjects":["jerusalem","hebron","gibeon","motza","gezer","megiddo","hazor","nahas","rabbah","tyre","israelp","philistines"],
+ "transitionIn":{"text":"About 1000 BC. No empire rules the land. Philistine cities hold the coast, Tyre trades across the sea, and in the Hebrew Bible David is king in Jerusalem.",
+   "title":"c. 1000 BC: David, Solomon and the split","ambient":"desert","beats":NAR1000.clean(NAR1000.INTRO_BEATS)},
+ "transitionOut":{"to":-930,"text":"Next: David's Jerusalem, his wars and heirs, Solomon's temple and gates, and the split into Israel and Judah. Tradition and archaeology are told side by side, and where scholars disagree, each view is given."},
+ "events":[
+  {"id":"gates","kicker":"Archaeology","title":"The six-chambered gates","date":"10th–9th century BC","cert":D,
+   "text":"The Bible says Solomon built Hazor, Megiddo and Gezer. In the 1950s Yigael Yadin found city gates of the same plan at all three, each with six chambers, and called them Solomon's gates. Israel Finkelstein later moved them about a century down, to the kings of the northern kingdom. At Gezer, radiocarbon dates published in 2023 put the level with the gate back in the 10th century BC.",
+   "why":"Was Solomon a great builder, as the Bible says? The gates are one of the main tests. They show planned building in these years, but not who ordered it, and Hazor and Megiddo are still argued over.",
+   "claims":[["'Solomon built Hazor, Megiddo and Gezer' (1 Kings 9:15).",T,["bible"]],["Yadin identified the six-chambered gates at Hazor, Megiddo and Gezer as Solomonic.",A,["yadin1958"]],["Finkelstein's 'low chronology' dates these levels to the 9th century BC.",D,["fink1996"]],["Radiocarbon dates for Gezer Stratum 8, with the gate: built c. 998–957 BC, destroyed c. 969–940 BC (68% ranges). Similar gates are also found elsewhere, so the plan alone does not prove a single builder.",D,["webster2023"]]],
+   "src":["yadin1958","fink1996","webster2023","bible"],"objects":["gezer","megiddo","hazor"],"focus":{"c":[35.2,32.45],"k":4.2},"hl":["gezer","megiddo","hazor"]},
+  {"id":"copper","kicker":"The neighbours","title":"The copper of Edom","date":"c. 1100–850 BC","cert":A,
+   "text":"After Egypt left Canaan, copper smelting in the Arabah valley did not stop. At Khirbet en-Nahas in Faynan and at Timna, huge slag heaps and radiocarbon dates show production on a large scale in the 11th to 9th centuries BC, run by people who mostly lived in tents.",
+   "why":"Archaeologists look for stone palaces to find kingdoms. Edom's copper shows that a strong, organised society can leave few buildings. Some scholars call this the 'architectural bias', and it matters for how we judge David's kingdom too.",
+   "claims":[["Large-scale smelting at Khirbet en-Nahas and Timna in the 11th–9th centuries BC, dated by radiocarbon.",A,["levy2014","benyosef2019"]],["That this was run by an Edomite polity of largely nomadic people, and what that says about early kingdoms, is debated.",D,["benyosef2019"]],["The Bible says David put garrisons in Edom (2 Samuel 8:14).",T,["bible"]]],
+   "src":["levy2014","benyosef2019"],"objects":["nahas","timna","edom","bozrah"],"focus":{"c":[35.3,30.4],"k":5},"hl":["nahas","timna","bozrah"]},
+  {"id":"temple","kicker":"Jewish tradition","title":"The temple: text and parallels","date":"Tradition: 10th century BC","cert":T,
+   "text":"The Book of Kings describes Solomon's temple in detail: a porch, a great hall and an inner room, the Holy of Holies, where the Ark of the Covenant stood. No trace of it has been found, because the Temple Mount is a holy place and cannot be excavated. But temples of the same three-part plan are known, most closely at Ain Dara in Syria, and a small temple of this age was found at Tel Motza, just outside Jerusalem.",
+   "why":"The Temple in Jerusalem became the centre of Jewish worship. After it was destroyed, prayer took its place: Jews still face Jerusalem when they pray, as Solomon asks in his dedication prayer.",
+   "claims":[["The building and dedication of the temple: 1 Kings 6–8.",T,["bible"]],["Ain Dara has a three-part plan like the one described in 1 Kings 6.",A,["monson2000"]],["Tel Motza: an Iron IIA temple with altar and courtyard, late 10th–early 9th century BC.",A,["kisilevitz2015"]],["A stone shrine model from Khirbet Qeiyafa has a recessed doorframe that some compare with 1 Kings 6:31.",D,["garfinkelmumcuoglu2016"]],["Facing Jerusalem in prayer, from 1 Kings 8.",T,["berakhot30a"]]],
+   "src":["bible","monson2000","kisilevitz2015","garfinkelmumcuoglu2016","berakhot30a"],"objects":["jerusalem","motza","aindara","qeiyafa"],"focus":{"c":[35.2,31.8],"k":9},"hl":["jerusalem","motza"]},
+  {"id":"monarchy","kicker":"The big question","title":"Was there a united monarchy?","date":"c. 1000–930 BC","cert":D,
+   "text":"The Bible tells of one kingdom of all Israel under Saul, David and Solomon, which split in two after Solomon. Some historians, such as Israel Finkelstein, think the north and Judah were separate from the start, and that the 'united monarchy' is a later ideal. Others, such as Amihai Mazar, think a modest kingdom ruled from Jerusalem is the best reading of the evidence.",
+   "why":"A 9th-century BC stele from Tel Dan names the 'House of David', so a dynasty named after David ruled Judah within about a century and a half. How large and how rich that kingdom was at the start is still open.",
+   "claims":[["One kingdom under David and Solomon, split after Solomon: 2 Samuel to 1 Kings 12.",T,["bible"]],["The north and Judah were separate from the start; the united monarchy is a later ideal.",D,["finksilb2006","fink2013"]],["A modest united kingdom in the 10th century BC is the best reading of the evidence.",D,["mazar2010"]],["The Tel Dan stele names the 'House of David' (9th century BC).",A,["biran1993","biran1995"]]],
+   "src":["finksilb2006","mazar2010","biran1995","bible"],"objects":["jerusalem","shechem","dan","israelp"],"focus":{"c":[35.3,32.3],"k":4},"hl":["jerusalem","shechem","dan"]},
+  {"id":"mesha","kicker":"A neighbour's voice","title":"The Mesha stele","date":"c. 840 BC","cert":A,
+   "text":"About a century after the split, Mesha, king of Moab, set up a stone at Dibon boasting that he had thrown off the rule of Israel's king Omri and his son. It was found in 1868 and is now in the Louvre. In a broken line near the end, André Lemaire proposed reading 'House of David'. Others read a king's name, Balak, instead.",
+   "why":"It is Moab's own side of a story the Bible tells too (2 Kings 3). If the reading is right, it is a second 9th-century witness to a dynasty named after David.",
+   "claims":[["Mesha of Moab's inscription from Dibon, naming Omri king of Israel.",A,["lemaire1994","langlois2019"]],["Line 31 reads 'House of David': hypothetical but the most probable reading.",D,["lemaire1994","langlois2019"]],["Line 31 cannot read 'House of David'; the name may be Balak.",D,["finknaamanromer2019"]],["Mesha's revolt against Israel: 2 Kings 3.",T,["bible"]]],
+   "src":["lemaire1994","langlois2019","finknaamanromer2019","bible"],"objects":["dibon","moab"],"focus":{"c":[35.78,31.5],"k":8},"hl":["dibon"]}
+ ],
+ "explore":{
+  "key":["jerusalem","hebron","gibeon","tyre","rabbah","nahas","gezer","megiddo","hazor","motza","philistines","israelp"],
+  "text":"Open each key place or people on the map to read its fact box. Unexplored ones glow; explored ones get a check. Your progress is saved on this device. When you are ready, press Play to move on to c. 930 BC."},
+ "play":{
+  "to":-930, "title":"From c. 1000 BC to c. 930 BC",
+  "intro":"Plays full screen like a short narrated film, with subtitles (CC). Pause, step back or forward, or change speed at any time. Stop whenever you like: it remembers your chapter.",
+  "zoneObjects":{"philistia":"philistines","israel":"israelp","ammon":"ammon","moab":"moab","edom":"edom","judah":"judah"},
+  "ambient":"desert",
+  "beats":NAR1000.clean(NAR1000.PLAY)}
 }

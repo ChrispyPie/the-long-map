@@ -2,7 +2,8 @@
 // no frame lines in Play, pig-bone wording, battles without arrows, no border for David),
 // then in the browser: the 1150 opener ends on its choice and Continue goes on into Play,
 // a tap only shows the controls (never pauses), sound gaps stay within 2 s, Play ends on the
-// c. 1000 BC 'coming soon' state, and objects added for 1150 are not drawn on the 1207 map.
+// c. 1000 BC intro (Chapter 3) with a 'Continue to Chapter 3' button after the teaser line, and objects added
+// for 1150 are not drawn on the 1207 map.
 // Usage: node build/test-narration1150.js [url] [noshots]; SHOTS=dir for n1150_*.png screenshots.
 const { chromium } = require('playwright');
 const fs = require('fs'), path = require('path');
@@ -19,10 +20,12 @@ const ROOT = process.env.ROOT || path.join(__dirname, '..');
   const caps = b => b.steps.filter(x => x.type === 'caption');
   const s1150 = story.stops.find(s => s.year === -1150), s1000 = story.stops.find(s => s.year === -1000);
   ok('1150 is a live stop with its own map', s1150 && s1150.file === 'data/stories/jews/1150bc.json' && s1150.era === 'data/eras/1150bc.json' && !s1150.soon && fs.existsSync(path.join(ROOT, s1150.era)));
-  ok('1000 is the next, "coming soon" stop', s1000 && !s1000.file && s1000.soon && /David/.test(s1000.soon.title));
+  ok('1000 is the next, live stop (Chapter 3)', s1000 && s1000.file === 'data/stories/jews/1000bc.json' && !s1000.soon);
+  const last = caps(PL[PL.length - 1])[0];
+  ok('Play ends on the teaser for Chapter 3: ' + JSON.stringify(last.text), /Solomon/.test(last.text) && /next chapter\.$/.test(last.text) && last.ref && last.src.includes('bible'));
   ok('Play runs from c. 1150 to c. 1000 BC', data.play.to === -1000 && data.transitionOut && data.transitionOut.to === -1000);
   const sizes = all.map(b => b.audio && fs.existsSync(path.join(ROOT, b.audio)) ? fs.statSync(path.join(ROOT, b.audio)).size : -1);
-  ok('every line has its recording (' + all.length + ' files, ' + Math.round(sizes.reduce((a, s) => a + s, 0) / 1024) + ' kB)', all.length === 59 && sizes.every(s => s > 4000 && s < 80000));
+  ok('every line has its recording (' + all.length + ' files, ' + Math.round(sizes.reduce((a, s) => a + s, 0) / 1024) + ' kB)', all.length === 60 && sizes.every(s => s > 4000 && s < 80000));
   const idx = J('assets/narration/index.json');
   ok('every recording listed in index.json', all.every(b => { const k = Object.keys(idx).find(k => b.audio.endsWith(k)); return k && idx[k].ms > 0; }));
   ok('audioMs measured for every line', all.every(b => b.audioMs > 2000 && b.audioMs < 20000));
@@ -83,7 +86,7 @@ const ROOT = process.env.ROOT || path.join(__dirname, '..');
       await p.evaluate(() => document.getElementById('choicego').scrollIntoView({block: 'center'}));
       mobile ? await p.tap('#choicego') : await p.click('#choicego'); await p.waitForTimeout(1500);
       s = await p.evaluate(() => __app.play);
-      ok(name + ' Continue goes on into Play ' + JSON.stringify(s), s && s.reel === 'play' && s.n === 52 && !s.choice);
+      ok(name + ' Continue goes on into Play ' + JSON.stringify(s), s && s.reel === 'play' && s.n === 53 && !s.choice);
       const ch = await p.evaluate(() => __app.chapters('play').map(c => c.title));
       ok(name + ' Play chapters ' + ch.join(' / '), ch.length === 4 && ch[3] === 'David: tradition and evidence');
       // tap in Play: still no pause
@@ -96,13 +99,19 @@ const ROOT = process.env.ROOT || path.join(__dirname, '..');
       ok(name + ' Aphek battle: marker, no army arrows, gaps <= 2 s ' + JSON.stringify(s), s.battle >= 1 && s.army === 0 && s.gap <= 2000 && s.gap2 <= 2000);
       await shot('film');
       ok(name + ' Play voice lines requested', req.some(u => /jews-1150-play-/.test(u)));
-      // run to the end: c. 1000 BC coming soon, no border for David
+      // run to the end: the teaser line last, then the c. 1000 BC intro (Chapter 3) with a Continue button
       await p.evaluate(() => { __app.speed = 12; __app.seek(__app.play.n - 2); });
-      for (let i = 0; i < 80 && await p.evaluate(() => !!__app.play); i++) await p.waitForTimeout(500);
+      let lastCap = '';
+      for (let i = 0; i < 80 && await p.evaluate(() => !!__app.play); i++){ const c = await p.evaluate(() => __app.play && __app.play.i === __app.play.n - 1 ? document.getElementById('cap').textContent : ''); if (c) lastCap = c; await p.waitForTimeout(300); }
+      ok(name + ' last subtitle is the Chapter 3 teaser ' + JSON.stringify(lastCap.slice(0, 80)), /Solomon builds a temple/.test(lastCap) && /next chapter/.test(lastCap));
       await p.waitForTimeout(2500);
-      s = await p.evaluate(() => ({mode: __app.mode, pill: document.getElementById('pill').textContent, flag: !!document.querySelector('.soonflag'), added: document.querySelectorAll('path.added').length, body: document.getElementById('evbody').textContent.slice(0, 400)}));
-      ok(name + ' Play ends on c. 1000 BC coming soon, no border drawn for David ' + JSON.stringify({mode: s.mode, pill: s.pill, flag: s.flag, added: s.added}), s.mode === 'soon' && /1000/.test(s.pill) && s.flag && s.added === 0 && /David/.test(s.body));
-      await shot('soon1000');
+      s = await p.evaluate(() => ({mode: __app.mode, pill: document.getElementById('pill').textContent, flag: !!document.querySelector('.soonflag'), added: document.querySelectorAll('path.added').length, btn: (document.getElementById('gonextch') || {}).textContent}));
+      ok(name + ' Play ends on the c. 1000 BC intro with "Continue to Chapter 3", no border drawn for David ' + JSON.stringify(s), s.mode === 'stop' && /1000/.test(s.pill) && !s.flag && s.added === 0 && /Continue to Chapter 3/.test(s.btn || ''));
+      await shot('arrive1000');
+      await p.evaluate(() => document.getElementById('gonextch').click()); await p.waitForTimeout(1500);
+      s = await p.evaluate(() => __app.play);
+      ok(name + ' Continue to Chapter 3 starts its opening ' + JSON.stringify(s), s && s.reel === 'intro' && s.n === 7);
+      await p.evaluate(() => __app.playStop(false));
     } catch (e) { ok(name + ' ran: ' + e.message.split('\n')[0], false); }
     await ctx.close();
   }

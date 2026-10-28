@@ -24,7 +24,7 @@ const D = process.env.SHOTS || 'screens';
       const list = () => p.evaluate(() => [...document.querySelectorAll('#evbody .parts .chb')].map(x => ({k: +x.dataset.part, t: x.textContent, here: x.classList.contains('here'), go: x.classList.contains('gonext')})));
       await p.goto(url, {waitUntil: 'networkidle'}); await p.waitForTimeout(1200);
       let l = await list();
-      ok(name + ' 1207 intro lists Part 1 (here) and Part 2 ' + JSON.stringify(l.map(x => x.t)), l.length === 2 && l[0].here && /Chapter 1.*1207/.test(l[0].t) && /Chapter 2.*1150.*Start/.test(l[1].t) && !l[1].go);
+      ok(name + ' 1207 intro lists Part 1 (here) and Part 2 ' + JSON.stringify(l.map(x => x.t)), l.length === 3 && l[0].here && /Chapter 1.*1207/.test(l[0].t) && /Chapter 2.*1150.*Start/.test(l[1].t) && !l[1].go && /Chapter 3.*1000/.test(l[2].t));
       const pos = await p.evaluate(() => { const ev = document.getElementById('evbody'), h2 = ev.querySelector('h2'), pt = ev.querySelector('.parts'), cta = document.getElementById('gostory');
         return {afterTitle: h2.compareDocumentPosition(pt) & 4, beforeCta: pt.compareDocumentPosition(cta) & 4, off: pt.getBoundingClientRect().top - ev.getBoundingClientRect().top}; });
       ok(name + ' parts sit under the title, before the opening button ' + JSON.stringify(pos), pos.afterTitle && pos.beforeCta && pos.off < 160);
@@ -45,11 +45,11 @@ const D = process.env.SHOTS || 'screens';
       ok(name + ' Part 2 remembered as watched at its choice', await p.evaluate(() => localStorage.getItem('tlm.done.jews.-1150') === '1'));
       await tap('#choicego'); await p.waitForTimeout(1200);
       s = await p.evaluate(() => __app.play);
-      ok(name + ' Continue goes on into the c. 1150 to c. 1000 BC Play ' + JSON.stringify(s), s && s.reel === 'play' && s.n === 52);
+      ok(name + ' Continue goes on into the c. 1150 to c. 1000 BC Play ' + JSON.stringify(s), s && s.reel === 'play' && s.n === 53);
       await p.evaluate(() => __app.playStop(false)); await p.waitForTimeout(1500);
       await p.evaluate(() => __app.showStep(0)); await p.waitForTimeout(400);
       l = await list();
-      ok(name + ' 1150 intro lists Chapter 1 to go back, Chapter 2 started: Resume + Start over ' + JSON.stringify(l.map(x => x.t)), l.length === 2 && /Resume ▶ \(\d+:\d\d\)/.test(l[1].t) && await p.evaluate(() => /Start over/.test(document.querySelectorAll(".plist.parts li")[1].textContent)) && /Chapter 1.*Start/.test(l[0].t));
+      ok(name + ' 1150 intro lists Chapter 1 to go back, Chapter 2 started: Resume + Start over ' + JSON.stringify(l.map(x => x.t)), l.length === 3 && /Resume ▶ \(\d+:\d\d\)/.test(l[1].t) && await p.evaluate(() => /Start over/.test(document.querySelectorAll(".plist.parts li")[1].textContent)) && /Chapter 1.*Start/.test(l[0].t));
       // a fresh visit after Part 1 was watched and nothing of Part 2 started: Part 2 says Continue
       await p.evaluate(() => Object.keys(localStorage).filter(k => /^tlm\.(pos|resume)\.jews\.-1150/.test(k)).forEach(k => localStorage.removeItem(k)));
       // a fresh visit after Part 1 was watched: Part 2 says Continue
