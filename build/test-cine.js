@@ -1,4 +1,4 @@
-// Notice, opening book and cinematic mode. Usage: node build/test-cine.js [url] [noshots]; SHOTS=dir for screenshots.
+// Notice, opening book and cinematic mode. Usage: node build/test-cine.js [url] [noshots]; TS=s|m|l|xl for a saved text size; SHOTS=dir for screenshots.
 const { chromium } = require('playwright');
 const url = process.argv[2] || 'http://127.0.0.1:8793/';
 const shots = process.argv[3] !== 'noshots';
@@ -9,6 +9,7 @@ const D = process.env.SHOTS || 'screens';
   const ok = (n, c) => notes.push((c ? 'PASS ' : 'FAIL ') + n);
   for (const [name, vw, vh, mobile, rm] of [['mobile',393,852,true,false],['desktop',1280,800,false,false],['mobile-reduced',393,852,true,true]]) {
     const ctx = await b.newContext({viewport:{width:vw,height:vh}, deviceScaleFactor:2, isMobile:mobile, hasTouch:mobile, reducedMotion: rm ? 'reduce' : 'no-preference'});
+    if (process.env.TS) await ctx.addInitScript(t => localStorage.setItem('tlm.textsize', t), process.env.TS); // TS=xl runs the suite at a saved text size
     const p = await ctx.newPage();
     p.on('console', m => { if (m.type()==='error') errs.push(name+': '+m.text()); });
     p.on('pageerror', e => errs.push(name+' pageerror: '+e.message));
