@@ -856,7 +856,7 @@ function vigHide(now){
   const el = $('vig'); VIG.cur = null; clearTimeout(VIG.t); if (!el) return;
   el.classList.remove('in');
   // an enlarged picture whose time is up fades out where it is, then is a small card again for the next one
-  const unz = () => { el.classList.remove('zoom', 'zooming'); $('vp').classList.remove('vigzoom'); delete el.dataset.zi; };
+  const unz = () => { el.classList.remove('zoom', 'zooming'); $('vp').classList.remove('vigzoom'); delete el.dataset.zi; vigZoom.from = null; };
   if (now) VIGSLOT = null;
   if (now || el.hidden || REDUCED()){ el.hidden = true; el.classList.remove('out'); unz(); return; }
   el.classList.add('out'); VIG.t = setTimeout(() => { if (!VIG.cur){ el.hidden = true; el.classList.remove('out'); unz(); } }, 650);
@@ -878,7 +878,7 @@ function vigSlot(v){
   if (w < 130) return null;
   const h = Math.round((w - 12) / ar + vigCapH(v.caption, w));
   return side === 'a' ? {side, x: Math.round((W - w) / 2), y: Math.round(top), w, h}
-    : {side, x: Math.round(W - pad - w), y: Math.round(Math.max(top, (top + bot) / 2 - h / 2)), w, h};
+    : {side, x: Math.round(W - pad - w), y: Math.round(top), w, h};   // top right, below the year: enlarged, it grows down from there
 }
 const slotSame = (a, b) => (!a && !b) || (a && b && a.side === b.side && ['x', 'y', 'w', 'h'].every(k => Math.abs(a[k] - b[k]) < 4));
 // a new room for the card (it comes, goes or changes size): move the camera so the place in focus is in the
@@ -950,12 +950,14 @@ function vigPlace(){
   if (el.classList.contains('zoom')) return vigPlaceZoom(el);
   if (CINE && CINE.full){
     // the film: the card takes its room (above, or on the right); the camera keeps the place in focus beside it
+    // shrinking back: straight to the room it had (its height is mid-transition, so it cannot be measured now)
+    if (el.classList.contains('zooming') && VIGSLOT){ const o = VIGSLOT; el.style.width = o.w + 'px'; el.style.left = o.x + 'px'; el.style.top = o.y + 'px'; return; }
     const s = vigSlot(VIG.cur.v);
     if (!s){ el.style.visibility = 'hidden'; vigSetSlot(null); return; }   // no room on this screen: leave it out
     el.style.visibility = ''; el.dataset.side = s.side;
     el.style.width = s.w + 'px'; el.style.left = s.x + 'px'; el.style.top = s.y + 'px';
     const hr = el.offsetHeight;   // the caption may wrap differently from the estimate
-    if (hr && Math.abs(hr - s.h) > 1){ if (s.side === 'r') s.y = Math.round(Math.max(10, s.y - (hr - s.h) / 2)); s.h = hr; el.style.top = s.y + 'px'; }
+    if (hr && Math.abs(hr - s.h) > 1) s.h = hr;
     vigSetSlot(s); return;
   }
   const vp = $('vp').getBoundingClientRect(), W = vp.width, H = vp.height, narrow = W < 600;
@@ -993,18 +995,23 @@ function vigPlace(){
   if (hr && hr !== h){ const y2 = clamp(c.s === 'a' ? Math.min(y, c.y1 - hr) : y, top, Math.max(top, bot - hr)); if (y2 !== y) el.style.top = Math.round(y2) + 'px'; }
 }
 // enlarged: as large as fits the free picture (below the year, above the subtitles), centred in it
+// The enlarged picture keeps the small card's top edge and grows down and out from its middle (a pair stays
+// side by side), within the screen and above the subtitles when there is room; the map does not move.
 function vigPlaceZoom(el){
   const vp = $('vp').getBoundingClientRect(), f = filmFree(true), m = 6;
-  const top = Math.max(m, f.top), bot = Math.min(vp.height - m, f.bot), avail = bot - top;
-  const zi = el.querySelector('img[data-i="' + (el.dataset.zi || 0) + '"]') || el.querySelector('img');   // a pair enlarges one of its pictures
-  const ar = el.dataset.zi != null ? parseFloat(zi.style.getPropertyValue('--ar')) || 4 / 3 : parseFloat(el.dataset.ar) || 4 / 3;
+  const z0 = vigZoom.from || {top: parseFloat(el.style.top) || m, cx: vp.width / 2};
+  const top = Math.max(m, Math.min(z0.top, vp.height - m - 160));
+  const zi = el.dataset.zi != null && el.querySelector('img[data-i="' + el.dataset.zi + '"]');   // (one picture of a pair on its own)
+  const ar = zi ? parseFloat(zi.style.getPropertyValue('--ar')) || 4 / 3 : parseFloat(el.dataset.ar) || 4 / 3;
   const W = vp.width - 2 * m, pad = 8;
   // the frame and caption take about the same height whatever the width (read now: the width may be mid-transition)
-  const extra = el.offsetHeight - zi.offsetHeight;
-  const w = Math.max(140, Math.min(W, (avail - extra) * ar + pad));
-  el.style.width = Math.round(w) + 'px';
-  const h = (Math.round(w) - pad) / ar + extra;
-  el.style.left = Math.round((vp.width - w) / 2) + 'px'; el.style.top = Math.round(top + Math.max(0, (avail - h) / 2)) + 'px';
+  const pic = zi || el.querySelector('.vigin') || el.querySelector('img');
+  const extra = el.offsetHeight - pic.offsetHeight;
+  const fit = bot => Math.max(140, Math.min(W, (bot - top - extra) * ar + pad));
+  let w = fit(Math.min(vp.height - m, f.bot));
+  if (w < (z0.w || 0) * 1.1) w = Math.max(w, Math.min(fit(vp.height - m), (z0.w || 0) * 1.3));   // above the subtitles it would hardly grow: let it run over them
+  w = Math.round(w); el.style.width = w + 'px';
+  el.style.left = Math.round(Math.max(m, Math.min(vp.width - m - w, z0.cx - w / 2))) + 'px'; el.style.top = Math.round(top) + 'px';
 }
 // tap the picture: enlarge it or shrink it back. The narration keeps going; when the picture's time is up it
 // fades out as usual (enlarged or not). A tap beside the enlarged picture or Esc also shrinks it.
@@ -1013,10 +1020,10 @@ function vigZoom(on, k){
   const el = $('vig'); if (!el || el.hidden || !VIG.cur) return;
   if (on === el.classList.contains('zoom')) return;
   const pair = el.classList.contains('pair'), cp = el.querySelector('figcaption'), v = VIG.cur.v;
-  if (pair && on){ k = k == null ? 0 : +k; el.dataset.zi = k; const c = (vigPics(v)[k] || {}).caption || v.caption || ''; cp.textContent = c; cp.hidden = !c; }
-  else if (pair){ delete el.dataset.zi; cp.textContent = v.caption || ''; cp.hidden = !v.caption; }
+  if (on) vigZoom.from = {top: el.offsetTop, cx: el.offsetLeft + el.offsetWidth / 2, w: el.offsetWidth};   // the small card's top edge stays put
+  else vigZoom.from = null;
   el.classList.add('zooming'); el.classList.toggle('zoom', on); $('vp').classList.toggle('vigzoom', on);
-  vigPlace(); clearTimeout(vigZoom.t); vigZoom.t = setTimeout(() => el.classList.remove('zooming'), 360);
+  vigPlace(); clearTimeout(vigZoom.t); vigZoom.t = setTimeout(() => { el.classList.remove('zooming'); if (!on) vigPlace(); }, 360);
 }
 addEventListener('resize', () => requestAnimationFrame(vigPlace));
 addEventListener('orientationchange', () => setTimeout(() => requestAnimationFrame(vigPlace), 250));
@@ -1324,7 +1331,9 @@ $('prev').onclick = () => go(cur - 1);
 $('next').onclick = () => go(cur + 1);
 
 window.__zoomTest = () => flyTo([35.3, 32.0], 7, 600);
-window.__app = { openObj, closeObj, showStep, go, playStart, playPause, playStop, seek: i => PLAY && seek(i), vigZoom,
+// for the tests: where the camera's target is on screen now, and the room the picture card takes
+const camTarget = () => { if (!FLY) return null; const q = TR.apply(projection(FLY.c)), m = svg.node().getScreenCTM(); if (!m) return null; const pt = svg.node().createSVGPoint(); pt.x = q[0]; pt.y = q[1]; const r = pt.matrixTransform(m); return [r.x, r.y]; };
+window.__app = { camTarget, vigSlot: () => VIGSLOT, openObj, closeObj, showStep, go, playStart, playPause, playStop, seek: i => PLAY && seek(i), vigZoom,
   get step(){ return step; }, get K(){ return K; }, get open(){ return openId; }, get mode(){ return MODE; }, get cur(){ return cur; },
   get explored(){ return [...EXPLORED]; }, get keys(){ return [...KEYSET]; },
   get play(){ return PLAY ? {i: PLAY.i, n: PLAY.beats.length, paused: PLAY.paused, reel: PLAY.reel, hold: !!(PLAY.hold || PLAY.wait), chapter: chapterAt(PLAY.reel, PLAY.i).n, choice: !$('choice').hidden} : null; },
