@@ -10,11 +10,13 @@ make_data.py uses ms as the line's real length and refuses lines whose text no l
 """
 import hashlib, json, os, subprocess, sys, time, urllib.request
 sys.path.insert(0, os.path.dirname(__file__))
-import narration_jews_1207 as N
+import narration_jews_1207 as N, narration_jews_1150 as N1150
 VOICE = "VC6vCXhVaI8BZefRtXZV"; MODEL = "eleven_multilingual_v2"; FMT = "mp3_22050_32"
 SETTINGS = {"stability": 0.32, "similarity_boost": 0.75, "style": 0.47, "use_speaker_boost": True, "speed": 1.0}
 OUT = "assets/narration"; IDX = f"{OUT}/index.json"
-REELS = {"jews-1207-in": N.INTRO_BEATS, "jews-1207-play": N.PLAY}
+# reel name -> (narration module, beats); the reel name is the mp3 file prefix
+REELS = {"jews-1207-in": (N, N.INTRO_BEATS), "jews-1207-play": (N, N.PLAY),
+         "jews-1150-in": (N1150, N1150.INTRO_BEATS), "jews-1150-play": (N1150, N1150.PLAY)}
 def sha(t): return hashlib.sha1(t.encode()).hexdigest()[:12]
 def ms(fp):
     r = subprocess.run(["ffprobe","-v","error","-show_entries","format=duration","-of","csv=p=0",fp], capture_output=True, text=True, check=True)
@@ -37,12 +39,12 @@ if __name__ == "__main__":
     idx = json.load(open(IDX)) if os.path.exists(IDX) else {}
     rid = {}  # request ids of this run, for stitching (not stored)
     chars = 0
-    for reel, beats in REELS.items():
+    for reel, (M, beats) in REELS.items():
         ids = []
         for i, b in enumerate(beats):
-            fp, t = file_of(reel, i), N.speech(b)
+            fp, t = file_of(reel, i), M.speech(b)
             if idx.get(fp, {}).get("sha") == sha(t) and os.path.exists(fp): ids = []; continue
-            nxt = N.speech(beats[i+1]) if i + 1 < len(beats) else None
+            nxt = M.speech(beats[i+1]) if i + 1 < len(beats) else None
             audio, r = tts(t, ids, nxt); chars += len(t)
             open(fp, "wb").write(audio); ids.append(r)
             idx[fp] = {"ms": ms(fp), "sha": sha(t)}
