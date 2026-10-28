@@ -837,12 +837,14 @@ function vigLoad(v){
     im.onload = () => { r.ok = true; r.cb.splice(0).forEach(f => f()); }; im.onerror = () => { r.ok = false; r.cb = []; }; im.src = v.src; }
   return r;
 }
-function vigPreload(i){ if (!PLAY) return; for (let j = i; j <= i + 2; j++){ const b = PLAY.beats[j]; if (b && b.vignette) vigLoad(b.vignette); } }
+// a vignette is one picture {src, alt, caption?, fx?, photo?} or a pair {images: [two of those], caption?}
+const vigPics = v => v.images || [v];
+function vigPreload(i){ if (!PLAY) return; for (let j = i; j <= i + 2; j++){ const b = PLAY.beats[j]; if (b && b.vignette) vigPics(b.vignette).forEach(vigLoad); } }
 function vigHide(now){
   const el = $('vig'); VIG.cur = null; clearTimeout(VIG.t); if (!el) return;
   el.classList.remove('in');
   // an enlarged picture whose time is up fades out where it is, then is a small card again for the next one
-  const unz = () => { el.classList.remove('zoom', 'zooming'); $('vp').classList.remove('vigzoom'); };
+  const unz = () => { el.classList.remove('zoom', 'zooming'); $('vp').classList.remove('vigzoom'); delete el.dataset.zi; };
   if (now || el.hidden || REDUCED()){ el.hidden = true; el.classList.remove('out'); unz(); return; }
   el.classList.add('out'); VIG.t = setTimeout(() => { if (!VIG.cur){ el.hidden = true; el.classList.remove('out'); unz(); } }, 650);
 }
@@ -852,18 +854,45 @@ function vigBeat(i, b, at_){
   if (c && (b.vignette || b.steps.some(x => x.type === 'focus') || i >= c.i + (c.v.beats || VIG_BEATS) || i < c.i)) vigHide();
   vigPreload(i + 1);
   const v = b.vignette; if (!v) return;
-  const r = vigLoad(v); if (r.ok === false) return;
-  at(at_, () => { if (!PLAY || PLAY.i !== i) return; const show = () => { if (PLAY && PLAY.i === i && r.ok) vigShow(v, i, r.im); }; r.ok ? show() : r.cb.push(show); });
+  const rs = vigPics(v).map(vigLoad); if (rs.some(r => r.ok === false)) return;
+  const tok = VIG.want = {};   // shown once, when every picture of it has loaded
+  at(at_, () => { if (!PLAY || PLAY.i !== i) return;
+    const show = () => { if (VIG.want === tok && PLAY && PLAY.i === i && rs.every(r => r.ok)){ VIG.want = null; vigShow(v, i, rs.map(r => r.im)); } };
+    rs.forEach(r => r.ok ? show() : r.cb.push(show)); });
 }
-function vigShow(v, i, im){
+function vigShow(v, i, ims){
   const el = $('vig'); if (!el) return;
   clearTimeout(VIG.t); VIG.cur = {v, i}; VIG.n++;
-  const img = el.querySelector('img'); img.src = im.src; img.alt = v.alt || '';
-  img.style.setProperty('--ar', im.naturalWidth && im.naturalHeight ? im.naturalWidth / im.naturalHeight : 4 / 3);
+  const pics = vigPics(v), box = el.querySelector('.vigin');
+  // a pair: two pictures side by side (never stacked), the same height, scaled down together to fit the card
+  while (box.querySelectorAll('img').length < pics.length){ const m = document.createElement('img'); m.alt = ''; m.decoding = 'async'; box.insertBefore(m, box.querySelector('.vigfx')); }
+  const imgs = [...box.querySelectorAll('img')];
+  let ar = 0;
+  imgs.forEach((img, k) => { const p = pics[k], im = ims[k]; img.hidden = !p; if (!p) return;
+    const a = im.naturalWidth && im.naturalHeight ? im.naturalWidth / im.naturalHeight : 4 / 3; ar += a;
+    img.src = im.src; img.alt = p.alt || ''; img.style.setProperty('--ar', a); img.dataset.i = k;
+    img.dataset.caption = p.caption || ''; img.classList.toggle('photo', !!p.photo); });
+  el.classList.toggle('pair', pics.length > 1); el.dataset.ar = ar; delete el.dataset.zi;
+  vigFx(el, pics, ims);
   el.dataset.kb = String(VIG.n % 4);
   const cp = el.querySelector('figcaption'); cp.textContent = v.caption || ''; cp.hidden = !v.caption;
   el.classList.remove('in', 'out', 'zoom', 'zooming'); $('vp').classList.remove('vigzoom'); el.hidden = false; vigPlace(); void el.offsetWidth; el.classList.add('in');
   el.classList.toggle('paused', !!PLAY.paused);
+}
+// fx: a subtle code-drawn touch on an illustration (rising smoke, flickering fire, moving waves, birds, drifting
+// dust or clouds). CSS only (transform/opacity), never on photos, frozen while paused, off with reduced motion.
+// In a pair it covers only the illustrated half.
+const VIG_FX = {smoke: 3, fire: 2, waves: 2, birds: 3, dust: 6, clouds: 2};
+function vigFx(el, pics, ims){
+  const box = el.querySelector('.vigin'); let fx = box.querySelector('.vigfx');
+  const k = pics.findIndex(p => p.fx && !p.photo), p = pics[k];
+  if (!p || REDUCED()){ if (fx) fx.hidden = true; return; }
+  if (!fx){ fx = document.createElement('div'); fx.className = 'vigfx'; fx.setAttribute('aria-hidden', 'true'); box.appendChild(fx); }
+  const a = ims.map(im => im.naturalWidth && im.naturalHeight ? im.naturalWidth / im.naturalHeight : 4 / 3), tot = a.reduce((x, y) => x + y, 0);
+  const left = a.slice(0, k).reduce((x, y) => x + y, 0) / tot * 100;
+  fx.style.left = left + '%'; fx.style.width = (a[k] / tot * 100) + '%'; fx.dataset.i = k;
+  fx.innerHTML = String(p.fx).split(' ').filter(t => VIG_FX[t]).map(t => '<div class="fx-' + t + '">' + '<i></i>'.repeat(VIG_FX[t]) + '</div>').join('');
+  fx.hidden = false;
 }
 // the largest card that fits to the right, left, above or below the focus point
 function vigPlace(){
@@ -877,7 +906,7 @@ function vigPlace(){
   let bot = H - pad;
   if (CINE && CINE.full) bot = Math.min(bot, f.bot - 4);   // the subtitles and source chip; the tap controls may cover it for a moment
   else if (cap && !cap.hidden && cap.offsetHeight && cap.parentNode === $('vp')){ const r = cap.getBoundingClientRect(); bot = Math.min(bot, r.top - vp.top - 8); }
-  const ar = parseFloat(el.querySelector('img').style.getPropertyValue('--ar')) || 4 / 3;
+  const ar = parseFloat(el.dataset.ar) || 4 / 3;
   const maxW0 = narrow ? Math.min(W * .8, 330) : Math.min(Math.max(W * .3, 240), 400);
   // caption: one line, or two when it is long (it wraps instead of being cut off)
   const capL = c => !c ? 0 : c.length * 6.4 * TSM() > maxW0 - 16 ? 2 : 1;
@@ -907,10 +936,11 @@ function vigPlace(){
 function vigPlaceZoom(el){
   const vp = $('vp').getBoundingClientRect(), f = filmFree(), m = 6;
   const top = Math.max(m, f.top), bot = Math.min(vp.height - m, f.bot), avail = bot - top;
-  const ar = parseFloat(el.querySelector('img').style.getPropertyValue('--ar')) || 4 / 3;
+  const zi = el.querySelector('img[data-i="' + (el.dataset.zi || 0) + '"]') || el.querySelector('img');   // a pair enlarges one of its pictures
+  const ar = el.dataset.zi != null ? parseFloat(zi.style.getPropertyValue('--ar')) || 4 / 3 : parseFloat(el.dataset.ar) || 4 / 3;
   const W = vp.width - 2 * m, pad = 8;
   // the frame and caption take about the same height whatever the width (read now: the width may be mid-transition)
-  const extra = el.offsetHeight - el.querySelector('img').offsetHeight;
+  const extra = el.offsetHeight - zi.offsetHeight;
   const w = Math.max(140, Math.min(W, (avail - extra) * ar + pad));
   el.style.width = Math.round(w) + 'px';
   const h = (Math.round(w) - pad) / ar + extra;
@@ -918,9 +948,13 @@ function vigPlaceZoom(el){
 }
 // tap the picture: enlarge it or shrink it back. The narration keeps going; when the picture's time is up it
 // fades out as usual (enlarged or not). A tap beside the enlarged picture or Esc also shrinks it.
-function vigZoom(on){
+// In a pair, the tapped picture (k = 0 or 1) is enlarged on its own, with its own caption and credit.
+function vigZoom(on, k){
   const el = $('vig'); if (!el || el.hidden || !VIG.cur) return;
   if (on === el.classList.contains('zoom')) return;
+  const pair = el.classList.contains('pair'), cp = el.querySelector('figcaption'), v = VIG.cur.v;
+  if (pair && on){ k = k == null ? 0 : +k; el.dataset.zi = k; const c = (vigPics(v)[k] || {}).caption || v.caption || ''; cp.textContent = c; cp.hidden = !c; }
+  else if (pair){ delete el.dataset.zi; cp.textContent = v.caption || ''; cp.hidden = !v.caption; }
   el.classList.add('zooming'); el.classList.toggle('zoom', on); $('vp').classList.toggle('vigzoom', on);
   vigPlace(); clearTimeout(vigZoom.t); vigZoom.t = setTimeout(() => el.classList.remove('zooming'), 360);
 }
@@ -1102,7 +1136,7 @@ let movedUp = -1e9;
 // button in the control bar, or Space. Taps on the controls keep them up. Objects are not opened mid-film.
 $('vp').addEventListener('click', e => {
   // the vignette picture: a tap enlarges or shrinks it and leaves the controls alone
-  if (e.target.closest('#vig')){ e.stopPropagation(); e.preventDefault(); vigZoom(!$('vig').classList.contains('zoom')); return; }
+  if (e.target.closest('#vig')){ e.stopPropagation(); e.preventDefault(); const t = e.target.closest('#vig img'); vigZoom(!$('vig').classList.contains('zoom'), t ? t.dataset.i : null); return; }
   if (!CINE || e.target.closest('.cap2, .choice, button, a')) return;
   e.stopPropagation(); e.preventDefault();
   if ($('vig').classList.contains('zoom')){ vigZoom(false); return; }   // a tap beside the enlarged picture shrinks it
