@@ -165,9 +165,11 @@ const D = process.env.SHOTS || 'screens';
     await p.evaluate(()=>__app.go(1)); await p.waitForTimeout(1200);
     ok(name+' timeline to 1150: '+await p.evaluate(()=>__app.mode+' '+document.querySelectorAll('.added').length), await p.evaluate(()=>__app.mode==='stop' && document.querySelectorAll('path.added').length===0 && document.querySelectorAll('path.z-philistia').length>=1 && document.querySelectorAll('path.z-hatti').length===0));
     await p.evaluate(()=>__app.go(2)); await p.waitForTimeout(1200);
-    ok(name+' timeline to c. 1000 BC: the end of the 1150 Play, coming soon', await p.evaluate(()=>__app.mode==='soon' && /1000/.test(document.getElementById('pill').textContent) && !!document.querySelector('.soonflag')));
-    await p.evaluate(()=>__app.go(3)); await p.waitForTimeout(600);
-    ok(name+' planned stop c. 930 BC shows coming soon box', await p.evaluate(()=>!document.getElementById('soon').hidden && document.getElementById('ev').hidden));
+    ok(name+' timeline to c. 1000 BC: a live stop (Chapter 3) with its own map', await p.evaluate(()=>__app.mode==='stop' && /1000/.test(document.getElementById('pill').textContent) && !document.querySelector('.soonflag') && document.querySelectorAll('path.z-ammon').length>=1));
+    await p.evaluate(()=>__app.go(3)); await p.waitForTimeout(1500);
+    ok(name+' timeline to c. 930 BC: the end of the 1000 Play, coming soon, Israel and Judah drawn', await p.evaluate(()=>__app.mode==='soon' && /930/.test(document.getElementById('pill').textContent) && !!document.querySelector('.soonflag') && document.querySelectorAll('path.added.z-judah').length===1));
+    await p.evaluate(()=>__app.go(4)); await p.waitForTimeout(600);
+    ok(name+' planned stop 722 BC shows coming soon box', await p.evaluate(()=>!document.getElementById('soon').hidden && document.getElementById('ev').hidden));
     await p.evaluate(()=>__app.go(0)); await p.waitForTimeout(1200);
     await ctx.close();
   }
