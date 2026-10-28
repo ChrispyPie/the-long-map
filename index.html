@@ -369,6 +369,10 @@
     .key .ring { animation:none; stroke-opacity:.8; }
     .battle .pulse { animation:none; opacity:.4; }
   }
+  /* parts of the book on the intro step (js/app.js partList): the one you are on, and the next one to continue with */
+  .plist { list-style:none; margin:0 0 10px; padding:0; } .plist li { margin:0 0 4px; } .parts .chb { min-height:46px; } .parts .chb .ct b { font-weight:700; } .parts .chb .cm { font-weight:700; color:#f0d79a; }
+  .parts .chb.here { cursor:default; background:none; color:var(--ink); border:1px dashed rgba(90,60,30,.5); box-shadow:none; text-shadow:none; } .parts .chb.here .cm { color:var(--ink2); font-weight:600; }
+  .parts .chb.gonext { box-shadow:inset 0 0 0 2px var(--accent-foil), 0 1px 3px rgba(0,0,0,.35); }
 
   /* ---------- materials: worn leather for the binding and controls, old paper for everything you read ---------- */
   html { background:var(--leather-dk); }
