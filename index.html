@@ -335,6 +335,10 @@ try { var t = localStorage.getItem('tlm.textsize'); if (/^(s|m|l|xl)$/.test(t)) 
   body.cine .cap2 .cmeta:not(:has(> :not(:empty))) { display:none; }
   body.cine .cap2 .cmeta .csrc { margin-top:0; } body.cine .cap2 .cmeta .csrc:empty { display:none; }
   body.cine #revtag { position:static; font-size:10.5px; line-height:15px; padding:1px 6px; }
+  /* review mode: the tag is a button that copies itself; a hit area larger than it looks, for a thumb */
+  body.cine #revtag { position:relative; top:auto; right:auto; }
+  #revtag::before { content:''; position:absolute; inset:-12px -10px -8px; }
+  #revtag.copied { background:#2f6b3a; color:#fff; }
   body.cine:not(.idle) .cap2 .crow, body.cine:not(.idle) .cap2 .bar, body.cine:not(.idle) .cap2 .chaps:not([hidden]) { animation:ctlin .22s ease-out; }
   @keyframes ctlin { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
   .ctlhint { display:none; } body.cine.idle .cap2 .ctlhint:not([hidden]) { display:block; margin-bottom:6px; padding:4px 11px; border-radius:99px; background:rgba(30,18,10,.8); color:#e6d7b6; font:calc(11.5px * var(--ts))/1.3 var(--sans); pointer-events:none; animation:ctlhint 3.4s ease forwards; }
@@ -366,6 +370,15 @@ try { var t = localStorage.getItem('tlm.textsize'); if (/^(s|m|l|xl)$/.test(t)) 
   @keyframes vigkb2 { from { transform:scale(1.03) translate(2%,2%); } to { transform:scale(1.13) translate(-2%,0); } }
   @keyframes vigkb3 { from { transform:scale(1.12) translate(-3%,2%); } to { transform:scale(1.04) translate(2%,-1%); } }
   @media (prefers-reduced-motion: reduce){ .vig, .vig.out { transform:none; transition:opacity .3s; } .vig.in img, .vig.in[data-kb] img { animation:none; transform:none; } }
+  /* a tap on the picture enlarges it to fit the free picture (js/app.js vigZoom), a second tap or a tap beside it shrinks it back */
+  .vig.in { pointer-events:auto; cursor:zoom-in; -webkit-tap-highlight-color:transparent; }
+  .vig.zoom { cursor:zoom-out; padding:4px 4px 0; box-shadow:0 0 0 100vmax rgba(14,8,4,.6), 0 14px 40px rgba(0,0,0,.6); }
+  .vig.zoom:not(:has(figcaption:not([hidden]))) { padding-bottom:4px; }
+  .vig.zoom img, .vig.zoom.in img, .vig.zoom.in[data-kb] img { animation:none; transform:none; }
+  .vig.zoom figcaption { -webkit-line-clamp:4; line-clamp:4; font-size:calc(13px * var(--ts)); }
+  .vig.zooming { transition:opacity .55s ease, transform .6s cubic-bezier(.2,.7,.3,1), left .32s ease, top .32s ease, width .32s ease, padding .32s ease, box-shadow .32s ease; }
+  #vp.vigzoom .cap2 { z-index:3; }
+  @media (prefers-reduced-motion: reduce){ .vig.zooming { transition:opacity .3s; } }
   /* narrated films: chapter card, chapter strip, the opener's choice (js/app.js) */
   .chapcard { position:absolute; left:50%; top:16%; transform:translateX(-50%); z-index:3; text-align:center; pointer-events:none; padding:10px 22px 12px; border-radius:10px; background:rgba(30,18,10,.82); border:1px solid rgba(224,189,114,.3); color:#fbf6e8; max-width:calc(100% - 40px); }
   .chapcard[hidden] { display:none; } .chapcard.in { animation:chapin 3.6s ease forwards; }
@@ -405,7 +418,7 @@ try { var t = localStorage.getItem('tlm.textsize'); if (/^(s|m|l|xl)$/.test(t)) 
   @media (max-width:380px){ .choicein { padding:16px 14px 12px; } .choicein .cbtns { flex-direction:column; align-items:center; } }
   @media (prefers-reduced-motion: reduce){ .chapcard.in, .choice.in .choicein { animation:none; } }
   body.cc-off .cap2 .ctext, body.cc-off .cap2 .csrc { display:none; }
-  #revtag { position:absolute; right:10px; top:-21px; padding:1px 7px; border-radius:6px; background:rgba(40,28,16,.78); color:#f3e6c8; font:600 11px/17px ui-monospace, Menlo, Consolas, monospace; letter-spacing:.02em; pointer-events:none; white-space:nowrap; }
+  #revtag { position:absolute; right:10px; top:-21px; padding:1px 7px; border-radius:6px; background:rgba(40,28,16,.78); color:#f3e6c8; font:600 11px/17px ui-monospace, Menlo, Consolas, monospace; letter-spacing:.02em; white-space:nowrap; border:0; margin:0; cursor:copy; -webkit-tap-highlight-color:transparent; touch-action:manipulation; }
   @media (max-width:899px){ body.cine .cap2 .ctext { font-size:calc(15.5px * var(--ts)); } body.cine .cap2 .crow button { min-width:38px; padding:6px 8px; } }
   /* small phones: one row of controls; the progress bar shows how far along the film is */
   @media (max-width:430px){ body.cine .cap2 .crow { gap:1px; padding:4px 4px; } body.cine .cap2 .crow button { min-width:34px; padding:6px 4px; } body.cine .cap2 .crow .n { display:none; } body.cine .cap2 #capspd { min-width:44px; } }

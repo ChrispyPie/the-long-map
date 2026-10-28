@@ -478,11 +478,25 @@ const REVIEW = (() => { try { const q = new URLSearchParams(location.search).get
 const mss = ms => { const t = Math.max(0, Math.floor(ms / 1000)); return Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0'); };
 function reviewTag(){
   if (!REVIEW || !PLAY || !STOP || !PLAY.beats) return;
-  let e = $('revtag'); if (!e){ e = document.createElement('div'); e.id = 'revtag'; e.setAttribute('aria-hidden', 'true'); $('capmeta').appendChild(e); }
+  let e = $('revtag'); if (!e){ e = document.createElement('button'); e.type = 'button'; e.id = 'revtag'; e.title = 'Copy'; e.onclick = revCopy; $('capmeta').appendChild(e); }
   // line = 1-based index in this reel's beats (the order in the narration data); time = elapsed in the chapter, opening included
   const t = posMs(PLAY.reel, PLAY.i) + Math.max(0, PLAY.clock - (PLAY.t0 || 0));
   const s = 'Ch' + chapNo(cur) + ' · ' + (PLAY.reel === 'intro' ? 'opening ' : '') + '#' + (PLAY.i + 1) + ' · ' + mss(t);
-  if (e.textContent !== s) e.textContent = s;
+  e.dataset.tag = s; e.setAttribute('aria-label', 'Copy ' + s);
+  if (!e.classList.contains('copied') && e.textContent !== s) e.textContent = s;
+}
+// a tap on the tag copies it (to paste into a fix report) and says so for a moment; it never touches the
+// player: no controls, no pause. navigator.clipboard where it works, else a hidden textarea + execCommand
+function revCopy(ev){
+  ev.stopPropagation(); ev.preventDefault();
+  const e = $('revtag'); if (!e) return; const s = e.dataset.tag || e.textContent; if (ev.detail) e.blur();   // no focus ring after a tap
+  const old = () => { try { const t = document.createElement('textarea'); t.value = s; t.setAttribute('readonly', '');
+    t.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;font-size:16px;';
+    e.parentNode.appendChild(t); t.select(); t.setSelectionRange(0, s.length); const ok = document.execCommand('copy'); t.remove(); return ok; } catch(x){ return false; } };
+  const done = ok => { e.classList.add('copied'); e.textContent = ok ? 'Kopierat ✓' : s; clearTimeout(revCopy.t);
+    revCopy.t = setTimeout(() => { e.classList.remove('copied'); e.textContent = e.dataset.tag || s; }, 1400); };
+  if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(s).then(() => done(true), () => done(old()));
+  else done(old());
 }
 // ---------- Play: one virtual clock, so pause, speed and step all stay in sync ----------
 // Timing rules (see build/README.md): the caption line drives the beat. Camera first, then the
@@ -827,8 +841,10 @@ function vigPreload(i){ if (!PLAY) return; for (let j = i; j <= i + 2; j++){ con
 function vigHide(now){
   const el = $('vig'); VIG.cur = null; clearTimeout(VIG.t); if (!el) return;
   el.classList.remove('in');
-  if (now || el.hidden || REDUCED()){ el.hidden = true; el.classList.remove('out'); return; }
-  el.classList.add('out'); VIG.t = setTimeout(() => { if (!VIG.cur){ el.hidden = true; el.classList.remove('out'); } }, 650);
+  // an enlarged picture whose time is up fades out where it is, then is a small card again for the next one
+  const unz = () => { el.classList.remove('zoom', 'zooming'); $('vp').classList.remove('vigzoom'); };
+  if (now || el.hidden || REDUCED()){ el.hidden = true; el.classList.remove('out'); unz(); return; }
+  el.classList.add('out'); VIG.t = setTimeout(() => { if (!VIG.cur){ el.hidden = true; el.classList.remove('out'); unz(); } }, 650);
 }
 // called when beat i starts; at = clock time the camera has (nearly) settled
 function vigBeat(i, b, at_){
@@ -846,12 +862,13 @@ function vigShow(v, i, im){
   img.style.setProperty('--ar', im.naturalWidth && im.naturalHeight ? im.naturalWidth / im.naturalHeight : 4 / 3);
   el.dataset.kb = String(VIG.n % 4);
   const cp = el.querySelector('figcaption'); cp.textContent = v.caption || ''; cp.hidden = !v.caption;
-  el.classList.remove('in', 'out'); el.hidden = false; vigPlace(); void el.offsetWidth; el.classList.add('in');
+  el.classList.remove('in', 'out', 'zoom', 'zooming'); $('vp').classList.remove('vigzoom'); el.hidden = false; vigPlace(); void el.offsetWidth; el.classList.add('in');
   el.classList.toggle('paused', !!PLAY.paused);
 }
 // the largest card that fits to the right, left, above or below the focus point
 function vigPlace(){
   const el = $('vig'); if (!el || el.hidden || !VIG.cur) return;
+  if (el.classList.contains('zoom')) return vigPlaceZoom(el);
   const vp = $('vp').getBoundingClientRect(), W = vp.width, H = vp.height, narrow = W < 600;
   const cy = $('cyear'), cap = $('cap'), pad = 10, gap = narrow ? 34 : 48;
   // where flyTo puts the place in focus (the camera may still be landing when the card comes in)
@@ -885,6 +902,27 @@ function vigPlace(){
   // the real height (the caption may wrap differently from the estimate): keep the card inside the free picture
   const hr = el.offsetHeight;
   if (hr && hr !== h){ const y2 = clamp(c.s === 'a' ? Math.min(y, c.y1 - hr) : y, top, Math.max(top, bot - hr)); if (y2 !== y) el.style.top = Math.round(y2) + 'px'; }
+}
+// enlarged: as large as fits the free picture (below the year, above the subtitles), centred in it
+function vigPlaceZoom(el){
+  const vp = $('vp').getBoundingClientRect(), f = filmFree(), m = 6;
+  const top = Math.max(m, f.top), bot = Math.min(vp.height - m, f.bot), avail = bot - top;
+  const ar = parseFloat(el.querySelector('img').style.getPropertyValue('--ar')) || 4 / 3;
+  const W = vp.width - 2 * m, pad = 8;
+  // the frame and caption take about the same height whatever the width (read now: the width may be mid-transition)
+  const extra = el.offsetHeight - el.querySelector('img').offsetHeight;
+  const w = Math.max(140, Math.min(W, (avail - extra) * ar + pad));
+  el.style.width = Math.round(w) + 'px';
+  const h = (Math.round(w) - pad) / ar + extra;
+  el.style.left = Math.round((vp.width - w) / 2) + 'px'; el.style.top = Math.round(top + Math.max(0, (avail - h) / 2)) + 'px';
+}
+// tap the picture: enlarge it or shrink it back. The narration keeps going; when the picture's time is up it
+// fades out as usual (enlarged or not). A tap beside the enlarged picture or Esc also shrinks it.
+function vigZoom(on){
+  const el = $('vig'); if (!el || el.hidden || !VIG.cur) return;
+  if (on === el.classList.contains('zoom')) return;
+  el.classList.add('zooming'); el.classList.toggle('zoom', on); $('vp').classList.toggle('vigzoom', on);
+  vigPlace(); clearTimeout(vigZoom.t); vigZoom.t = setTimeout(() => el.classList.remove('zooming'), 360);
 }
 addEventListener('resize', () => requestAnimationFrame(vigPlace));
 addEventListener('tlm:textsize', () => requestAnimationFrame(vigPlace));
@@ -1056,20 +1094,24 @@ const onPic = e => e.target && e.target.closest && e.target.closest('#vp') && !e
 // (a mouse that just moved onto the picture brought the controls up; a click right after keeps them up)
 let movedUp = -1e9;
 ['pointermove', 'pointerdown', 'touchstart', 'keydown'].forEach(t => addEventListener(t, e => {
-  if (!CINE || ((t === 'pointerdown' || t === 'touchstart') && onPic(e))) return;
+  if (!CINE || ((t === 'pointerdown' || t === 'touchstart') && (onPic(e) || (e.target.closest && e.target.closest('#revtag'))))) return;   // the review tag copies, it does not bring up the controls
   if (t === 'pointermove' && document.body.classList.contains('idle')) movedUp = performance.now();
   wake(); }, {passive: true}));
 // in the film a tap (or click) on the picture shows the controls, and a tap while they show hides them again,
 // like a video player; it never pauses or plays, which is too easy to do by accident. Play and pause: the
 // button in the control bar, or Space. Taps on the controls keep them up. Objects are not opened mid-film.
 $('vp').addEventListener('click', e => {
+  // the vignette picture: a tap enlarges or shrinks it and leaves the controls alone
+  if (e.target.closest('#vig')){ e.stopPropagation(); e.preventDefault(); vigZoom(!$('vig').classList.contains('zoom')); return; }
   if (!CINE || e.target.closest('.cap2, .choice, button, a')) return;
   e.stopPropagation(); e.preventDefault();
+  if ($('vig').classList.contains('zoom')){ vigZoom(false); return; }   // a tap beside the enlarged picture shrinks it
   if (document.body.classList.contains('idle') || performance.now() - movedUp < 800) wake(); else ctlHide();
 }, true);
 addEventListener('keydown', e => {
   if (!CINE || !PLAY) return;
-  if (e.key === 'Escape'){ e.preventDefault(); playStop(false); }
+  if (e.key === 'Escape' && $('vig').classList.contains('zoom')){ e.preventDefault(); vigZoom(false); }
+  else if (e.key === 'Escape'){ e.preventDefault(); playStop(false); }
   else if (e.key === ' ' && !(e.target.closest && e.target.closest('button'))){ e.preventDefault(); playPause(); }
   else if (e.key === 'ArrowRight') $('capnext').click();
   else if (e.key === 'ArrowLeft') $('capprev').click();
@@ -1169,7 +1211,7 @@ $('prev').onclick = () => go(cur - 1);
 $('next').onclick = () => go(cur + 1);
 
 window.__zoomTest = () => flyTo([35.3, 32.0], 7, 600);
-window.__app = { openObj, closeObj, showStep, go, playStart, playPause, playStop, seek: i => PLAY && seek(i),
+window.__app = { openObj, closeObj, showStep, go, playStart, playPause, playStop, seek: i => PLAY && seek(i), vigZoom,
   get step(){ return step; }, get K(){ return K; }, get open(){ return openId; }, get mode(){ return MODE; }, get cur(){ return cur; },
   get explored(){ return [...EXPLORED]; }, get keys(){ return [...KEYSET]; },
   get play(){ return PLAY ? {i: PLAY.i, n: PLAY.beats.length, paused: PLAY.paused, reel: PLAY.reel, hold: !!(PLAY.hold || PLAY.wait), chapter: chapterAt(PLAY.reel, PLAY.i).n, choice: !$('choice').hidden} : null; },
