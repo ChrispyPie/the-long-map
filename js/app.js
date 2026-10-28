@@ -113,10 +113,23 @@ async function getJSON(u){ if (!cache[u]) cache[u] = fetch(u).then(r => { if (!r
 
 function flyTo(c, k, ms = 900){
   const [w,h] = size(); const p = projection(c);
-  // in the film the focus sits a little above the subtitles
-  let dy = 0;
-  if (CINE && CINE.full) dy = Math.min(h * 0.16, ($('cap').offsetHeight || 0) / 2);
-  svg.transition().duration(ms).call(zoom.transform, d3.zoomIdentity.translate(w/2, h/2 - dy).scale(k).translate(-p[0], -p[1]));
+  // in the film the focus sits in the middle of the free picture: below the year, above the subtitles
+  const f = filmFree();
+  svg.transition().duration(ms).call(zoom.transform, d3.zoomIdentity.translate(w/2, f.cy).scale(k).translate(-p[0], -p[1]));
+}
+// the part of the film picture nothing covers: below the year bar and above the subtitle box (its source chip
+// included). The player controls only show for a moment on a tap, so they do not count. Outside the film: all of it.
+function filmFree(){
+  const [w, h] = size();
+  if (!(CINE && CINE.full)) return {top: 0, bot: h, cy: h / 2, w, h};
+  const vb = $('vp').getBoundingClientRect(), cy = $('cyear'), cap = $('cap');
+  const top = Math.min(h * .2, cy && cy.offsetHeight ? cy.getBoundingClientRect().bottom - vb.top + 6 : Math.min(h * .06, 46));
+  let bot = h - 8;
+  if (cap && !cap.hidden && cap.parentNode === $('vp')){
+    for (const el of [$('captext'), $('capmeta')]){ if (el && el.offsetHeight) bot = Math.min(bot, el.getBoundingClientRect().top - vb.top - 6); }
+  }
+  bot = Math.max(bot, top + h * .45);   // a very long line never squeezes the picture below half the screen
+  return {top, bot, cy: (top + bot) / 2, w, h};
 }
 
 // ---------- object geometry ----------
@@ -465,7 +478,7 @@ const REVIEW = (() => { try { const q = new URLSearchParams(location.search).get
 const mss = ms => { const t = Math.max(0, Math.floor(ms / 1000)); return Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0'); };
 function reviewTag(){
   if (!REVIEW || !PLAY || !STOP || !PLAY.beats) return;
-  let e = $('revtag'); if (!e){ e = document.createElement('div'); e.id = 'revtag'; e.setAttribute('aria-hidden', 'true'); $('cap').appendChild(e); }
+  let e = $('revtag'); if (!e){ e = document.createElement('div'); e.id = 'revtag'; e.setAttribute('aria-hidden', 'true'); $('capmeta').appendChild(e); }
   // line = 1-based index in this reel's beats (the order in the narration data); time = elapsed in the chapter, opening included
   const t = posMs(PLAY.reel, PLAY.i) + Math.max(0, PLAY.clock - (PLAY.t0 || 0));
   const s = 'Ch' + chapNo(cur) + ' · ' + (PLAY.reel === 'intro' ? 'opening ' : '') + '#' + (PLAY.i + 1) + ' · ' + mss(t);
@@ -545,9 +558,10 @@ function focusView(x){
   const os = (x.hl || []).map(id => OBJ[id]);
   if (!os.length || !os.every(placeLike)) return {c: x.c, k: x.k};
   const [w, h] = size();
-  // the free picture: in the film the subtitles cover the bottom and the year the top
-  const capH = CINE && CINE.full ? Math.min(h * 0.32, $('cap').offsetHeight || 0) : 0;
-  const aw = w * 0.72, ah = Math.max(120, (h - capH - 70) * 0.62);
+  // the free picture: in the film the subtitles cover the bottom and the year the top. The place and its SPAN
+  // fill about half of the free height, so the bigger picture shows more of the land around it
+  const f = filmFree();
+  const aw = w * 0.72, ah = Math.max(120, (f.bot - f.top) * (CINE && CINE.full ? 0.5 : 0.62));
   const ps = os.map(o => projection(o.pt)), xs = ps.map(p => p[0]), ys = ps.map(p => p[1]);
   const deg = Math.abs(projection([36, 31.8])[0] - projection([35, 31.8])[0]);
   const m = Math.min(...os.map(SPAN)) * deg;
@@ -841,13 +855,17 @@ function vigPlace(){
   const vp = $('vp').getBoundingClientRect(), W = vp.width, H = vp.height, narrow = W < 600;
   const cy = $('cyear'), cap = $('cap'), pad = 10, gap = narrow ? 34 : 48;
   // where flyTo puts the place in focus (the camera may still be landing when the card comes in)
-  const px = W / 2, py = H / 2 - (CINE && CINE.full ? Math.min(H * .16, (cap.offsetHeight || 0) / 2) : 0);
+  const f = filmFree(), px = W / 2, py = f.cy;
   let top = Math.max(pad, cy && cy.offsetHeight ? cy.getBoundingClientRect().bottom - vp.top + 8 : Math.min(H * .06, 46) + 8);
-  let bot = H - (CINE ? Math.min(H * .06, 46) : 0) - pad;
-  if (cap && !cap.hidden && cap.offsetHeight && cap.parentNode === $('vp')){ const r = cap.getBoundingClientRect(); bot = Math.min(bot, r.top - vp.top - 8); }
+  let bot = H - pad;
+  if (CINE && CINE.full) bot = Math.min(bot, f.bot - 4);   // the subtitles and source chip; the tap controls may cover it for a moment
+  else if (cap && !cap.hidden && cap.offsetHeight && cap.parentNode === $('vp')){ const r = cap.getBoundingClientRect(); bot = Math.min(bot, r.top - vp.top - 8); }
   const ar = parseFloat(el.querySelector('img').style.getPropertyValue('--ar')) || 4 / 3;
-  const capH = () => (VIG.cur.v.caption ? 22 * TSM() : 0) + 12;   // caption line + frame padding
-  const maxW = narrow ? Math.min(W * .8, 330) : Math.min(Math.max(W * .3, 240), 400);
+  const maxW0 = narrow ? Math.min(W * .8, 330) : Math.min(Math.max(W * .3, 240), 400);
+  // caption: one line, or two when it is long (it wraps instead of being cut off)
+  const capL = c => !c ? 0 : c.length * 6.4 * TSM() > maxW0 - 16 ? 2 : 1;
+  const capH = () => (VIG.cur.v.caption ? 6 + 16 * TSM() * capL(VIG.cur.v.caption) : 0) + 12;   // caption lines + frame padding
+  const maxW = maxW0;
   const fit = (w, h) => Math.max(0, Math.min(maxW, w - 12, (h - capH()) * ar + 12));
   const cand = [
     {s: 'r', w: fit(W - pad - (px + gap), bot - top), x0: px + gap, y: 'mid'},
@@ -864,6 +882,9 @@ function vigPlace(){
   if (c.s === 'r' || c.s === 'l'){ x = c.s === 'r' ? c.x0 : c.x1 - w; y = clamp(py - h * .6, top, bot - h); }
   else { x = clamp(px - w / 2, pad, W - pad - w); y = c.s === 'a' ? c.y1 - h : c.y0; y = clamp(y, top, bot - h); }
   el.style.width = w + 'px'; el.style.left = Math.round(x) + 'px'; el.style.top = Math.round(y) + 'px'; el.dataset.side = c.s;
+  // the real height (the caption may wrap differently from the estimate): keep the card inside the free picture
+  const hr = el.offsetHeight;
+  if (hr && hr !== h){ const y2 = clamp(c.s === 'a' ? Math.min(y, c.y1 - hr) : y, top, Math.max(top, bot - hr)); if (y2 !== y) el.style.top = Math.round(y2) + 'px'; }
 }
 addEventListener('resize', () => requestAnimationFrame(vigPlace));
 addEventListener('tlm:textsize', () => requestAnimationFrame(vigPlace));
@@ -988,7 +1009,7 @@ function enterCine(){
   if (rq && !document.fullscreenElement){ try { const p = rq.call(el); if (p && p.then) p.then(() => { if (CINE) CINE.fsOn = true; }).catch(() => {}); else CINE.fsOn = true; } catch(e){} }
   const ph = document.createElement('div'); ph.id = 'vpph'; ph.className = 'vpph'; ph.style.height = r.height + 'px'; vp.before(ph);
   vp.classList.add('cinefixed'); $('cyear').textContent = $('pill').textContent;
-  b.classList.add('cine'); wake();
+  b.classList.add('cine'); ctlHide(); ctlHint();
   placeCap();
   const c = CINE;
   c.ready = morph(vp, r, {left: 0, top: 0, width: innerWidth, height: innerHeight}).then(() => {
@@ -1020,13 +1041,31 @@ function wake(){
   const b = document.body; b.classList.remove('idle'); clearTimeout(idleT); idleT = null;
   if (CINE && PLAY && !PLAY.paused) idleT = setTimeout(() => { idleT = null; if (CINE && PLAY && !PLAY.paused && !CINE.out) b.classList.add('idle'); }, IDLE_MS);
 }
-['pointermove', 'pointerdown', 'touchstart', 'keydown'].forEach(t => addEventListener(t, () => { if (CINE) wake(); }, {passive: true}));
-// in the film a tap (or click) on the picture only shows the controls (or keeps them up); it never pauses
-// or plays, which is too easy to do by accident. Play and pause: the button in the control bar, or Space.
-// Objects are not opened mid-film.
+// hide the controls now (a tap on the picture while they show, and the start of a film)
+function ctlHide(){ clearTimeout(idleT); idleT = null; if (CINE) document.body.classList.add('idle'); }
+// the first two films on this device say once how to get the controls
+function ctlHint(){
+  const el = $('ctlhint'); if (!el) return; let n = 0;
+  try { n = +localStorage.getItem('tlm.ctlhint') || 0; if (n < 2) localStorage.setItem('tlm.ctlhint', String(n + 1)); } catch(e){}
+  if (n >= 2){ el.hidden = true; return; }
+  el.textContent = matchMedia('(hover: none)').matches ? 'Tap the screen for controls' : 'Move the mouse or click for controls';
+  el.hidden = false; clearTimeout(ctlHint.t); ctlHint.t = setTimeout(() => { el.hidden = true; }, 3600);
+}
+// a touch or click on the picture itself is decided in the click handler below (show or hide); anything else wakes
+const onPic = e => e.target && e.target.closest && e.target.closest('#vp') && !e.target.closest('.cap2, .choice, button, a');
+// (a mouse that just moved onto the picture brought the controls up; a click right after keeps them up)
+let movedUp = -1e9;
+['pointermove', 'pointerdown', 'touchstart', 'keydown'].forEach(t => addEventListener(t, e => {
+  if (!CINE || ((t === 'pointerdown' || t === 'touchstart') && onPic(e))) return;
+  if (t === 'pointermove' && document.body.classList.contains('idle')) movedUp = performance.now();
+  wake(); }, {passive: true}));
+// in the film a tap (or click) on the picture shows the controls, and a tap while they show hides them again,
+// like a video player; it never pauses or plays, which is too easy to do by accident. Play and pause: the
+// button in the control bar, or Space. Taps on the controls keep them up. Objects are not opened mid-film.
 $('vp').addEventListener('click', e => {
   if (!CINE || e.target.closest('.cap2, .choice, button, a')) return;
-  e.stopPropagation(); e.preventDefault(); wake();
+  e.stopPropagation(); e.preventDefault();
+  if (document.body.classList.contains('idle') || performance.now() - movedUp < 800) wake(); else ctlHide();
 }, true);
 addEventListener('keydown', e => {
   if (!CINE || !PLAY) return;
@@ -1138,7 +1177,7 @@ window.__app = { openObj, closeObj, showStep, go, playStart, playPause, playStop
   parts: () => parts().map((x, n) => ({n: n + 1, k: x.k, year: x.s.year, done: partDone(x.s.year)})), partStart,
   chapters: r => reelChapters(r || 'play').map(c => ({n: c.n, title: c.title, i: c.i, end: c.end, ms: c.ms})), resume: r => resumeGet(r || 'play'), pos: y => posGet(y === undefined ? STOP && STOP.year : y),
   set speed(v){ setSpeed(v); }, projection,
-  get cine(){ return CINE ? {full: !!CINE.full, fs: !!document.fullscreenElement, idle: document.body.classList.contains('idle')} : null; },
+  get cine(){ return CINE ? {full: !!CINE.full, fs: !!document.fullscreenElement, idle: document.body.classList.contains('idle')} : null; }, filmFree, wake, ctlHide,
   get cc(){ return CC; }, setCC, enterCine, exitCine, IDLE_MS,
   get snd(){ return {on: SND.on, ctx: SND.ctx ? SND.ctx.state : null, phase: SND.phase, target: SND.target, gain: SND.bus ? SND.bus.gain.value : null,
     amb: SND.amb ? SND.amb.name : null, shots: SND.shots.map(o => o.name), loaded: Object.keys(SND.buf).sort()}; }, setSnd,
