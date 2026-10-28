@@ -9,6 +9,7 @@ const D = process.env.SHOTS || 'screens';
   process.on('unhandledRejection', e => { console.log(notes.join('\n')); console.log('CRASH', e.message.split('\n')[0]); process.exit(1); });
   for (const [name, vw, vh, mobile] of [['mobile',393,852,true],['desktop',1280,800,false]]) {
     const ctx = await b.newContext({viewport:{width:vw,height:vh}, deviceScaleFactor:2, isMobile:mobile, hasTouch:mobile});
+    if (process.env.TS) await ctx.addInitScript(t => localStorage.setItem('tlm.textsize', t), process.env.TS); // TS=xl runs the suite at a saved text size
     const p = await ctx.newPage();
     // the About notice is tested in test-cine.js; here the visitor has already seen it
     await ctx.addInitScript(() => { try { localStorage.setItem('tlm.notice.v1', 'seen'); } catch(e){} });
