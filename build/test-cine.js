@@ -14,7 +14,7 @@ const D = process.env.SHOTS || 'screens';
     p.on('console', m => { if (m.type()==='error') errs.push(name+': '+m.text()); });
     p.on('pageerror', e => errs.push(name+' pageerror: '+e.message));
     const sfx = mobile ? '' : '_desktop', shot = async f => { if (shots && (!rm || f.includes('reduced'))) await p.screenshot({path:D+'/'+f+'.png'}); };
-    const tap = async sel => mobile ? p.tap(sel) : p.click(sel);
+    const tap = async sel => { await p.evaluate(s => { if (document.body.classList.contains('idle') && document.querySelector(s) && document.querySelector(s).closest('#cap')) __app.wake(); }, sel); return mobile ? p.tap(sel) : p.click(sel); }; // the film's controls are hidden until a tap on the picture, as a viewer would do first
     await p.goto(url, {waitUntil:'networkidle'}); await p.waitForTimeout(900);
     // 1) notice on first visit
     ok(name+' notice shown on first visit', await p.evaluate(()=>!document.getElementById('intro').hidden && __intro.state==='notice'));

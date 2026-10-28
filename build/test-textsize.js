@@ -81,6 +81,7 @@ const SIZES = {s: .9, m: 1, l: 1.2, xl: 1.4};
               crowIn: r.left >= 0 && r.right <= innerWidth + .5 && r.bottom <= innerHeight + .5, half: q.height <= innerHeight * .5, sw: document.documentElement.scrollWidth, W: document.documentElement.clientWidth}; });
           ok(n + ' film: subtitles x1.4 (' + c.fs + 'px), inside the picture, clear of the controls ' + JSON.stringify(c), Math.abs(c.ratio - 1.4) < .02 && c.inside && !c.overCrow && c.crowIn && c.half && c.sw <= c.W);
           if (shots && vw === 390) await p.screenshot({path: D + '/textsize_film_xl.png'});
+          await p.evaluate(() => __app.ctlHide());   // controls hidden, as while the film plays: a tap on the picture brings them up
           if (mobile) await p.touchscreen.tap(Math.round(vw / 2), Math.round(vh * .35)); else await p.mouse.click(Math.round(vw / 2), Math.round(vh * .35));
           await p.waitForTimeout(250);
           const t = await p.evaluate(() => ({idle: document.body.classList.contains('idle'), paused: __app.play && __app.play.paused, open: __app.open}));
