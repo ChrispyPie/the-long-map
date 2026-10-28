@@ -37,10 +37,11 @@ const url = process.argv[2] || 'http://127.0.0.1:8852/';
       const card = await R('#vig'), beat = (await st()).i;
       // tap the picture: enlarged, controls untouched, still playing
       await tap(...mid(card)); await p.waitForTimeout(500);
-      let s = await st(); const big = await R('#vig'), f = await p.evaluate(() => __app.filmFree()), vp = await R('#vp');
+      let s = await st(); const big = await R('#vig'), f = await p.evaluate(() => __app.filmFree(true)), vp = await R('#vp');
       ok(`${name} tap enlarges the picture (${card[2] - card[0]}x${card[3] - card[1]} -> ${big[2] - big[0]}x${big[3] - big[1]})`, s.zoom && (big[2] - big[0]) * (big[3] - big[1]) > 1.25 * (card[2] - card[0]) * (card[3] - card[1]));
       ok(name + ' enlarged picture fits the screen, clear of the year and the subtitles ' + JSON.stringify({big, vp, top: f.top|0, bot: f.bot|0}), big[0] >= vp[0] && big[2] <= vp[2] && big[1] - vp[1] >= f.top - 1 && big[3] - vp[1] <= f.bot + 1);
-      ok(name + ' enlarged picture uses the room: full width or full height', big[2] - big[0] >= (vp[2] - vp[0]) - 16 || big[3] - big[1] >= (f.bot - f.top) - 16);
+      ok(name + ' enlarged picture keeps the small card\'s top edge (' + card[1] + ' -> ' + big[1] + ')', Math.abs(big[1] - card[1]) <= 2);
+      ok(name + ' enlarged picture uses the room below it: full width or down to the subtitles', big[2] - big[0] >= (vp[2] - vp[0]) - 16 || big[3] - vp[1] >= f.bot - 16);
       ok(name + ' tap on the picture leaves the controls hidden and keeps playing ' + JSON.stringify(s), (s.idle || !mobile) && !s.paused);
       const kb = await p.evaluate(() => getComputedStyle(document.querySelector('#vig img')).animationName);
       ok(name + ' no slow pan while enlarged (whole picture visible): ' + kb, kb === 'none');

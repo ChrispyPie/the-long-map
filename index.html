@@ -377,7 +377,7 @@ try { var t = localStorage.getItem('tlm.textsize'); if (/^(s|m|l|xl)$/.test(t)) 
   .vig.pair.in img, .vig.pair.in[data-kb] img { animation:none; transform:none; }   /* no slow pan in a pair: one picture must not spill over the other */
   .vig .vigin img[hidden] { display:none; }
   .vig.pair.zoom[data-zi="0"] .vigin img[data-i="1"], .vig.pair.zoom[data-zi="1"] .vigin img[data-i="0"] { display:none; }
-  .vig.pair.zoom .vigin img { flex:1 1 auto; width:100%; }
+  .vig.pair.zoom[data-zi] .vigin img { flex:1 1 auto; width:100%; }
   .vig.in img.photo, .vig.in[data-kb] img.photo { animation:none; transform:none; }   /* photos stay still */
   /* fx (js/app.js vigFx): subtle code-drawn motion on an illustration; transform and opacity only */
   .vigfx { position:absolute; top:0; bottom:0; left:0; width:100%; overflow:hidden; pointer-events:none; }
@@ -409,7 +409,7 @@ try { var t = localStorage.getItem('tlm.textsize'); if (/^(s|m|l|xl)$/.test(t)) 
   @media (prefers-reduced-motion: reduce){ .vigfx { display:none !important; } }
   /* a tap on the picture enlarges it to fit the free picture (js/app.js vigZoom), a second tap or a tap beside it shrinks it back */
   .vig.in { pointer-events:auto; cursor:zoom-in; -webkit-tap-highlight-color:transparent; }
-  .vig.zoom { cursor:zoom-out; padding:4px 4px 0; box-shadow:0 0 0 100vmax rgba(14,8,4,.6), 0 14px 40px rgba(0,0,0,.6); }
+  .vig.zoom { transform-origin:top center; cursor:zoom-out; padding:4px 4px 0; box-shadow:0 0 0 100vmax rgba(14,8,4,.6), 0 14px 40px rgba(0,0,0,.6); }
   .vig.zoom:not(:has(figcaption:not([hidden]))) { padding-bottom:4px; }
   .vig.zoom img, .vig.zoom.in img, .vig.zoom.in[data-kb] img { animation:none; transform:none; }
   .vig.zoom figcaption { -webkit-line-clamp:4; line-clamp:4; font-size:calc(13px * var(--ts)); }

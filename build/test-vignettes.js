@@ -46,7 +46,7 @@ const ROOT = process.env.ROOT || path.join(__dirname, '..');
         await p.waitForFunction(() => { const e = document.getElementById('vig'); return !e.hidden && e.classList.contains('in'); }, null, {timeout: 8000}).catch(() => {});
         await p.waitForTimeout(800);
         const s = await V(p);
-        const cx = (s.vp[0] + s.vp[2]) / 2, foc = await p.evaluate(() => document.getElementById('vp').getBoundingClientRect().top + __app.filmFree().cy);   // the middle of the free picture (js/app.js filmFree)
+        const [cx, foc] = await p.evaluate(() => { const r = document.getElementById('vp').getBoundingClientRect(), f = __app.filmFree(); return [r.left + f.cx, r.top + f.cy]; });   // the middle of the free picture beside the card (js/app.js filmFree)
         const fbox = [cx - 14, foc - 14, cx + 14, foc + 14];
         ok(`${name} ${y} ${r} ${i}: card in, picture loaded ${s.src} ${JSON.stringify(s.r)}`, s.shown && s.loaded && s.i === i);
         ok(`${name} ${y} ${r} ${i}: inside the film, clear of the focus point, subtitles and year`, s.r[0] >= s.vp[0] && s.r[2] <= s.vp[2] && s.r[1] >= s.vp[1] && s.r[3] <= s.vp[3] && !hit(s.r, fbox) && !hit(s.r, s.cap) && !hit(s.r, s.cy) && (s.r[2] - s.r[0]) >= 130);
