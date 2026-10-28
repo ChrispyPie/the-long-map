@@ -1022,6 +1022,9 @@ function vigZoom(on, k){
   const pair = el.classList.contains('pair'), cp = el.querySelector('figcaption'), v = VIG.cur.v;
   if (on) vigZoom.from = {top: el.offsetTop, cx: el.offsetLeft + el.offsetWidth / 2, w: el.offsetWidth};   // the small card's top edge stays put
   else vigZoom.from = null;
+  if (pair){   // enlarged, a pair stays side by side; its caption names each picture (with its credit)
+    const cs = vigPics(v).map(x => x.caption || ''), c = on && cs.some(Boolean) ? 'Left: ' + (cs[0] || '–') + '. Right: ' + (cs[1] || '–') + '.' : v.caption || '';
+    cp.textContent = c; cp.hidden = !c; }
   el.classList.add('zooming'); el.classList.toggle('zoom', on); $('vp').classList.toggle('vigzoom', on);
   vigPlace(); clearTimeout(vigZoom.t); vigZoom.t = setTimeout(() => { el.classList.remove('zooming'); if (!on) vigPlace(); }, 360);
 }

@@ -1,6 +1,6 @@
 // Every vignette in chapters 1-3, phone (390x844) and desktop: the card comes in on its beat with all its
 // pictures loaded, inside the film and clear of the subtitles and year. A pair sits side by side (never
-// stacked) at one height, and each picture zooms on its own with its own caption. The fx overlay sits on
+// stacked) at one height, and enlarged it stays side by side, top edge in place, naming each picture's caption. The fx overlay sits on
 // illustrations only and is gone with reduced motion. No page errors.
 // Usage: node build/test-vignettes-all.js [url]
 const { chromium } = require('playwright');
@@ -58,14 +58,15 @@ const ROOT = process.env.ROOT || path.join(__dirname, '..');
       if (wantFx && !s.fx) why.push('no fx'); if (!wantFx && s.fx) why.push('fx where none expected');
       if (s.fx) fxSeen++;
       if (why.length){ bad++; ok(`${name} ${c.y} ${c.reel} ${c.i}: ${why.join('; ')}`, false); }
-      // pair: each picture zooms by itself with its own caption, tap again to close
+      // pair: tapping either picture enlarges the pair, side by side, top edge in place, with each picture's caption; Esc closes
       if (pics.length === 2 && !reduced){
         for (const k of [0, 1]){
           await p.evaluate(k => __app.playPause(true), k);
+          const top0 = await p.evaluate(() => document.getElementById('vig').getBoundingClientRect().top);
           await p.locator('#vig img').nth(k).click(); await p.waitForTimeout(500);
-          const z = await p.evaluate(() => { const e = document.getElementById('vig'); const vis = [...e.querySelectorAll('img')].filter(im => getComputedStyle(im).display !== 'none');
-            return {zoom: e.classList.contains('zoom'), vis: vis.map(im => im.getAttribute('src')), text: e.textContent}; });
-          ok(`${name} pair picture ${k + 1} zooms on its own with its caption (${pics[k].caption || ''})`, z.zoom && z.vis.length === 1 && z.vis[0].endsWith(pics[k].src) && (!pics[k].caption || z.text.includes(pics[k].caption)));
+          const z = await p.evaluate(() => { const e = document.getElementById('vig'); const vis = [...e.querySelectorAll('.vigin img')].filter(im => getComputedStyle(im).display !== 'none').map(im => im.getBoundingClientRect());
+            return {zoom: e.classList.contains('zoom'), n: vis.length, side: vis.length === 2 && Math.abs(vis[0].top - vis[1].top) <= 1 && vis[0].right <= vis[1].left + 1, top: e.getBoundingClientRect().top, text: e.textContent}; });
+          ok(`${name} pair (tap ${k + 1}) enlarges side by side, top kept (${top0 | 0} -> ${z.top | 0}), both captions`, z.zoom && z.side && Math.abs(z.top - top0) <= 2 && pics.every(q => !q.caption || z.text.includes(q.caption)));
           await p.keyboard.press('Escape'); await p.waitForTimeout(400);
           const u = await p.evaluate(() => { const e = document.getElementById('vig'); return {zoom: e.classList.contains('zoom'), n: [...e.querySelectorAll('img')].filter(im => getComputedStyle(im).display !== 'none').length, text: e.textContent}; });
           ok(`${name} pair closes back to both pictures and the pair caption`, !u.zoom && u.n === 2 && (!c.v.caption || u.text.includes(c.v.caption)));
