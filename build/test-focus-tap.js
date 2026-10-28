@@ -123,8 +123,12 @@ const ROOT = process.env.ROOT || path.join(__dirname, '..');
       await tapAt(...spot);
       ok(`${name} short tap on the map shows the player`, !(await idle(p)) && !!(await box(p, '#cap .crow')));
       // with the player up, a tap on the picture leaves it up (and only enlarges the picture)
+      // (the card has a time of its own: start its beat again so it is surely up)
+      await startAt(p, -1207, 'play', 34);
+      await p.waitForFunction(() => { const e = document.getElementById('vig'); return !e.hidden && e.classList.contains('in'); }, null, {timeout: 8000});
+      await p.waitForTimeout(900);
       v = await box(p, '#vig');
-      if (v){ await p.evaluate(() => __app.wake()); await tapAt(...mid(v)); ok(`${name} with the player up, a tap on the picture leaves it up`, !(await idle(p)));
+      if (v){ await p.evaluate(() => __app.wake()); await tapAt(...mid(v)); ok(`${name} with the player up, a tap on the picture leaves it up`, !(await idle(p)) && await p.evaluate(() => document.getElementById('vig').classList.contains('zoom')));
         await tapAt(...mid(await box(p, '#vig'))); }
       // with the player up its panel covers the lower map: tap a spot that is map (svg), not card or controls
       const spot3 = await p.evaluate(() => { const r = document.getElementById('vp').getBoundingClientRect(), f = __app.filmFree();
