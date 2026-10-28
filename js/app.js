@@ -111,17 +111,25 @@ svg.append('defs').html('<filter id="soft" x="-50%" y="-50%" width="200%" height
 
 async function getJSON(u){ if (!cache[u]) cache[u] = fetch(u).then(r => { if (!r.ok) throw new Error(u+' '+r.status); return r.json(); }); return cache[u]; }
 
+let FLY = null;   // the last camera target, so it can be re-centred when the free picture changes
 function flyTo(c, k, ms = 900){
-  const [w,h] = size(); const p = projection(c);
-  // in the film the focus sits in the middle of the free picture: below the year, above the subtitles
+  const p = projection(c); FLY = {c, k};
+  // in the film the focus sits in the middle of the free picture: below the year (and the picture card, when
+  // one sits above), above the subtitles; beside the card when it sits on the right
   const f = filmFree();
-  svg.transition().duration(ms).call(zoom.transform, d3.zoomIdentity.translate(w/2, f.cy).scale(k).translate(-p[0], -p[1]));
+  svg.transition().duration(ms).call(zoom.transform, d3.zoomIdentity.translate(f.cx, f.cy).scale(k).translate(-p[0], -p[1]));
 }
+// the room a picture card takes (or is about to take) in the film: {side: 'a' (above) or 'r' (right), x, y, w, h}
+// in #vp pixels, or null. Set at the start of the beat, before the camera moves, so the camera aims beside it.
+let VIGSLOT = null;
+const VIG_GAP = 10;
 // the part of the film picture nothing covers: below the year bar and above the subtitle box (its source chip
-// included). The player controls only show for a moment on a tap, so they do not count. Outside the film: all of it.
-function filmFree(){
+// included), and beside the picture card when there is one (below it, or left of it on a wide screen). The
+// player controls only show for a moment on a tap, so they do not count. Outside the film: all of it.
+// noCard: the free picture without the card (to size the card itself, or the enlarged picture).
+function filmFree(noCard){
   const [w, h] = size();
-  if (!(CINE && CINE.full)) return {top: 0, bot: h, cy: h / 2, w, h};
+  if (!(CINE && CINE.full)) return {top: 0, bot: h, cy: h / 2, left: 0, right: w, cx: w / 2, w, h};
   const vb = $('vp').getBoundingClientRect(), cy = $('cyear'), cap = $('cap');
   const top = Math.min(h * .2, cy && cy.offsetHeight ? cy.getBoundingClientRect().bottom - vb.top + 6 : Math.min(h * .06, 46));
   let bot = h - 8;
@@ -129,7 +137,10 @@ function filmFree(){
     for (const el of [$('captext'), $('capmeta')]){ if (el && el.offsetHeight) bot = Math.min(bot, el.getBoundingClientRect().top - vb.top - 6); }
   }
   bot = Math.max(bot, top + h * .45);   // a very long line never squeezes the picture below half the screen
-  return {top, bot, cy: (top + bot) / 2, w, h};
+  let top2 = top, left = 0, right = w; const sl = noCard ? null : VIGSLOT;
+  if (sl && sl.side === 'a') top2 = Math.min(bot - 60, Math.max(top, sl.y + sl.h + VIG_GAP));
+  else if (sl && sl.side === 'r') right = Math.max(w * .4, sl.x - VIG_GAP);
+  return {top: top2, bot, cy: (top2 + bot) / 2, left, right, cx: (left + right) / 2, w, h};
 }
 
 // ---------- object geometry ----------
@@ -575,7 +586,7 @@ function focusView(x){
   // the free picture: in the film the subtitles cover the bottom and the year the top. The place and its SPAN
   // fill about half of the free height, so the bigger picture shows more of the land around it
   const f = filmFree();
-  const aw = w * 0.72, ah = Math.max(120, (f.bot - f.top) * (CINE && CINE.full ? 0.5 : 0.62));
+  const aw = (f.right - f.left) * 0.72, ah = Math.max(90, (f.bot - f.top) * (CINE && CINE.full ? 0.5 : 0.62));
   const ps = os.map(o => projection(o.pt)), xs = ps.map(p => p[0]), ys = ps.map(p => p[1]);
   const deg = Math.abs(projection([36, 31.8])[0] - projection([35, 31.8])[0]);
   const m = Math.min(...os.map(SPAN)) * deg;
@@ -686,6 +697,7 @@ function runBeat(i){
   preload(PLAY.beats[i + 1]);
   // 2) camera moves first, 3) then one visual event at a time
   let t = t0; const f = b.steps.find(x => x.type === 'focus');
+  vigReserve(i, b, !f);   // the card's room first, so the camera aims beside it
   if (f){ STEP.focus(f, dur(f)); t += dur(f) + GAP; }
   vigBeat(i, b, f ? t0 + dur(f) * 0.75 : t0 + 250);
   b.steps.filter(x => VISUAL.includes(x.type)).forEach(x => { at(t, () => { STEP[x.type](x, dur(x)); sndShot(sfxOf(x)); }); t += dur(x) + GAP; });
@@ -845,8 +857,46 @@ function vigHide(now){
   el.classList.remove('in');
   // an enlarged picture whose time is up fades out where it is, then is a small card again for the next one
   const unz = () => { el.classList.remove('zoom', 'zooming'); $('vp').classList.remove('vigzoom'); delete el.dataset.zi; };
+  if (now) VIGSLOT = null;
   if (now || el.hidden || REDUCED()){ el.hidden = true; el.classList.remove('out'); unz(); return; }
   el.classList.add('out'); VIG.t = setTimeout(() => { if (!VIG.cur){ el.hidden = true; el.classList.remove('out'); unz(); } }, 650);
+}
+// the card's place in the film: above the free picture on a tall screen (the place in focus then sits in the
+// middle between the card and the subtitles), on the right on a wide one (the place sits in the middle of
+// what is left). Sized so the map keeps most of the room. null: no card, or no room for one.
+const vigCapH = (cap, w) => (cap ? 6 + 16 * TSM() * (cap.length * 6.4 * TSM() > w - 16 ? 2 : 1) : 0) + 12;   // caption lines + frame
+function vigSlot(v){
+  if (!v || !(CINE && CINE.full)) return null;
+  const vp = $('vp').getBoundingClientRect(), W = vp.width, H = vp.height, pad = 10, f = filmFree(true), cy = $('cyear');
+  const top = Math.max(pad, cy && cy.offsetHeight ? cy.getBoundingClientRect().bottom - vp.top + 8 : Math.min(H * .06, 46) + 8);
+  const bot = f.bot - 4, A = bot - top;
+  const ar = vigPics(v).reduce((a, p) => { const r = VIG.img[p.src], im = r && r.im; return a + (im && im.naturalWidth && im.naturalHeight ? im.naturalWidth / im.naturalHeight : 4 / 3); }, 0);
+  const side = H >= W * .9 ? 'a' : 'r';
+  const maxW = side === 'a' ? Math.min(W - 2 * pad, W * .8, 340) : Math.min(Math.max(W * .3, 240), 400, W * .4);
+  const hMax = side === 'a' ? A * .42 : A;
+  const w = Math.round(Math.min(maxW, (hMax - vigCapH(v.caption, maxW)) * ar + 12));
+  if (w < 130) return null;
+  const h = Math.round((w - 12) / ar + vigCapH(v.caption, w));
+  return side === 'a' ? {side, x: Math.round((W - w) / 2), y: Math.round(top), w, h}
+    : {side, x: Math.round(W - pad - w), y: Math.round(Math.max(top, (top + bot) / 2 - h / 2)), w, h};
+}
+const slotSame = (a, b) => (!a && !b) || (a && b && a.side === b.side && ['x', 'y', 'w', 'h'].every(k => Math.abs(a[k] - b[k]) < 4));
+// a new room for the card (it comes, goes or changes size): move the camera so the place in focus is in the
+// middle of the new free picture. Not when the beat flies the camera itself (it then aims there already).
+function vigSetSlot(s, refocus = true){
+  const same = slotSame(VIGSLOT, s); VIGSLOT = s;
+  if (!same && refocus) camRefocus();
+}
+function camRefocus(ms = 700){
+  if (!PLAY || !(CINE && CINE.full)) return;
+  if (PLAY.lastFocus) flyFocus(PLAY.lastFocus, ms / SPEED); else if (FLY) flyTo(FLY.c, FLY.k, ms / SPEED);
+}
+// at the start of beat i (before its camera move): the room its card will take, or none when the card ends here
+function vigReserve(i, b, refocus){
+  const c = VIG.cur, v = b.vignette; let s = VIGSLOT;
+  if (v){ const rs = vigPics(v).map(vigLoad); s = rs.some(r => r.ok === false) ? null : vigSlot(v); }
+  else if (!c || b.steps.some(x => x.type === 'focus') || i >= c.i + (c.v.beats || VIG_BEATS) || i < c.i) s = null;
+  vigSetSlot(s, refocus);
 }
 // called when beat i starts; at = clock time the camera has (nearly) settled
 function vigBeat(i, b, at_){
@@ -898,6 +948,16 @@ function vigFx(el, pics, ims){
 function vigPlace(){
   const el = $('vig'); if (!el || el.hidden || !VIG.cur) return;
   if (el.classList.contains('zoom')) return vigPlaceZoom(el);
+  if (CINE && CINE.full){
+    // the film: the card takes its room (above, or on the right); the camera keeps the place in focus beside it
+    const s = vigSlot(VIG.cur.v);
+    if (!s){ el.style.visibility = 'hidden'; vigSetSlot(null); return; }   // no room on this screen: leave it out
+    el.style.visibility = ''; el.dataset.side = s.side;
+    el.style.width = s.w + 'px'; el.style.left = s.x + 'px'; el.style.top = s.y + 'px';
+    const hr = el.offsetHeight;   // the caption may wrap differently from the estimate
+    if (hr && Math.abs(hr - s.h) > 1){ if (s.side === 'r') s.y = Math.round(Math.max(10, s.y - (hr - s.h) / 2)); s.h = hr; el.style.top = s.y + 'px'; }
+    vigSetSlot(s); return;
+  }
   const vp = $('vp').getBoundingClientRect(), W = vp.width, H = vp.height, narrow = W < 600;
   const cy = $('cyear'), cap = $('cap'), pad = 10, gap = narrow ? 34 : 48;
   // where flyTo puts the place in focus (the camera may still be landing when the card comes in)
@@ -934,7 +994,7 @@ function vigPlace(){
 }
 // enlarged: as large as fits the free picture (below the year, above the subtitles), centred in it
 function vigPlaceZoom(el){
-  const vp = $('vp').getBoundingClientRect(), f = filmFree(), m = 6;
+  const vp = $('vp').getBoundingClientRect(), f = filmFree(true), m = 6;
   const top = Math.max(m, f.top), bot = Math.min(vp.height - m, f.bot), avail = bot - top;
   const zi = el.querySelector('img[data-i="' + (el.dataset.zi || 0) + '"]') || el.querySelector('img');   // a pair enlarges one of its pictures
   const ar = el.dataset.zi != null ? parseFloat(zi.style.getPropertyValue('--ar')) || 4 / 3 : parseFloat(el.dataset.ar) || 4 / 3;
@@ -959,6 +1019,7 @@ function vigZoom(on, k){
   vigPlace(); clearTimeout(vigZoom.t); vigZoom.t = setTimeout(() => el.classList.remove('zooming'), 360);
 }
 addEventListener('resize', () => requestAnimationFrame(vigPlace));
+addEventListener('orientationchange', () => setTimeout(() => requestAnimationFrame(vigPlace), 250));
 addEventListener('tlm:textsize', () => requestAnimationFrame(vigPlace));
 // ---------- cinematic mode: the narrated part as a small film ----------
 // The map viewport grows from its place in the page to the full screen (Fullscreen API where it exists,
@@ -1127,18 +1188,36 @@ function ctlHint(){
 const onPic = e => e.target && e.target.closest && e.target.closest('#vp') && !e.target.closest('.cap2, .choice, button, a');
 // (a mouse that just moved onto the picture brought the controls up; a click right after keeps them up)
 let movedUp = -1e9;
+// A finger that moves a little during a tap sends pointermove too: only a mouse moving over the map wakes the
+// controls, never a touch or pen, and never the mouse over the picture card (a tap or click on it only
+// enlarges or shrinks it).
+const onVig = e => e.target && e.target.closest && e.target.closest('#vig');
 ['pointermove', 'pointerdown', 'touchstart', 'keydown'].forEach(t => addEventListener(t, e => {
+  if (t === 'pointermove' && (e.pointerType !== 'mouse' || e.buttons || onVig(e))) return;   // a mouse drag pans the map, it does not wake
   if (!CINE || ((t === 'pointerdown' || t === 'touchstart') && (onPic(e) || (e.target.closest && e.target.closest('#revtag'))))) return;   // the review tag copies, it does not bring up the controls
   if (t === 'pointermove' && document.body.classList.contains('idle')) movedUp = performance.now();
   wake(); }, {passive: true}));
 // in the film a tap (or click) on the picture shows the controls, and a tap while they show hides them again,
 // like a video player; it never pauses or plays, which is too easy to do by accident. Play and pause: the
 // button in the control bar, or Space. Taps on the controls keep them up. Objects are not opened mid-film.
+// Only a SHORT tap on the map shows or hides the controls: released within TAP_MS, moved less than TAP_PX,
+// one finger. A long press, a drag (pan) or a pinch never does, nor the click a browser sends after one.
+const TAP_MS = 350, TAP_PX = 10;
+const GEST = {ids: new Set(), x: 0, y: 0, t0: 0, t1: 0, moved: false, multi: false};
+$('vp').addEventListener('pointerdown', e => {
+  if (!GEST.ids.size){ Object.assign(GEST, {x: e.clientX, y: e.clientY, t0: performance.now(), t1: 0, moved: false, multi: false}); }
+  GEST.ids.add(e.pointerId); if (GEST.ids.size > 1) GEST.multi = true;
+}, true);
+addEventListener('pointermove', e => { if (GEST.ids.has(e.pointerId) && Math.hypot(e.clientX - GEST.x, e.clientY - GEST.y) >= TAP_PX) GEST.moved = true; }, true);
+['pointerup', 'pointercancel'].forEach(t => addEventListener(t, e => { if (!GEST.ids.delete(e.pointerId)) return; if (t === 'pointercancel') GEST.moved = true; if (!GEST.ids.size) GEST.t1 = performance.now(); }, true));
+$('vp').addEventListener('touchstart', e => { if (e.touches.length > 1) GEST.multi = true; }, {capture: true, passive: true});
+const shortTap = e => GEST.t0 && !GEST.moved && !GEST.multi && (GEST.t1 || performance.now()) - GEST.t0 <= TAP_MS && Math.hypot(e.clientX - GEST.x, e.clientY - GEST.y) < TAP_PX;
 $('vp').addEventListener('click', e => {
   // the vignette picture: a tap enlarges or shrinks it and leaves the controls alone
   if (e.target.closest('#vig')){ e.stopPropagation(); e.preventDefault(); const t = e.target.closest('#vig img'); vigZoom(!$('vig').classList.contains('zoom'), t ? t.dataset.i : null); return; }
   if (!CINE || e.target.closest('.cap2, .choice, button, a')) return;
   e.stopPropagation(); e.preventDefault();
+  if (e.detail !== 0 && !shortTap(e)) return;   // a long press, drag or pinch: leave the controls as they are (detail 0: keyboard or script)
   if ($('vig').classList.contains('zoom')){ vigZoom(false); return; }   // a tap beside the enlarged picture shrinks it
   if (document.body.classList.contains('idle') || performance.now() - movedUp < 800) wake(); else ctlHide();
 }, true);
