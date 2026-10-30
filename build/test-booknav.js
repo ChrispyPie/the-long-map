@@ -37,7 +37,7 @@ const D = process.env.SHOTS || 'screens';
     const yv = ys.map(o => o.y), hv = ys.map(o => o.h);
     ok(name + ' controls keep their y across lines ' + JSON.stringify([...new Set(yv)]), Math.max(...yv) - Math.min(...yv) <= 1);
     ok(name + ' subtitle box has one fixed height ' + JSON.stringify([...new Set(hv)]), Math.max(...hv) - Math.min(...hv) <= 1 && hv[0] > 20);
-    ok(name + ' controls fit on one row', await p.evaluate(() => { const r = document.querySelector('#cap .crow'); return r.scrollWidth <= r.clientWidth + 1 && [...r.children].every(c => c.getBoundingClientRect().top - r.children[0].getBoundingClientRect().top < 6 || c.offsetParent === null); }));
+    ok(name + ' controls fit: one row, or two rows on a phone, none cut off', await p.evaluate(() => { const r = document.querySelector('#cap .crow'), bs = [...r.querySelectorAll('button')].filter(c => c.offsetParent !== null); const rows = new Set(bs.map(c => Math.round(c.getBoundingClientRect().top))).size; return r.scrollWidth <= r.clientWidth + 1 && rows === (innerWidth <= 640 ? 2 : 1); }));
     // 2) references: chapter time and line number
     ok(name + ' time counter reads m:ss / m:ss', /^\d+:\d\d \/ \d+:\d\d$/.test(await p.textContent('#captime')));
     await tap('#captime'); await p.waitForTimeout(200);
@@ -145,7 +145,7 @@ const D = process.env.SHOTS || 'screens';
       pl = await p.evaluate(() => ({...__app.play, time: __app.time}));
       if (want) ok(name + ' ' + q + ' plays from that line', pl.reel === want.r && pl.i === want.i);
       else { const [a] = pl.time.split(' / '); const [m, s] = a.split(':').map(Number); ok(name + ' ?t=525 starts at the beat holding 8:45 (' + pl.time + ')', m * 60 + s <= 526 && m * 60 + s > 525 - 40); }
-      if (/review/.test(q)) ok(name + ' review tag still works', /^Ch4 · opening #3 · \d+:\d\d$/.test(await p.evaluate(() => (document.getElementById('revtag') || {}).textContent || '')));
+      if (/review/.test(q)) ok(name + ' review mode adds no extra position tag (time is in the player, #line in the subtitle)', !(await p.evaluate(() => document.getElementById('revtag'))) && !!(await p.evaluate(() => document.querySelector('#captext .lnum'))));
     }
     } catch(e){ ok(name + ' stopped: ' + e.message.split('\n').slice(0, 12).join(' | '), false); await p.screenshot({path: '/tmp/booknav_fail_' + name + '.png'}).catch(() => {}); }
     await ctx.close();

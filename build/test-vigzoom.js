@@ -59,28 +59,8 @@ const url = process.argv[2] || 'http://127.0.0.1:8852/';
       await tap(...beside); await p.waitForTimeout(400);
       s = await st(); ok(name + ' tap beside the enlarged picture shrinks it, controls stay', !s.zoom && !s.idle && !s.paused);
       if (!mobile){ await tap(...mid(await R('#vig'))); await p.waitForTimeout(300); await p.keyboard.press('Escape'); await p.waitForTimeout(300); s = await st(); ok(name + ' Esc shrinks the picture and does not end the film', !s.zoom && (await p.evaluate(() => !!__app.play))); }
-      // review tag: tap copies, shows 'Kopierat ✓', no controls, no pause
-      await p.evaluate(() => __app.ctlHide()); await p.waitForTimeout(150);
-      const rt = await R('#revtag');
-      const tagTxt = await p.evaluate(() => document.getElementById('revtag').dataset.tag);
-      await tap(...mid(rt)); await p.waitForTimeout(250);
-      s = await st(); let t = await p.evaluate(async () => ({txt: document.getElementById('revtag').textContent, clip: await navigator.clipboard.readText().catch(e => 'ERR ' + e.message)}));
-      ok(`${name} tap on the review tag copies "${tagTxt}" and says Kopierat ✓ (${t.txt} / ${t.clip})`, t.txt === 'Kopierat ✓' && /^Ch\d+ · #\d+ · \d+:\d\d$/.test(t.clip) && t.clip.split(' · ').slice(0, 2).join() === tagTxt.split(' · ').slice(0, 2).join());
-      ok(name + ' tag tap: controls stay hidden, still playing', (s.idle || !mobile) && !s.paused);
-      await p.waitForTimeout(1500);
-      ok(name + ' tag shows the position again afterwards', await p.evaluate(() => { const e = document.getElementById('revtag'); return e.textContent === e.dataset.tag && /^Ch\d/.test(e.textContent); }));
-      // easy to hit: a tap a little above the tag counts
-      const rt2 = await R('#revtag'); await p.evaluate(() => navigator.clipboard.writeText('x'));
-      await tap((rt2[0] + rt2[2]) / 2, rt2[1] - 8); await p.waitForTimeout(250);
-      t = await p.evaluate(async () => ({txt: document.getElementById('revtag').textContent, clip: await navigator.clipboard.readText()}));
-      s = await st(); ok(`${name} tag hit area reaches 8px above it (${rt2[3] - rt2[1]}px tall tag)`, t.txt === 'Kopierat ✓' && /^Ch\d/.test(t.clip) && (s.idle || !mobile));
-      await p.waitForTimeout(1500);
-      // older browsers: no navigator.clipboard, the textarea fallback copies
-      await p.evaluate(() => { window.__cp = null; Object.defineProperty(navigator, 'clipboard', {value: undefined, configurable: true}); document.addEventListener('copy', e => { window.__cp = (document.activeElement && document.activeElement.value) || String(getSelection()); }, {once: true}); });
-      await tap(...mid(await R('#revtag'))); await p.waitForTimeout(250);
-      t = await p.evaluate(() => ({txt: document.getElementById('revtag').textContent, cp: window.__cp, tag: document.getElementById('revtag').dataset.tag, left: document.querySelectorAll('#cap textarea').length}));
-      ok(`${name} fallback without navigator.clipboard copies (${t.cp})`, t.txt === 'Kopierat ✓' && /^Ch\d/.test(t.cp || '') && t.left === 0);
-      if (name === 'phone') await p.screenshot({path: '/tmp/vz-phone-copied.png'});
+      // review mode adds no extra position tag above the subtitles any more (the time is in the player, the #line in the subtitle)
+      ok(name + ' no review tag above the subtitles', !(await p.evaluate(() => document.getElementById('revtag'))));
       // the picture's time runs out while it is enlarged: it closes, and the next one (most lines have one now) is a normal card
       await p.evaluate(() => __app.seek(34)); await waitVig(); await p.waitForTimeout(700);
       await tap(...mid(await R('#vig'))); await p.waitForTimeout(400);

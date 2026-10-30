@@ -76,7 +76,7 @@ const ROOT = process.env.ROOT || path.join(__dirname, '..');
     const ch = await p.evaluate(() => { const r = id => { const e = document.getElementById(id).getBoundingClientRect(); return e.width > 80 && e.height >= 44 && e.bottom <= innerHeight && e.top >= 0; }; return {go: r('choicego'), map: r('choicemap'), q: document.querySelector('#choice .q').textContent, sub: document.getElementById('choicesub').textContent}; });
     ok(name+' choice shown and the film waits: '+JSON.stringify(pl)+' '+JSON.stringify(ch), pl.i === iChoice && pl.hold && pl.choice && ch.go && ch.map && /Scene 2/.test(ch.sub));
     const row1 = await p.evaluate(() => { const bs = [...document.querySelectorAll('.cap2 .crow button')].map(e => e.getBoundingClientRect()); return {rows: new Set(bs.map(x => Math.round(x.top))).size, r: Math.max(...bs.map(x => x.right)), W: innerWidth}; });
-    ok(name+' controls on one row at 1.25x too '+JSON.stringify(row1), row1.rows === 1 && row1.r <= row1.W);
+    ok(name+' controls on one row (two on a phone) at 1.25x too '+JSON.stringify(row1), row1.rows === (row1.W <= 640 ? 2 : 1) && row1.r <= row1.W);
     if (shots){ await wake(); await p.screenshot({path: D+'/narr_choice'+(mobile ? '' : '_desktop')+'.png'}); }
     await tap('#choicego'); await p.waitForTimeout(700); pl = await P();
     ok(name+' Continue the story: chapter 2 begins '+JSON.stringify(pl), pl.i === iChoice + 1 && pl.chapter === 2 && !pl.choice && /Scene 2 of 3/.test(await p.textContent('#chapcard')));
@@ -115,8 +115,8 @@ const ROOT = process.env.ROOT || path.join(__dirname, '..');
     pl = await P();
     ok(name+' Play strip: chapter 3 '+JSON.stringify(pl)+' card '+await p.textContent('#chapcard'), pl.i === chP[2].i && pl.chapter === 3 && /Scene 3 of 4/.test(await p.textContent('#chapcard')));
     if (shots){ await wake(); await p.waitForTimeout(400); await p.screenshot({path: D+'/narr_chapters'+(mobile ? '' : '_desktop')+'.png'}); }
-    const row = await p.evaluate(() => { const bs = [...document.querySelectorAll('.cap2 .crow button')].map(e => e.getBoundingClientRect()); return {rows: new Set(bs.map(x => Math.round(x.top))).size, r: Math.max(...bs.map(x => x.right)), W: innerWidth}; });
-    ok(name+' controls with the narrator button still on one row '+JSON.stringify(row), row.rows === 1 && row.r <= row.W);
+    const row = await p.evaluate(() => { __app.wake(); const bs = [...document.querySelectorAll('.cap2 .crow button')].map(e => e.getBoundingClientRect()); return {rows: new Set(bs.map(x => Math.round(x.top))).size, r: Math.max(...bs.map(x => x.right)), W: innerWidth}; });
+    ok(name+' controls with the narrator button still on one row (two on a phone) '+JSON.stringify(row), row.rows === (row.W <= 640 ? 2 : 1) && row.r <= row.W);
     await p.evaluate(i => __app.seek(i), iRef); await p.waitForTimeout(500);
     const rs = await p.textContent('#capsrc'), wantRef = PL[iRef].steps.find(x => x.ref).ref;
     ok(name+' Bible reference after the sources: '+rs, rs.startsWith('Sources:') && rs.endsWith(' · ' + wantRef));
