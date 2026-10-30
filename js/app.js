@@ -506,34 +506,12 @@ let PLAY = null, FXZ = [], YEAR = null;
 const shortSrc = k => { const s = SRC[k]; if (!s) return k; const m = s.t.match(/^([^,(.]+?)(?:,| et al\.| &)[^(]*\((\d{4})\)/); if (m) return m[1].trim() + (/ et al\./.test(s.t.slice(0, 40)) ? ' et al.' : '') + ' ' + m[2]; if (s.kind === 'tradition') return 'Hebrew Bible'; return s.t.split(/[.(]/)[0].trim().slice(0, 40); };
 const yfmt = (y, c) => (c ? 'c. ' : '') + fmt(Math.round(y));
 function setYear(y, approx){ YEAR = y; const t = yfmt(y, approx); $('big').textContent = t; $('pill').textContent = t; $('cyear').textContent = t; }
-// ---------- review mode (temporary): ?review=1 turns it on (remembered), ?review=0 turns it off ----------
-// a small 'Ch2 · #14 · 3:12' tag on the subtitle box so fixes can be reported by line and time; normal visitors never see it
-const REVIEW = (() => { try { const q = new URLSearchParams(location.search).get('review');
-  if (q === '1') localStorage.setItem('tlm.review', '1'); else if (q === '0') localStorage.removeItem('tlm.review');
-  return localStorage.getItem('tlm.review') === '1'; } catch(e){ return false; } })();
+// ---------- review mode: ?review=1 is still accepted (and remembered), but it adds nothing to the film any more. ----------
+// The film has exactly one time counter (in the player, js refCopy: tap copies a link to that moment) and one line marker
+// (the '#57' at the end of each subtitle: tap copies a link to that line). The old 'Ch2 · #14 · 3:12' tag above the
+// subtitles is gone in every mode.
 const mss = ms => { const t = Math.max(0, Math.floor(ms / 1000)); return Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0'); };
-function reviewTag(){
-  if (!REVIEW || !PLAY || !STOP || !PLAY.beats) return;
-  let e = $('revtag'); if (!e){ e = document.createElement('button'); e.type = 'button'; e.id = 'revtag'; e.title = 'Copy'; e.onclick = revCopy; $('capmeta').appendChild(e); }
-  // line = 1-based index in this reel's beats (the order in the narration data); time = elapsed in the chapter, opening included
-  const t = posMs(PLAY.reel, PLAY.i) + Math.max(0, PLAY.clock - (PLAY.t0 || 0));
-  const s = 'Ch' + chapNo(cur) + ' · ' + (PLAY.reel === 'intro' ? 'opening ' : '') + '#' + (PLAY.i + 1) + ' · ' + mss(t);
-  e.dataset.tag = s; e.setAttribute('aria-label', 'Copy ' + s);
-  if (!e.classList.contains('copied') && e.textContent !== s) e.textContent = s;
-}
-// a tap on the tag copies it (to paste into a fix report) and says so for a moment; it never touches the
-// player: no controls, no pause. navigator.clipboard where it works, else a hidden textarea + execCommand
-function revCopy(ev){
-  ev.stopPropagation(); ev.preventDefault();
-  const e = $('revtag'); if (!e) return; const s = e.dataset.tag || e.textContent; if (ev.detail) e.blur();   // no focus ring after a tap
-  const old = () => { try { const t = document.createElement('textarea'); t.value = s; t.setAttribute('readonly', '');
-    t.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;font-size:16px;';
-    e.parentNode.appendChild(t); t.select(); t.setSelectionRange(0, s.length); const ok = document.execCommand('copy'); t.remove(); return ok; } catch(x){ return false; } };
-  const done = ok => { e.classList.add('copied'); e.textContent = ok ? 'Kopierat ✓' : s; clearTimeout(revCopy.t);
-    revCopy.t = setTimeout(() => { e.classList.remove('copied'); e.textContent = e.dataset.tag || s; }, 1400); };
-  if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(s).then(() => done(true), () => done(old()));
-  else done(old());
-}
+try { const q = new URLSearchParams(location.search).get('review'); if (q === '0') localStorage.removeItem('tlm.review'); } catch(e){}
 // ---------- Play: one virtual clock, so pause, speed and step all stay in sync ----------
 // Timing rules (see build/README.md): the caption line drives the beat. Camera first, then the
 // visual events one at a time, then the line must have finished (reading time or audio), then pauseAfter.
@@ -547,7 +525,7 @@ function tick(now){
   if (!PLAY) return;
   const dt = Math.min(100, now - (PLAY.last || now)); PLAY.last = now;
   if (!PLAY.paused && !PLAY.hold && !PLAY.wait) PLAY.clock += dt * SPEED;   // wait: the opener's choice
-  audioWatch(now); reviewTag(); timeTag();
+  audioWatch(now); timeTag();
   const c = PLAY.clock;
   PLAY.anims = PLAY.anims.filter(a => { const f = Math.min(1, Math.max(0, (c - a.t0) / a.ms)); a.fn(ease(f)); return f < 1; });
   if (PLAY.anims.length) scaleMarks();
@@ -728,7 +706,7 @@ function runBeat(i){
   PLAY.i = i; PLAY.events = []; PLAY.hold = false; PLAY.wait = false; PLAY.sndUsed = new Set(); hideChoice();
   PLAY.tok = (PLAY.tok || 0) + 1;
   if (PLAY.audio){ PLAY.audio.onended = PLAY.audio.onerror = null; PLAY.audio.pause(); PLAY.audio = null; }
-  PLAY.t0 = t0; reviewTag();
+  PLAY.t0 = t0;
   const ch = chapterAt(PLAY.reel, i);
   if (b.chapter || i === PLAY.from){ showChapter(ch, PLAY.reel); }
   resumeSet(PLAY.reel, i); if (i > 0 || PLAY.reel === 'play') posSet(PLAY.reel, i); drawChapters();
@@ -1263,7 +1241,7 @@ let movedUp = -1e9;
 const onVig = e => e.target && e.target.closest && e.target.closest('#vig');
 ['pointermove', 'pointerdown', 'touchstart', 'keydown'].forEach(t => addEventListener(t, e => {
   if (t === 'pointermove' && (e.pointerType !== 'mouse' || e.buttons || onVig(e))) return;   // a mouse drag pans the map, it does not wake
-  if (!CINE || ((t === 'pointerdown' || t === 'touchstart') && (onPic(e) || (e.target.closest && e.target.closest('#revtag, .lnum, #captime'))))) return;   // the review tag copies, it does not bring up the controls
+  if (!CINE || ((t === 'pointerdown' || t === 'touchstart') && (onPic(e) || (e.target.closest && e.target.closest('.lnum, #captime'))))) return;   // the time and line references copy, they do not bring up the controls
   if (t === 'pointermove' && document.body.classList.contains('idle')) movedUp = performance.now();
   wake(); }, {passive: true}));
 // in the film a tap (or click) on the picture shows the controls, and a tap while they show hides them again,

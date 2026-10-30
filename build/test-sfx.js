@@ -48,7 +48,7 @@ const ROOT = process.env.ROOT || path.join(__dirname, '..');
     }
     ok(name+' audio starts with Play: one context, running '+JSON.stringify(s), await p.evaluate(() => window.__acN) === 1 && s.ctx === 'running');
     const row = await p.evaluate(() => { const bs = [...document.querySelectorAll('.cap2 .crow button')].map(e => e.getBoundingClientRect()); return {rows: new Set(bs.map(x => Math.round(x.top))).size, l: Math.min(...bs.map(x => x.left)), r: Math.max(...bs.map(x => x.right)), W: innerWidth}; });
-    ok(name+' film controls fit on one row '+JSON.stringify(row), row.rows === 1 && row.l >= 0 && row.r <= row.W);
+    ok(name+' film controls fit on one row (two on a phone) '+JSON.stringify(row), row.rows === (row.W <= 640 ? 2 : 1) && row.l >= 0 && row.r <= row.W);
     ok(name+' all clips loaded '+s.loaded, s.loaded.join() === 'battle,border,desert,migration,river,year');
     ok(name+' ambient loop under the scene: '+s.amb, s.amb === 'desert');
     ok(name+' ducked about -18 dB under the line '+JSON.stringify(s), s.phase === 'voice' && near(s.target, Math.pow(10, -18/20)) && s.gain < 0.2);

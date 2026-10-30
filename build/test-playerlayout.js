@@ -10,7 +10,7 @@ const url = process.argv[2] || 'http://127.0.0.1:8852/';
   const notes = [], errs = [];
   const ok = (n, c) => notes.push((c ? 'PASS ' : 'FAIL ') + n);
   const b = await chromium.launch();
-  for (const [name, vw, vh, mobile] of [['phone', 390, 844, true], ['phone-small', 360, 740, true], ['desktop', 1280, 800, false]]){
+  for (const [name, vw, vh, mobile] of [['phone', 390, 844, true], ['phone-small', 360, 740, true], ['phone-412', 412, 915, true], ['desktop', 1280, 800, false]]){
     const ctx = await b.newContext({viewport: {width: vw, height: vh}, deviceScaleFactor: 1, isMobile: mobile, hasTouch: mobile});
     await ctx.addInitScript(() => { localStorage.setItem('tlm.notice.v1', 'seen'); localStorage.setItem('tlm.snd', 'off'); localStorage.setItem('tlm.review', '1'); });
     const p = await ctx.newPage();
@@ -33,9 +33,11 @@ const url = process.argv[2] || 'http://127.0.0.1:8852/';
       ok(`${name} subtitles at the very bottom (${vp[3] - ct[3]} px from the edge)`, vp[3] - ct[3] <= 16 && vp[3] - ct[3] >= 4);
       const after = await p.evaluate(() => getComputedStyle(document.getElementById('vp'), '::after').height);
       ok(name + ' no band reserved at the bottom (' + after + ')', parseFloat(after) === 0 || after === 'auto');
-      await p.waitForFunction(() => document.getElementById('revtag'), null, {timeout: 4000}).catch(() => {});
-      const rt = await R('#revtag'), cs = await R('#capsrc');
-      ok(name + ' review tag sits just above the subtitles', rt && rt[3] <= ct[1] && ct[1] - rt[3] <= 12);
+      await p.waitForTimeout(1500);
+      // one time counter (in the player) and one line marker (in the subtitle box): no extra 'Ch1 · #4 · 0:33' tag, review mode or not
+      ok(name + ' no extra position tag above the subtitles (review mode on)', !(await p.evaluate(() => document.getElementById('revtag'))));
+      ok(name + ' line marker sits inside the subtitle box', !!(await R('#captext .lnum')));
+      const rt = null, cs = await R('#capsrc');
       if (cs) ok(name + ' source chip sits just above the subtitles', cs[3] <= ct[1] && ct[1] - cs[3] <= 30);
       const f = await p.evaluate(() => __app.filmFree()), cy = await R('#cyear');
       ok(`${name} free picture runs from the year (${f.top|0}) to the subtitles (${f.bot|0})`, f.top >= cy[3] - vp[1] && f.top <= cy[3] - vp[1] + 12 && Math.abs(f.bot - (Math.min(ct[1], cs ? cs[1] : 1e9, rt ? rt[1] : 1e9) - vp[1] - 6)) <= 2);
@@ -58,6 +60,23 @@ const url = process.argv[2] || 'http://127.0.0.1:8852/';
       ok(name + ' tap shows the controls', !(await idle()) && !!crow);
       ok(name + ' controls sit above the subtitles, subtitles stay at the bottom', crow && ct2 && crow[3] <= ct2[1] && vp2[3] - ct2[3] <= 16);
       ok(name + ' tap does not pause', (await p.evaluate(() => __app.play && __app.play.paused)) === false);
+      // the buttons: none overlaps another (Skip never covers the time), each is a 44px target on a phone, and the
+      // close X sits at least 16px inside the screen edge (a phone case covers the edges)
+      const bs = await p.evaluate(() => [...document.querySelectorAll('#cap .crow button')].filter(e => e.offsetWidth).map(e => { const r = e.getBoundingClientRect(); return {id: e.id, l: r.left, t: r.top, r: r.right, b: r.bottom}; }));
+      const ov = []; for (let i = 0; i < bs.length; i++) for (let j = i + 1; j < bs.length; j++){ const a = bs[i], c = bs[j]; if (Math.min(a.r, c.r) - Math.max(a.l, c.l) > 0.5 && Math.min(a.b, c.b) - Math.max(a.t, c.t) > 0.5) ov.push(a.id + '/' + c.id); }
+      ok(`${name} no two controls overlap (${bs.length} buttons${ov.length ? ': ' + ov.join(' ') : ''})`, bs.length >= 12 && !ov.length);
+      const tm = bs.find(x => x.id === 'captime'), tw = await p.evaluate(() => { const e = document.getElementById('captime'); return e.scrollWidth - e.clientWidth; });
+      ok(`${name} time counter is whole (${tm && Math.round(tm.r - tm.l)}px wide, ${tw}px cut)`, tm && tm.r - tm.l >= 60 && tw <= 0);
+      const xb = bs.find(x => x.id === 'capx');
+      ok(`${name} close X is inset from the edges (${Math.round(xb.l)} / ${Math.round(vw - xb.r)} px)`, xb.l >= 16 && vw - xb.r >= 16);
+      ok(name + ' every control is inside the screen with 16px to spare', bs.every(x => x.l >= 16 && vw - x.r >= 16));
+      if (mobile){
+        const small = bs.filter(x => x.r - x.l < 43.5 || x.b - x.t < 43.5).map(x => x.id);
+        ok(name + ' phone: every control is a 44px target' + (small.length ? ' (' + small.join(' ') + ')' : ''), !small.length);
+        const rows = [...new Set(bs.map(x => Math.round(x.t)))];
+        ok(`${name} phone: the buttons sit in 2 rows under the scene strip (${rows.length})`, rows.length === 2 && bs.find(x => x.id === 'capskip').t > tm.b - 1 && Math.abs(xb.t - bs.find(x => x.id === 'capskip').t) < 1);
+        await p.screenshot({path: `/tmp/pl-${name}-controls.png`});
+      } else ok(name + ' wide screen: one row of buttons', new Set(bs.map(x => Math.round(x.t))).size === 1);
       const sp = await R('#capspd'); await tap((sp[0] + sp[2]) / 2, (sp[1] + sp[3]) / 2); await p.waitForTimeout(250);
       ok(name + ' a tap on a control keeps them up', !(await idle()));
       await p.evaluate(() => { __app.speed = 1; });
