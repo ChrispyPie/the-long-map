@@ -51,7 +51,8 @@ const url = process.argv[2] || 'http://127.0.0.1:8852/';
       // a tap shows the controls above the subtitles
       // on the map, not on a picture card (a tap on that enlarges it instead)
       const vg = await R('#vig'), inV = ([x, y]) => vg && x >= vg[0] - 4 && x <= vg[2] + 4 && y >= vg[1] - 4 && y <= vg[3] + 4;
-      const spot = [[.5, .35], [.5, .6], [.15, .6], [.85, .6], [.5, .2]].map(([a, b]) => [vp2[0] + (vp2[2] - vp2[0]) * a, vp2[1] + (vp2[3] - vp2[1]) * b]).find(q => !inV(q));
+      // (the subtitle box keeps the height of the longest line, so the controls can sit higher: try spots above them first)
+      const spot = [[.5, .35], [.5, .5], [.15, .5], [.85, .5], [.5, .2], [.5, .6], [.15, .6], [.85, .6]].map(([a, b]) => [vp2[0] + (vp2[2] - vp2[0]) * a, vp2[1] + (vp2[3] - vp2[1]) * b]).find(q => !inV(q));
       await tap(...spot); await p.waitForTimeout(350);
       const crow = await R('#cap .crow'), ct2 = await R('#captext');
       ok(name + ' tap shows the controls', !(await idle()) && !!crow);

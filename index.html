@@ -587,6 +587,144 @@ try { var t = localStorage.getItem('tlm.textsize'); if (/^(s|m|l|xl)$/.test(t)) 
   .notice .nfoot { flex:none; }
   .ck .nm, .chip, .books li { overflow-wrap:anywhere; }
   @media (max-width:359px){ .ts .tsl { display:none; } }
+
+  /* ---------- the film's subtitle box keeps one height per chapter (js/app.js capFit) ----------
+     --caph = the tallest line of this chapter at this width and text size, so the controls above never move between lines;
+     a short line sits at the bottom and leaves empty room above it */
+  .cap2 .csub { display:block; }
+  body.cine .cap2 .csub { order:4; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; width:100%; min-height:var(--caph, 0px); }
+  body.cine.cc-off .cap2 .csub, body.choosing .cap2 .csub { min-height:0; }
+  /* public references (js/app.js refCopy): the chapter time in the controls ('8:45 / 12:50') and a small '#57' at the end of
+     each subtitle; a tap copies a link to that moment or line. Both have a fixed size, the line number is part of the measured box */
+  .ctime { font-variant-numeric:tabular-nums; }
+  body.cine .cap2 .crow .n { display:none; }
+  body.cine .cap2 .crow .ctime { min-width:0; width:8.6em; padding:6px 4px; font:12px/1 var(--sans); color:#e6d7b6; white-space:nowrap; }
+  @media (max-width:430px){ body.cine .cap2 .crow .ctime { width:7.6em; font-size:11px; } }
+  .lnum { display:none; }
+  body.cine .cap2 .ctext .lnum { display:inline-block; vertical-align:1px; margin:0 0 0 6px; min-height:0; height:auto; padding:0 6px; border-radius:5px; border:1px solid rgba(224,189,114,.35);
+    background:rgba(255,255,255,.06); color:#d9c49c; font:calc(11px * var(--ts))/1.45 var(--sans); box-shadow:none; text-shadow:none; position:relative; }
+  body.cine .cap2 .ctext .lnum::before { content:''; position:absolute; inset:-10px -8px; }
+  .toast .tbtn { pointer-events:auto; margin-left:10px; min-height:30px; padding:3px 10px; border-radius:99px; background:#fff; color:#2f6b3a; border:0; font:600 12.5px/1.2 var(--sans); box-shadow:none; text-shadow:none; }
+  .toast.act { pointer-events:auto; }
+  .toast { position:fixed; left:50%; top:max(52px, 9vh); transform:translateX(-50%); z-index:95; padding:7px 14px; border-radius:99px; background:#2f6b3a; color:#fff;
+    font:600 13px/1.3 var(--sans); box-shadow:0 3px 12px rgba(0,0,0,.4); pointer-events:none; max-width:calc(100% - 32px); text-align:center; }
+  .toast.in { animation:toastin .2s ease-out; } @keyframes toastin { from { opacity:0; transform:translate(-50%, -6px); } }
+  /* a shared link (?ch=4&line=57): the line is shown with one big Play, since a browser may not start sound by itself */
+  .deep { position:fixed; left:50%; top:50%; transform:translate(-50%, -50%); z-index:80; width:min(420px, calc(100% - 28px)); box-sizing:border-box; padding:16px 18px 14px; border-radius:var(--r);
+    color:var(--ink); box-shadow:0 10px 40px rgba(0,0,0,.55); }
+  .deep[hidden] { display:none; }
+  .deep .k { font:600 calc(11.5px * var(--ts))/1.3 var(--sans); letter-spacing:.08em; text-transform:uppercase; color:var(--accent-ink); }
+  .deep h2 { margin:4px 0 6px; font:600 calc(20px * var(--ts))/1.25 var(--serif); }
+  .deep q { display:block; margin:0 0 12px; font:italic calc(15px * var(--ts))/1.45 var(--serif); color:var(--ink2); }
+  .deep .cta { display:flex; flex-wrap:wrap; gap:8px; }
+
+  /* ---------- the book button and the book (chapters, scenes, index) ---------- */
+  .bkbtn { display:inline-flex; align-items:center; justify-content:center; gap:6px; }
+  .bkbtn .bkico, .bkico { width:24px; height:24px; flex:none; display:block; filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.45)); }
+  .hbook { min-width:40px; min-height:36px; padding:3px 8px; border-radius:99px; background:transparent; border-color:rgba(224,189,114,.55); box-shadow:none; }
+  .hbook .bkico { width:26px; height:26px; }
+  body.cine .cap2 .crow #capbook { padding:3px 6px; } body.cine .cap2 .crow #capbook .bkico { width:26px; height:26px; }
+  .gobook { display:inline-flex; align-items:center; gap:8px; } .bookline { margin:10px 0; }
+  .bkw { position:fixed; inset:0; z-index:90; display:flex; align-items:center; justify-content:center;
+    /* aged paper: large soft stains, and a fine fibre grain on top (both SVG noise, no images) */
+    --stain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='420'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.009 .012' numOctaves='3' seed='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .28 0 0 0 0 .1 0 0 0 1.5 -.62'/%3E%3C/filter%3E%3Crect width='420' height='420' filter='url(%23s)'/%3E%3C/svg%3E");
+    --fibre:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.5 .08' numOctaves='2' seed='9' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .4 0 0 0 0 .27 0 0 0 0 .12 0 0 0 .5 -.12'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23f)'/%3E%3C/svg%3E");
+    /* worn leather: light scuffs where the hide has rubbed */
+    --scuff:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.035 .6' numOctaves='2' seed='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .78 0 0 0 0 .6 0 0 0 0 .42 0 0 0 2.2 -1.45'/%3E%3C/filter%3E%3Crect width='260' height='260' filter='url(%23c)'/%3E%3C/svg%3E"); }
+  .bkw[hidden] { display:none; }
+  .bkback { position:absolute; inset:0; background:radial-gradient(ellipse at 50% 45%, rgba(30,18,8,.62), rgba(8,4,2,.86)); }
+  .bkw.in .bkback { animation:bkfade .35s ease-out; } @keyframes bkfade { from { opacity:0; } }
+  .bkbook { position:relative; width:min(460px, calc(100vw - 20px)); height:min(760px, calc(100dvh - 24px)); box-sizing:border-box; padding:13px 13px 13px 22px; border-radius:7px 13px 13px 7px; perspective:1800px;
+    background:
+      radial-gradient(circle at 0 0, rgba(160,110,70,.55), rgba(160,110,70,0) 34px), radial-gradient(circle at 100% 0, rgba(160,110,70,.5), rgba(160,110,70,0) 38px),
+      radial-gradient(circle at 0 100%, rgba(160,110,70,.5), rgba(160,110,70,0) 38px), radial-gradient(circle at 100% 100%, rgba(160,110,70,.6), rgba(160,110,70,0) 44px),
+      var(--scuff), var(--hide),
+      linear-gradient(90deg, #22130a, #3d2414 4.5%, #2a170b 5.5%, #4e301b 9%, #5c3a21 45%, #4b2d19 85%, #3a2213);
+    box-shadow:0 22px 70px rgba(0,0,0,.75), 0 2px 0 rgba(255,220,170,.08) inset, inset 0 0 0 1px rgba(0,0,0,.65), inset 0 0 22px rgba(0,0,0,.6); }
+  /* stitching round the edge of the cover, and a thin gold-foil rule inside it */
+  .bkbook::before { content:''; position:absolute; inset:5px 5px 5px 7px; border:1.5px dashed rgba(224,189,114,.5); border-radius:5px 10px 10px 5px; pointer-events:none;
+    filter:drop-shadow(0 1px 0 rgba(0,0,0,.6)); }
+  .bkbook::after { content:''; position:absolute; top:9px; bottom:9px; left:12px; width:2px; background:linear-gradient(#e0bd72, #a07a32 30%, #e0bd72 60%, #8f6a2a); opacity:.55; pointer-events:none; }
+  .bkpages { position:relative; width:100%; height:100%; transform-style:preserve-3d; border-radius:2px 7px 7px 2px;
+    box-shadow:2px 0 0 #d9c393, 3px 1px 0 #b99c69, 4px 2px 0 #cfb683, 5px 3px 0 #a5875a, 0 3px 6px rgba(0,0,0,.45); }
+  .bkpage, .bkturn { position:absolute; inset:0; box-sizing:border-box; overflow:auto; overscroll-behavior:contain; touch-action:pan-y; padding:20px 20px 66px 26px; border-radius:2px 7px 7px 2px; color:#2b1d0e;
+    background:
+      linear-gradient(90deg, rgba(60,34,12,.42), rgba(60,34,12,.14) 3%, rgba(60,34,12,0) 9%),
+      radial-gradient(ellipse at 82% 16%, rgba(150,100,40,.13), rgba(150,100,40,0) 22%),
+      radial-gradient(ellipse at 14% 78%, rgba(130,85,35,.12), rgba(130,85,35,0) 30%),
+      var(--stain), var(--fibre), var(--grain),
+      linear-gradient(172deg, #f2e4c2, #ead8ae 45%, #e4cd9c 80%, #dcc08a);
+    box-shadow:inset 0 0 48px rgba(110,68,22,.38), inset 0 0 7px rgba(90,52,18,.5), inset 0 0 0 1px rgba(110,75,35,.45); }
+  .bkpage { scrollbar-width:thin; scrollbar-color:rgba(120,85,40,.5) transparent; }
+  .bkturn { transform-origin:left center; backface-visibility:hidden; pointer-events:none; z-index:2; box-shadow:inset 0 0 48px rgba(110,68,22,.38), inset 0 0 0 1px rgba(110,75,35,.45), 0 0 30px rgba(0,0,0,.4); }
+  .bkturn::after { content:''; position:absolute; inset:0; background:linear-gradient(90deg, rgba(0,0,0,0) 40%, rgba(40,20,5,.22)); pointer-events:none; }
+  .bkcover { position:absolute; inset:0; z-index:5; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; border-radius:7px 13px 13px 7px; transform-origin:left center; backface-visibility:hidden;
+    background:radial-gradient(circle at 100% 0, rgba(160,110,70,.5), rgba(160,110,70,0) 40px), radial-gradient(circle at 100% 100%, rgba(160,110,70,.55), rgba(160,110,70,0) 46px),
+      var(--scuff), var(--hide), radial-gradient(ellipse at 50% 40%, #6b4428, #4a2c18 60%, #2e1a0c);
+    box-shadow:inset 0 0 0 1px rgba(0,0,0,.7), inset 0 0 26px rgba(0,0,0,.55), inset 0 0 0 16px rgba(0,0,0,0), inset 0 0 0 17px rgba(224,189,114,.6), inset 0 0 0 21px rgba(0,0,0,0), inset 0 0 0 22px rgba(224,189,114,.35);
+    color:#e0bd72; text-align:center; pointer-events:none; }
+  .bkcover::before { content:''; position:absolute; inset:9px; border:1.5px dashed rgba(224,189,114,.45); border-radius:5px 10px 10px 5px; }
+  .bkcover::after { content:'✦'; position:absolute; bottom:18%; font-size:20px; color:#e0bd72; text-shadow:0 1px 0 rgba(0,0,0,.6); }
+  .bkcover .bkc1, .bkcover .bkc2 { background:linear-gradient(180deg, #f6e2a8, #e0bd72 48%, #a9823a 52%, #e8c985); -webkit-background-clip:text; background-clip:text; color:transparent; filter:drop-shadow(0 1px 0 rgba(0,0,0,.7)); }
+  .bkcover[hidden] { display:none; }
+  .bkcover .bkc1 { font:600 13px/1 var(--sans); letter-spacing:.3em; text-transform:uppercase; } .bkcover .bkc2 { font:600 30px/1.15 var(--serif); padding:0 34px; }
+  .bkcover .bkc3 { font:italic 14px/1 var(--serif); color:rgba(224,189,114,.8); }
+  .bkx { position:absolute; top:18px; right:18px; z-index:4; width:40px; height:40px; min-height:40px; padding:0; border-radius:99px; font-size:17px; line-height:1; background:rgba(236,220,182,.95); color:#2b1d0e; border:1px solid rgba(120,85,40,.55); box-shadow:0 1px 2px rgba(60,35,10,.3); }
+  .bkribbon { position:absolute; top:-6px; right:64px; z-index:4; width:34px; height:74px; min-height:0; padding:0 0 12px; border:0; border-radius:0; display:flex; align-items:flex-end; justify-content:center;
+    background:linear-gradient(90deg, #6a1d14, #a5342a 35%, #c0473a 50%, #a5342a 65%, #6a1d14); clip-path:polygon(0 0, 100% 0, 100% 100%, 50% 84%, 0 100%); box-shadow:none; color:#f6e3c0; filter:drop-shadow(0 2px 2px rgba(0,0,0,.4)); }
+  .bkribbon span { font:600 9px/1 var(--sans); letter-spacing:.06em; text-transform:uppercase; writing-mode:vertical-rl; transform:rotate(180deg); }
+  .bkribbon:hover, .bkribbon:focus-visible { height:80px; }
+  .bknav { position:absolute; left:18px; right:10px; bottom:10px; z-index:3; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 12px;
+    background:linear-gradient(rgba(228,205,156,0), rgba(228,205,156,.96) 38%); border-radius:0 0 7px 2px; left:22px; right:13px; bottom:13px; }
+  .bknav button { min-width:48px; min-height:42px; font-size:20px; padding:0 12px; }
+  .bknav #bkn { font:12px/1.2 var(--sans); color:var(--ink2); text-align:center; }
+  .bkpg .k { font:600 calc(11.5px * var(--ts))/1.3 var(--sans); letter-spacing:.12em; text-transform:uppercase; color:var(--accent-ink); padding-right:96px; }
+  .bkpg h2 { margin:6px 0 4px; font:600 calc(24px * var(--ts))/1.2 var(--serif); padding-right:40px; }
+  .bkpg .yrs { font:calc(13px * var(--ts))/1.4 var(--sans); color:var(--ink2); }
+  .bkpg .sum { margin:10px 0; font:calc(16px * var(--ts))/1.5 var(--serif); }
+  .bkpg .st { display:flex; align-items:center; gap:8px; margin:6px 0 10px; font:calc(13px * var(--ts))/1.3 var(--sans); color:var(--ink2); }
+  .bkpg .st .bktick { color:#a8791f; font-weight:700; }
+  .bkpg .st .pb { flex:1; max-width:140px; height:5px; border-radius:3px; background:rgba(90,60,30,.18); overflow:hidden; } .bkpg .st .pb i { display:block; height:100%; background:var(--accent); }
+  .bkpg .acts { display:flex; flex-wrap:wrap; gap:8px; margin:8px 0 14px; } .bkpg .acts button { min-height:42px; }
+  .bkpg .sub { margin:12px 0 6px; font:600 calc(11.5px * var(--ts))/1.3 var(--sans); letter-spacing:.1em; text-transform:uppercase; color:var(--ink3); }
+  .bkpg ol.sc { list-style:none; margin:0; padding:0; border-top:1px solid rgba(150,115,60,.3); }
+  .bkpg ol.sc li { border-bottom:1px solid rgba(150,115,60,.3); }
+  .bkpg ol.sc button { display:flex; width:100%; align-items:baseline; gap:10px; min-height:40px; padding:7px 4px; border:0; border-radius:0; background:none; box-shadow:none; text-shadow:none; color:var(--ink); text-align:left; font:calc(14.5px * var(--ts))/1.3 var(--serif); }
+  .bkpg ol.sc button:hover, .bkpg ol.sc button:focus-visible { background:rgba(184,137,58,.14); }
+  .bkpg ol.sc .n { flex:none; width:1.6em; color:var(--accent-ink); font:600 calc(12px * var(--ts))/1.3 var(--sans); }
+  .bkpg ol.sc .t { flex:1; } .bkpg ol.sc .m { flex:none; color:var(--ink2); font:calc(12px * var(--ts))/1.3 var(--sans); }
+  .bkpg ol.sc .tag { display:inline-block; margin-right:5px; padding:0 5px; border-radius:4px; background:var(--accent-soft); color:var(--accent-ink); font:600 calc(10px * var(--ts))/1.5 var(--sans); letter-spacing:.05em; text-transform:uppercase; vertical-align:1px; }
+  .bkpg ol.sc .m { font-variant-numeric:tabular-nums; }
+  .bkpg ol.sc .ok { flex:none; width:1.1em; text-align:center; color:#a8791f; font:700 calc(14px * var(--ts))/1.3 var(--sans); text-shadow:0 1px 0 rgba(255,240,200,.6); }
+  .bkpg .cok { color:#a8791f; font:700 .8em var(--sans); text-shadow:0 1px 0 rgba(255,240,200,.6); }
+  .bkpg ol.sc .now .t::after { content:' · now'; color:var(--accent-ink); font:600 calc(11px * var(--ts)) var(--sans); }
+  .bkpg.soon { color:var(--ink3); } .bkpg.soon h2 { color:var(--ink3); } .bkpg.soon .sum { color:var(--ink3); }
+  .bkpg .soonflag2 { display:inline-block; margin:8px 0; padding:3px 9px; border-radius:99px; border:1px dashed var(--line2); font:600 calc(12px * var(--ts))/1.3 var(--sans); color:var(--ink3); }
+  .bkpg ul.ix { list-style:none; margin:10px 0 0; padding:0; }
+  .bkpg ul.ix > li { border-bottom:1px solid rgba(150,115,60,.35); }
+  .bkpg ul.ix .row { display:flex; align-items:stretch; gap:6px; }
+  .bkpg ul.ix .row > button { min-height:48px; border:0; border-radius:0; background:none; box-shadow:none; text-shadow:none; color:var(--ink); }
+  .bkpg ul.ix .acc { flex:1; display:flex; align-items:center; gap:10px; padding:8px 4px; text-align:left; font:calc(15px * var(--ts))/1.3 var(--serif); }
+  .bkpg ul.ix .acc .cn { flex:none; width:2.2em; font:600 calc(12px * var(--ts))/1.2 var(--sans); color:var(--accent-ink); }
+  .bkpg ul.ix .acc .ct { flex:1; } .bkpg ul.ix .acc .ct small { display:block; font:calc(12px * var(--ts))/1.3 var(--sans); color:var(--ink2); }
+  .bkpg ul.ix .acc .ar { flex:none; transition:transform .2s; color:var(--ink2); } .bkpg ul.ix .acc[aria-expanded="true"] .ar { transform:rotate(180deg); }
+  .bkpg ul.ix .acc .bktick { color:#a8791f; font-weight:700; }
+  .bkpg ul.ix .pg { flex:none; padding:0 10px; font:600 calc(12.5px * var(--ts))/1.2 var(--sans); color:var(--accent-ink); border-left:1px solid rgba(150,115,60,.3) !important; }
+  .bkpg ul.ix .body { padding:0 0 10px 2.6em; } .bkpg ul.ix .body[hidden] { display:none; }
+  .bkpg ul.ix .body p { margin:0 0 8px; font:calc(14px * var(--ts))/1.5 var(--serif); }
+  .bkpg ul.ix li.bkintro .acc .cn { color:var(--accent); font-size:16px; }
+  .bkpg ul.ix li.bkintro { background:rgba(184,137,58,.09); border-top:2px solid rgba(184,137,58,.5); border-bottom:2px solid rgba(184,137,58,.5); margin-bottom:4px; }
+  .bkpg ul.ix li.soon .acc { color:var(--ink3); cursor:default; }
+  /* settings menu in the controls, and the same switch in the book */
+  .cap2 .crow .cset { font-size:17px; }
+  @media (max-width:430px){ body.cine .cap2 .crow { gap:0; padding:3px 3px; flex-wrap:nowrap; max-width:calc(100vw - 12px); } body.cine .cap2 .crow button { min-width:30px; padding:6px 2px; } body.cine .cap2 #capspd { min-width:34px; } body.cine .cap2 .crow .ctime { width:auto; padding:6px 3px; font-size:10.5px; letter-spacing:-.01em; } body.cine .cap2 .crow #capbook { padding:3px 3px; } body.cine .cap2 .crow #capbook .bkico { width:23px; height:23px; } body.cine .cap2 .crow #capskip { padding:6px 4px; font-size:12px; } body.cine .cap2 .crow .cset { font-size:15px; } }
+  .capmenu { position:absolute; right:8px; bottom:calc(100% + 8px); z-index:5; padding:10px 12px; border-radius:10px; background:rgba(28,18,10,.94); color:#f3e6c4; border:1px solid rgba(224,189,114,.45); box-shadow:0 8px 24px rgba(0,0,0,.5); max-width:260px; }
+  .capmenu[hidden], body:not(.cine) .capmenu, body.cine.idle .capmenu { display:none; }
+  .skipi { display:flex; flex-wrap:wrap; align-items:center; gap:4px 9px; min-height:40px; font:600 calc(14px * var(--ts))/1.25 var(--sans); cursor:pointer; }
+  .skipi input { width:20px; height:20px; margin:0; accent-color:var(--accent); flex:none; }
+  .skipi small { flex-basis:100%; padding-left:29px; font:calc(12px * var(--ts))/1.3 var(--sans); opacity:.75; }
+  .bkpg .skipi { margin:4px 0 10px; color:#3a2814; }
+  @media (prefers-reduced-motion: reduce){ .bkw.in .bkback, .toast.in { animation:none; } .bkpg ul.ix .acc .ar { transition:none; } }
 </style>
 </head>
 <body>
@@ -597,7 +735,7 @@ try { var t = localStorage.getItem('tlm.textsize'); if (/^(s|m|l|xl)$/.test(t)) 
     <h1 class="stitle" id="stitle">Story of the Jews</h1>
     <p class="chapter" id="chapter"></p>
   </div>
-  <div class="hright"><button type="button" class="about" id="about" aria-haspopup="dialog">About</button><div class="yearpill" id="pill">1207 BC</div></div>
+  <div class="hright"><button type="button" class="bkbtn hbook" id="bookbtn" aria-label="Open the book: chapters and scenes" title="Chapters and scenes"><svg class="bkico" viewBox="0 0 24 24" aria-hidden="true"><rect x="5.2" y="3.1" width="15.6" height="18.6" rx="1.4" fill="#e6d3a6" stroke="#8a6a3a" stroke-width=".5"/><path d="M6.4 20.4h13.6M6.4 19.3h13.8" stroke="#bfa575" stroke-width=".4"/><rect x="3.2" y="1.8" width="16" height="18.6" rx="1.8" fill="#5a3820" stroke="#24140a" stroke-width=".7"/><path d="M3.2 3.6a1.8 1.8 0 0 1 1.8-1.8h1.6v18.6H5a1.8 1.8 0 0 1-1.8-1.8z" fill="#3e2413"/><path d="M4.1 5.2h2.2M4.1 16.9h2.2" stroke="#e0bd72" stroke-width=".7"/><path d="M17.6 2.4l1 1M3.9 19.6l.9-.9M18.2 19.4l-.8-.8" stroke="#9a6a42" stroke-width=".9" stroke-linecap="round" opacity=".8"/><rect x="8.2" y="4" width="9" height="14.2" rx=".9" fill="none" stroke="#e0bd72" stroke-width=".55" stroke-dasharray="1.05 .8" opacity=".9"/><path d="M12.7 7.6l1.7 3.5-1.7 3.5-1.7-3.5z" fill="#e0bd72"/><path d="M12.7 9.4l.8 1.7-.8 1.7-.8-1.7z" fill="#5a3820"/><path d="M15.3 20.4v3l.9-.8.9.8v-3z" fill="#a5342a"/></svg></button><button type="button" class="about" id="about" aria-haspopup="dialog">About</button><div class="yearpill" id="pill">1207 BC</div></div>
 </header>
 <div class="layout">
 <div class="mapcol">
@@ -614,11 +752,11 @@ try { var t = localStorage.getItem('tlm.textsize'); if (/^(s|m|l|xl)$/.test(t)) 
   <div class="chapcard" id="chapcard" hidden aria-live="polite"></div>
   <div class="choice" id="choice" hidden role="group" aria-label="What next?"><div class="choicein"><p class="q">The world is set. What next?</p>
     <div class="cbtns"><button type="button" class="play" id="choicego">Continue the story ›</button><button type="button" id="choicemap">Explore the map</button></div><p class="cs" id="choicesub"></p></div></div>
-  <div class="cap2 paper" id="cap" hidden aria-live="polite"><p class="ctext" id="captext"></p><div class="cmeta" id="capmeta"><div class="csrc" id="capsrc"></div></div>
+  <div class="cap2 paper" id="cap" hidden aria-live="polite"><div class="csub" id="capsub"><p class="ctext" id="captext"></p><div class="cmeta" id="capmeta"><div class="csrc" id="capsrc"></div></div></div>
     <div class="bar"><i id="capbar"></i></div>
     <div class="chaps" id="capch" hidden aria-label="Chapters"></div>
     <div class="ctlhint" id="ctlhint" aria-hidden="true" hidden></div>
-    <div class="crow"><button type="button" id="capprev" aria-label="Previous step">‹</button><button type="button" id="cappp" aria-label="Pause">❚❚</button><button type="button" id="capnext" aria-label="Next step">›</button><button type="button" id="capspd" aria-label="Speed 1x">1×</button><button type="button" id="capcc" class="cc on" aria-pressed="true" aria-label="Subtitles on">CC</button><button type="button" id="capsnd" class="cc snd on" aria-pressed="true" aria-label="Sound on" title="Sound on"><svg class="ico" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 7.5h3l4-3.5v12l-4-3.5H3z" fill="currentColor"/><path class="w" d="M13 7a4 4 0 0 1 0 6M15.2 4.8a7 7 0 0 1 0 10.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path class="x" d="M13 7.5l5 5M18 7.5l-5 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button><button type="button" id="capvoice" class="cc snd voice on" aria-pressed="true" aria-label="Narrator on" title="Narrator on"><svg class="ico" viewBox="0 0 20 20" aria-hidden="true"><circle cx="7.5" cy="6.5" r="3.2" fill="currentColor"/><path d="M1.8 17.5c.4-3.6 2.8-5.6 5.7-5.6s5.3 2 5.7 5.6z" fill="currentColor"/><path class="w" d="M13.6 4.4a3.6 3.6 0 0 1 0 4.8M15.8 2.6a6.4 6.4 0 0 1 0 8.4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path class="x" d="M13.5 4l4.5 4.5M18 4l-4.5 4.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button><span class="n" id="capn"></span><button type="button" id="capskip">Skip</button><button type="button" id="capx" aria-label="Exit film" title="Exit film">×</button></div></div>
+    <div class="crow"><button type="button" id="capprev" aria-label="Previous step">‹</button><button type="button" id="cappp" aria-label="Pause">❚❚</button><button type="button" id="capnext" aria-label="Next step">›</button><button type="button" id="capspd" aria-label="Speed 1x">1×</button><button type="button" id="capcc" class="cc on" aria-pressed="true" aria-label="Subtitles on">CC</button><button type="button" id="capsnd" class="cc snd on" aria-pressed="true" aria-label="Sound on" title="Sound on"><svg class="ico" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 7.5h3l4-3.5v12l-4-3.5H3z" fill="currentColor"/><path class="w" d="M13 7a4 4 0 0 1 0 6M15.2 4.8a7 7 0 0 1 0 10.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path class="x" d="M13 7.5l5 5M18 7.5l-5 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button><button type="button" id="capvoice" class="cc snd voice on" aria-pressed="true" aria-label="Narrator on" title="Narrator on"><svg class="ico" viewBox="0 0 20 20" aria-hidden="true"><circle cx="7.5" cy="6.5" r="3.2" fill="currentColor"/><path d="M1.8 17.5c.4-3.6 2.8-5.6 5.7-5.6s5.3 2 5.7 5.6z" fill="currentColor"/><path class="w" d="M13.6 4.4a3.6 3.6 0 0 1 0 4.8M15.8 2.6a6.4 6.4 0 0 1 0 8.4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path class="x" d="M13.5 4l4.5 4.5M18 4l-4.5 4.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button><span class="n" id="capn"></span><button type="button" class="ctime" id="captime" aria-label="Copy a link to this moment" title="Copy a link to this moment">0:00 / 0:00</button><button type="button" id="capskip">Skip</button><button type="button" id="capbook" class="bkbtn" aria-label="Open the book: chapters and scenes" title="Chapters and scenes"><svg class="bkico" viewBox="0 0 24 24" aria-hidden="true"><rect x="5.2" y="3.1" width="15.6" height="18.6" rx="1.4" fill="#e6d3a6" stroke="#8a6a3a" stroke-width=".5"/><path d="M6.4 20.4h13.6M6.4 19.3h13.8" stroke="#bfa575" stroke-width=".4"/><rect x="3.2" y="1.8" width="16" height="18.6" rx="1.8" fill="#5a3820" stroke="#24140a" stroke-width=".7"/><path d="M3.2 3.6a1.8 1.8 0 0 1 1.8-1.8h1.6v18.6H5a1.8 1.8 0 0 1-1.8-1.8z" fill="#3e2413"/><path d="M4.1 5.2h2.2M4.1 16.9h2.2" stroke="#e0bd72" stroke-width=".7"/><path d="M17.6 2.4l1 1M3.9 19.6l.9-.9M18.2 19.4l-.8-.8" stroke="#9a6a42" stroke-width=".9" stroke-linecap="round" opacity=".8"/><rect x="8.2" y="4" width="9" height="14.2" rx=".9" fill="none" stroke="#e0bd72" stroke-width=".55" stroke-dasharray="1.05 .8" opacity=".9"/><path d="M12.7 7.6l1.7 3.5-1.7 3.5-1.7-3.5z" fill="#e0bd72"/><path d="M12.7 9.4l.8 1.7-.8 1.7-.8-1.7z" fill="#5a3820"/><path d="M15.3 20.4v3l.9-.8.9.8v-3z" fill="#a5342a"/></svg></button><button type="button" id="capset" class="cset" aria-label="Settings" title="Settings" aria-haspopup="true" aria-expanded="false" aria-controls="capmenu">⚙</button><button type="button" id="capx" aria-label="Exit film" title="Exit film">×</button></div><div class="capmenu" id="capmenu" hidden role="group" aria-label="Settings"><label class="skipi"><input type="checkbox" data-skipintro> Skip chapter intros <small>start each chapter at its first scene</small></label></div></div>
   <div class="soonbox" id="soon" hidden><b>Coming soon</b><span id="soont"></span></div>
   <div class="hint">Tap anything · pinch to zoom</div>
 </div>
@@ -687,6 +825,18 @@ try { var t = localStorage.getItem('tlm.textsize'); if (/^(s|m|l|xl)$/.test(t)) 
   </div>
 </div>
 <svg class="defs" width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute"><filter id="torn" x="-3%" y="-3%" width="106%" height="106%"><feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="4" seed="11" result="t"/><feDisplacementMap in="SourceGraphic" in2="t" scale="9" xChannelSelector="R" yChannelSelector="G"/></filter></svg>
+<div class="bkw" id="bkwrap" hidden>
+  <div class="bkback" id="bkback"></div>
+  <div class="bkbook" id="bkbook" role="dialog" aria-modal="true" aria-label="The book: chapters and scenes">
+    <div class="bkpages" id="bkpages"><div class="bkpage" id="bkpage"></div></div>
+    <button type="button" class="bkribbon" id="bkribbon" aria-label="Index of chapters"><span>Index</span></button>
+    <button type="button" class="bkx" id="bkx" aria-label="Close the book">✕</button>
+    <div class="bknav"><button type="button" id="bkprev" aria-label="Previous page">‹</button><span id="bkn"></span><button type="button" id="bknext" aria-label="Next page">›</button></div>
+    <div class="bkcover" id="bkcover" aria-hidden="true"><span class="bkc1" id="bkc1">Book One</span><span class="bkc2" id="bkc2">Story of the Jews</span><span class="bkc3">The Long Map</span></div>
+  </div>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+<div class="deep paper" id="deep" role="dialog" aria-labelledby="deept" hidden></div>
 <script src="js/d3-lite.min.js"></script>
 <script src="js/app.js"></script>
 <script src="js/intro.js"></script>
