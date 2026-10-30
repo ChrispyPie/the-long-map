@@ -1,5 +1,6 @@
 {
- "_note": "Site settings. donateUrl: set to a full https:// link to show a small 'Support this project' link in the footer; null hides it. Donations go to Ko-fi (ko-fi.com/thelongmap). reportUrl: same for a 'Report an error' link (e.g. a form or issue tracker); null hides it.",
+ "_note": "Site settings. donateUrl: set to a full https:// link to show a small 'Support this project' link in the footer; null hides it. Donations go to Ko-fi (ko-fi.com/thelongmap). reportUrl: where 'Report an error' goes (https only; null hides it). '{ref}' is replaced by a short, url-encoded 'Correction for Chapter N, #line M: <link>'. Now: a reply to the pinned corrections post on X. reportPost: the pinned post itself (fallback).",
  "donateUrl": "https://ko-fi.com/thelongmap",
- "reportUrl": null
+ "reportUrl": "https://x.com/intent/post?in_reply_to=2116194386589397340&text={ref}",
+ "reportPost": "https://x.com/TheLongMapHQ/status/2116194386589397340"
 }

@@ -338,8 +338,9 @@ function showStep(i, fly = true){
     const arr = ARRIVE === cur && chapNo(cur);
     h = `<div class="kicker">${esc(STORY.title)} · ${esc(STOP.label)}</div><h2>${esc(STOP.title)}</h2>` +
         (arr ? `<div class="cta arrive"><button type="button" class="play big" id="gonextch" data-part="${cur}" data-how="${posGet(STOP.year) ? 'resume' : 'over'}">Continue to Chapter ${arr} ▶</button></div>` : '') + partList() +
+        `<p class="bookline"><button type="button" class="gobook" id="gobook">${BKICO}<span>Open the book: chapters &amp; scenes</span></button></p>` +
         `<p class="lead">${esc(STORY.intro)}</p><p>${esc(tinText())}</p>` +
-        (tinBeats() ? `<div class="cta"><button type="button" class="play" id="gostory">▶ Watch the opening · ${minsOf(reelChapters('intro')[0].ms)}</button><button type="button" id="goexplore">Explore the map</button></div>` +
+        (tinBeats() ? `<div class="cta"><button type="button" class="play" id="gostory">${chapReel() === 'play' ? `▶ Play Chapter ${chapNo(cur)} · ${minShort(playTotal('play'))}` : `▶ Play Chapter ${chapNo(cur)} intro · ${minShort(reelChapters('intro')[0].ms)}`}</button><button type="button" id="goexplore">Explore the map</button></div>` +
             resumeHere('goresume') + chapterList('intro') +
             (STOP.events.length ? `<p class="cap"><button type="button" class="linkish" id="goread">Or read it as fact boxes ›</button></p>` : '')
           : `<div class="cta"><button type="button" class="play" id="gostory">Start the story ›</button><button type="button" id="goexplore">Explore the map</button></div>`) +
@@ -368,9 +369,10 @@ function showStep(i, fly = true){
   $('evprev').disabled = step === 0; $('evnext').disabled = last;
   $('evbody').querySelectorAll('.chip').forEach(b => b.onclick = ev => { ev.stopPropagation(); openObj(b.dataset.o, true); });
   if (e.intro){
-    $('gostory').onclick = ev => { ev.stopPropagation(); tinBeats() ? playStart('intro') : showStep(1); };
+    $('gostory').onclick = ev => { ev.stopPropagation(); tinBeats() ? playStart(chapReel()) : showStep(1); };
     $('goexplore').onclick = () => showStep(S.length - 1);
     if ($('goread')) $('goread').onclick = () => showStep(1);
+    $('gobook').onclick = ev => { ev.stopPropagation(); bkOpen(ev.currentTarget, bkPageOf(cur)); };
   }
   $('evbody').querySelectorAll('[data-reel]').forEach(b => b.onclick = ev => { ev.stopPropagation(); playStart(b.dataset.reel, +b.dataset.b); });
   $('evbody').querySelectorAll('[data-part]').forEach(b => b.onclick = ev => { ev.stopPropagation(); partStart(+b.dataset.part, b.dataset.how); });
@@ -441,6 +443,17 @@ function chapterList(r){
 // device once its opening film or its Play has run to the end (localStorage tlm.done.<story>.<year>).
 const doneKey = y => `tlm.done.${STORY && STORY.id}.${y}`;
 const partDone = y => { try { return localStorage.getItem(doneKey(y)) === '1'; } catch(e){ return false; } };
+// scenes watched: tlm.seen.<story>.<year> = ["play:30", ...] (reel and first beat of each scene). A scene counts
+// once its last line has played or been passed; the book ticks it, and ticks the chapter when all are done.
+const seenKey = y => `tlm.seen.${STORY && STORY.id}.${y}`;
+function seenGet(y){ try { const a = JSON.parse(localStorage.getItem(seenKey(y)) || '[]'); return new Set(Array.isArray(a) ? a : []); } catch(e){ return new Set(); } }
+function seenMark(i){
+  // every scene of the running film that ends before beat i (all of them when i is past the end)
+  if (!PLAY || !STOP || !PLAY.beats) return;
+  const bs = PLAY.beats, have = seenGet(STOP.year), n0 = have.size; let st = 0;
+  for (let j = 1; j <= bs.length; j++){ if (j === bs.length || bs[j].chapter){ if (j <= i) have.add(PLAY.reel + ':' + st); st = j; } }
+  if (have.size !== n0) try { localStorage.setItem(seenKey(STOP.year), JSON.stringify([...have])); } catch(e){}
+}
 function partSet(){ try { if (STOP) localStorage.setItem(doneKey(STOP.year), '1'); } catch(e){} }
 const parts = () => STORY.stops.map((s, k) => ({s, k})).filter(x => x.s.file);
 function partList(){
@@ -468,7 +481,17 @@ async function partStart(k, how){
   if (!here){ await go(k); $('cyear').textContent = $('pill').textContent; if (how === 'resume') p = posGet(y); }
   if (MODE !== 'stop') return exitCine();
   if (p && reelBeats(p.r)) playStart(p.r, p.i);
-  else if (tinBeats()) playStart('intro'); else exitCine();
+  else if (tinBeats()) playStart(chapReel()); else exitCine();
+}
+// "Skip chapter intros" (default off, remembered): Play chapter, Continue to Chapter N and the book start at the
+// story's first scene instead of the chapter's opening narration. Explicit taps on an intro scene still play it.
+let SKIPI = false;
+try { SKIPI = localStorage.getItem('tlm.skipintro') === 'on'; } catch(e){}
+const chapReel = () => tinBeats() && !(SKIPI && STOP && STOP.play) ? 'intro' : 'play';
+function setSkipIntro(on){
+  SKIPI = !!on; try { localStorage.setItem('tlm.skipintro', SKIPI ? 'on' : 'off'); } catch(e){}
+  document.querySelectorAll('input[data-skipintro]').forEach(c => { c.checked = SKIPI; });
+  if (MODE === 'stop' && !PLAY && step === 0 && STOP && !$('evbody').contains(document.activeElement)) showStep(0, false);
 }
 // the narrator's voice has its own switch (default on, also with reduced motion); effects are separate
 let VOICE = true;
@@ -524,7 +547,7 @@ function tick(now){
   if (!PLAY) return;
   const dt = Math.min(100, now - (PLAY.last || now)); PLAY.last = now;
   if (!PLAY.paused && !PLAY.hold && !PLAY.wait) PLAY.clock += dt * SPEED;   // wait: the opener's choice
-  audioWatch(now); reviewTag();
+  audioWatch(now); reviewTag(); timeTag();
   const c = PLAY.clock;
   PLAY.anims = PLAY.anims.filter(a => { const f = Math.min(1, Math.max(0, (c - a.t0) / a.ms)); a.fn(ease(f)); return f < 1; });
   if (PLAY.anims.length) scaleMarks();
@@ -638,14 +661,46 @@ const STEP = {
   },
   caption: (x, ms) => {
     if (!ms) return;
-    // subtitles show digits ("display") while the voice reads the words ("text")
-    $('captext').innerHTML = (badge(x.cert) ? badge(x.cert) + ' ' : '') + esc(x.display || x.text);
-    $('capsrc').textContent = x.cert === 'scene' ? 'Scene-setting only: no new facts.' : x.cert === 'frame' ? '' : 'Sources: ' + x.src.map(shortSrc).join('; ') + (x.ref ? ' · ' + x.ref : '');
-    $('cap').classList.toggle('frame', x.cert === 'frame');
-    $('capsrc').title = x.src.map(k => SRC[k] ? SRC[k].t : k).join('\n');
+    capFill(x, PLAY ? lineNo(PLAY.reel, PLAY.i) : '');
     const c = $('cap'); c.classList.remove('in'); void c.offsetWidth; c.classList.add('in');
   }
 };
+// one subtitle: badge + text + its line number ('#57', tap copies a link to the line), and the source line above it.
+// Subtitles show digits ("display") while the voice reads the words ("text").
+const lineNo = (r, i) => (r === 'intro' ? 'i' : '') + (i + 1);
+function capFill(x, ln){
+  $('captext').innerHTML = (badge(x.cert) ? badge(x.cert) + ' ' : '') + esc(x.display || x.text) +
+    (ln ? `<button type="button" class="lnum" data-ln="${ln}" aria-label="Copy a link to line ${ln}" title="Copy a link to this line">#${ln}</button>` : '');
+  $('capsrc').textContent = x.cert === 'scene' ? 'Scene-setting only: no new facts.' : x.cert === 'frame' ? '' : 'Sources: ' + x.src.map(shortSrc).join('; ') + (x.ref ? ' · ' + x.ref : '');
+  $('cap').classList.toggle('frame', x.cert === 'frame');
+  $('capsrc').title = x.src.map(k => SRC[k] ? SRC[k].t : k).join('\n');
+}
+// The film's subtitle box keeps ONE height for the whole chapter: the tallest of its lines (opening and Play) at this
+// width and text size, measured in place (each line is put in, measured, and the real line put back, all before the
+// next paint). So the controls above it never move from one line to the next. Again on resize, rotation and text size.
+function capFit(){
+  const sub = $('capsub'), cap = $('cap'), b = document.body;
+  if (!sub) return 0;
+  if (!PLAY || !CINE || !STOP || cap.hidden){ sub.style.removeProperty('--caph'); return 0; }
+  const tx = $('captext'), sr = $('capsrc');
+  const keep = {h: tx.innerHTML, s: sr.textContent, t: sr.title, f: cap.classList.contains('frame'), ch: b.classList.contains('choosing'), cc: b.classList.contains('cc-off')};
+  b.classList.remove('choosing', 'cc-off'); sub.style.setProperty('--caph', '0px');
+  let h = 0;
+  ['intro', 'play'].forEach(r => (reelBeats(r) || []).forEach((bt, i) => {
+    const x = bt.steps.find(y => y.type === 'caption'); if (!x) return;
+    capFill(x, lineNo(r, i)); h = Math.max(h, sub.getBoundingClientRect().height);
+  }));
+  tx.innerHTML = keep.h; sr.textContent = keep.s; sr.title = keep.t; cap.classList.toggle('frame', keep.f);
+  b.classList.toggle('choosing', keep.ch); b.classList.toggle('cc-off', keep.cc);
+  sub.style.setProperty('--caph', Math.ceil(h) + 'px');
+  return Math.ceil(h);
+}
+let capFitT = 0;
+const capFitSoon = () => { cancelAnimationFrame(capFitT); capFitT = requestAnimationFrame(() => { capFit(); placeChoice(); }); };
+addEventListener('resize', capFitSoon);
+addEventListener('orientationchange', () => setTimeout(capFitSoon, 250));
+addEventListener('tlm:textsize', capFitSoon);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(capFitSoon);
 const words = t => t.split(/\s+/).length;
 // reading time ~2.5 words per second, at least 2 s (make_data.py writes this as beat.duration)
 // with the voice on, a recorded line lasts as long as its audio (audioMs, measured when it was recorded)
@@ -667,6 +722,7 @@ function clearFx(){ gFx.selectAll('*').interrupt().remove(); gFxTop.selectAll('*
 function resetMap(){ clearFx(); drawZones(ERA); drawObjects(); }
 function applyInstant(i){ PLAY.beats[i].steps.forEach(x => { if (x.type !== 'caption') STEP[x.type](x, 0); }); }
 function runBeat(i){
+  seenMark(i);
   if (i >= PLAY.beats.length) return PLAY.reel === 'intro' ? introEnd() : playEnd();
   const b = PLAY.beats[i], t0 = PLAY.clock;
   PLAY.i = i; PLAY.events = []; PLAY.hold = false; PLAY.wait = false; PLAY.sndUsed = new Set(); hideChoice();
@@ -745,6 +801,7 @@ async function playStart(reel = 'play', from = 0){
   resetMap(); YEAR = STOP.year; setHighlight([]);
   buildChapters();
   if (from) seek(from); else runBeat(0);
+  capFit(); timeTag(true);
   PLAY.raf = requestAnimationFrame(tick);
 }
 // the opener's choice, shown over the picture when its last line has been spoken
@@ -1043,7 +1100,7 @@ let CINE = null, CC = true, idleT = 0;
 try { CC = localStorage.getItem('tlm.cc') !== 'off'; } catch(e){}
 function setCC(on){
   CC = !!on; try { localStorage.setItem('tlm.cc', CC ? 'on' : 'off'); } catch(e){}
-  document.body.classList.toggle('cc-off', !CC); requestAnimationFrame(vigPlace);
+  document.body.classList.toggle('cc-off', !CC); requestAnimationFrame(vigPlace); if (CC && typeof capFitSoon === 'function') capFitSoon();
   const b = $('capcc'); b.setAttribute('aria-pressed', String(CC)); b.setAttribute('aria-label', CC ? 'Subtitles on' : 'Subtitles off'); b.classList.toggle('on', CC);
 }
 setCC(CC);
@@ -1206,7 +1263,7 @@ let movedUp = -1e9;
 const onVig = e => e.target && e.target.closest && e.target.closest('#vig');
 ['pointermove', 'pointerdown', 'touchstart', 'keydown'].forEach(t => addEventListener(t, e => {
   if (t === 'pointermove' && (e.pointerType !== 'mouse' || e.buttons || onVig(e))) return;   // a mouse drag pans the map, it does not wake
-  if (!CINE || ((t === 'pointerdown' || t === 'touchstart') && (onPic(e) || (e.target.closest && e.target.closest('#revtag'))))) return;   // the review tag copies, it does not bring up the controls
+  if (!CINE || ((t === 'pointerdown' || t === 'touchstart') && (onPic(e) || (e.target.closest && e.target.closest('#revtag, .lnum, #captime'))))) return;   // the review tag copies, it does not bring up the controls
   if (t === 'pointermove' && document.body.classList.contains('idle')) movedUp = performance.now();
   wake(); }, {passive: true}));
 // in the film a tap (or click) on the picture shows the controls, and a tap while they show hides them again,
@@ -1244,6 +1301,8 @@ addEventListener('keydown', e => {
 // leaving browser fullscreen (e.g. the Esc key) also ends the film
 document.addEventListener('fullscreenchange', () => {
   if (document.fullscreenElement){ if (CINE) CINE.fsOn = true; return; }
+  // (with the book open, the Back / Esc that left fullscreen closes the book and the film stays)
+  if (BK.open && CINE && CINE.fsOn){ CINE.fsOn = false; bkClose(); return; }
   if (CINE && CINE.fsOn && !CINE.out && PLAY){ CINE.fsOn = false; playStop(false); }
 });
 $('cappp').onclick = e => { e.stopPropagation(); playPause(); };
@@ -1251,6 +1310,16 @@ $('capnext').onclick = e => { e.stopPropagation(); if (PLAY) seek(PLAY.i + 1 < P
 $('capprev').onclick = e => { e.stopPropagation(); if (PLAY) seek(PLAY.i - 1); };
 $('capspd').onclick = e => { e.stopPropagation(); setSpeed(SPEEDS[(SPEEDS.indexOf(SPEED) + 1) % SPEEDS.length] || 1); };
 $('capx').onclick = e => { e.stopPropagation(); playStop(false); };
+// the small settings menu in the controls (for now one switch: skip chapter intros)
+function capMenu(open){
+  const m = $('capmenu'), b = $('capset'); open = open === undefined ? m.hidden : !!open;
+  m.hidden = !open; b.setAttribute('aria-expanded', String(open));
+  if (open){ m.querySelector('input').checked = SKIPI; if (PLAY) wake(); }
+}
+$('capset').onclick = e => { e.stopPropagation(); capMenu(); };
+$('capmenu').addEventListener('click', e => e.stopPropagation());
+$('capmenu').addEventListener('change', e => { if (e.target.matches('input[data-skipintro]')) setSkipIntro(e.target.checked); });
+document.addEventListener('pointerdown', e => { if (!$('capmenu').hidden && !(e.target.closest && e.target.closest('#capmenu, #capset'))) capMenu(false); }, true);
 $('capcc').onclick = e => { e.stopPropagation(); setCC(!CC); };
 $('capsnd').onclick = e => { e.stopPropagation(); setSnd(!SND.on); };
 setSnd(SND.on);
@@ -1283,12 +1352,14 @@ function arriveSoon(k, rebuild){
   const all = [...new Set(recap.flatMap(c => c.src))];
   $('evbody').innerHTML = `<div class="kicker">${esc(STORY.title)} · ${esc(s.label)}</div><h2>${esc(s.soon.title)}</h2>` +
     `<div class="soonflag">Next chapter coming soon</div><p class="lead">${esc(s.soon.text)}</p>` +
-    `<div class="cta"><button type="button" class="play" id="replay">↺ Replay transition</button><button type="button" id="back1207">‹ Back to ${esc(STOP.label)}</button></div>` +
+    `<div class="cta"><button type="button" class="play" id="replay">▶ Play Chapter ${chapNo(liveBefore(k))} again</button><button type="button" id="back1207">‹ Chapter ${chapNo(liveBefore(k))} page</button></div>` +
+    `<p class="bookline"><button type="button" class="gobook" id="gobook">${BKICO}<span>Open the book: chapters &amp; scenes</span></button></p>` +
     `<div class="sub">What changed, step by step</div><ul class="claims">` + recap.map(c => `<li>${badge(c.cert)} ${esc(c.display || c.text)}</li>`).join('') + '</ul>' +
     `<details class="src"><summary>Sources (${all.length})</summary>${srcList(all)}</details>`;
   $('evbody').scrollTop = 0;
   $('evn').textContent = '1 / 1'; $('evprev').disabled = true; $('evnext').disabled = true;
-  $('replay').onclick = e => { e.stopPropagation(); MODE = 'stop'; cur = liveBefore(k); timelineState(STORY.stops[cur]); playStart('play'); };
+  $('replay').onclick = e => { e.stopPropagation(); MODE = 'stop'; cur = liveBefore(k); timelineState(STORY.stops[cur]); playStart(chapReel()); };
+  $('gobook').onclick = e => { e.stopPropagation(); bkOpen(e.currentTarget, bkPageOf(k)); };
   $('back1207').onclick = e => { e.stopPropagation(); go(liveBefore(k)); };
   drawKeys();
 }
@@ -1338,6 +1409,302 @@ $('next').onclick = () => go(cur + 1);
 window.__zoomTest = () => flyTo([35.3, 32.0], 7, 600);
 // for the tests: where the camera's target is on screen now, and the room the picture card takes
 const camTarget = () => { if (!FLY) return null; const q = TR.apply(projection(FLY.c)), m = svg.node().getScreenCTM(); if (!m) return null; const pt = svg.node().createSVGPoint(); pt.x = q[0]; pt.y = q[1]; const r = pt.matrixTransform(m); return [r.x, r.y]; };
+// ---------- public references: the chapter time in the controls and a '#57' on each subtitle ----------
+// A tap copies a ready text with a link (?ch=4&t=525 or ?ch=4&line=57) and says "Copied ✓"; with a reportUrl in
+// data/site.json the toast also offers "Report an error here", with the reference filled in where the form allows.
+const SITE_URL = 'https://thelongmap.com/';
+let SITE = {};
+const chapTotal = () => (tinBeats() ? playTotal('intro') : 0) + (STOP && STOP.play ? playTotal('play') : 0);
+function timeNow(){ if (!PLAY || !STOP) return 0; const b = PLAY.beats[PLAY.i]; return posMs(PLAY.reel, PLAY.i) + (b ? Math.min(beatPlan(b), Math.max(0, PLAY.clock - (PLAY.t0 || 0))) : 0); }
+function timeTag(force){
+  if (!PLAY || !STOP) return;
+  const e = $('captime'), s = mss(timeNow()) + ' / ' + mss(chapTotal());
+  if (force || e.textContent !== s){ e.textContent = s; e.setAttribute('aria-label', 'Chapter time ' + s + '. Copy a link to this moment'); }
+}
+const snip = (t, n = 80) => { t = String(t || '').replace(/\s+/g, ' ').trim(); if (t.length <= n) return t; const c = t.slice(0, n); const w = c.lastIndexOf(' '); return (w > n * 0.6 ? c.slice(0, w) : c).replace(/[\s,;:.]+$/, '') + '…'; };
+function timeRef(){ const n = chapNo(cur), t = timeNow(); return {text: `The Long Map – Chapter ${n} at ${mss(t)} ${SITE_URL}?ch=${n}&t=${Math.floor(t / 1000)}`, ref: `Chapter ${n} at ${mss(t)}`, short: `Correction for Chapter ${n} at ${mss(t)}: ${SITE_URL}?ch=${n}&t=${Math.floor(t / 1000)}`}; }
+function lineRef(ln){
+  const n = chapNo(cur), r = /^i/.test(ln) ? 'intro' : 'play', i = parseInt(String(ln).replace(/^i/, ''), 10) - 1;
+  const b = (reelBeats(r) || [])[i], x = b && b.steps.find(y => y.type === 'caption');
+  return {text: `The Long Map – Chapter ${n}, line #${ln}: "${snip(x ? x.display || x.text : '')}" ${SITE_URL}?ch=${n}&line=${ln}`, ref: `Chapter ${n}, line #${ln}`, short: `Correction for Chapter ${n}, #line ${ln}: ${SITE_URL}?ch=${n}&line=${ln}`};
+}
+function clipCopy(s){
+  const old = () => { try { const t = document.createElement('textarea'); t.value = s; t.setAttribute('readonly', '');
+    t.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;font-size:16px;';
+    document.body.appendChild(t); t.select(); t.setSelectionRange(0, s.length); const ok = document.execCommand('copy'); t.remove(); return ok; } catch(x){ return false; } };
+  if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(s).then(() => true, () => old());
+  return Promise.resolve(old());
+}
+let toastT = 0;
+function toast(msg, act){
+  const t = $('toast'); clearTimeout(toastT);
+  t.innerHTML = esc(msg) + (act ? `<button type="button" class="tbtn">${esc(act.label)}</button>` : '');
+  t.classList.toggle('act', !!act); t.hidden = false; t.classList.remove('in'); void t.offsetWidth; t.classList.add('in');
+  if (act) t.querySelector('.tbtn').onclick = e => { e.stopPropagation(); act.fn(); t.hidden = true; };
+  toastT = setTimeout(() => { t.hidden = true; }, act ? 5000 : 1600);
+}
+function reportHref(ref){
+  const u = SITE.reportUrl; if (typeof u !== 'string' || !/^https:\/\//.test(u)) return null;
+  if (u.includes('{ref}')) return u.split('{ref}').join(encodeURIComponent(ref.short || ref.text));   // e.g. a reply to the pinned corrections post on X (short text, well under 280)
+  if (/github\.com\/[^/]+\/[^/]+\/issues\/new/.test(u)) return u + (u.includes('?') ? '&' : '?') + 'title=' + encodeURIComponent('Error: ' + ref.ref) + '&body=' + encodeURIComponent(ref.text + '\n\nWhat is wrong:\n');
+  return u;   // other forms: the reference is on the clipboard already
+}
+function refCopy(ref, ev){
+  if (ev){ ev.stopPropagation(); ev.preventDefault(); if (ev.detail && ev.currentTarget && ev.currentTarget.blur) ev.currentTarget.blur(); }
+  LASTREF = ref;
+  clipCopy(ref.text).then(ok => {
+    const h = reportHref(ref);
+    toast(ok ? 'Copied ✓' : 'Could not copy', h ? {label: 'Report an error here', fn: () => window.open(h, '_blank', 'noopener')} : null);
+  });
+}
+let LASTREF = null;
+// the footer's "Report an error": in the film it reports the moment on screen, otherwise the chapter; without a
+// reportUrl it falls back to reportPost (the pinned corrections post)
+function chapRef(){ const n = chapNo(cur); return n > 0 ? {text: `${SITE_URL}?ch=${n}`, ref: `Chapter ${n}`, short: `Correction for Chapter ${n}: ${SITE_URL}?ch=${n}`} : {text: SITE_URL, ref: 'The Long Map', short: `Correction: ${SITE_URL}`}; }
+function reportNow(){ return reportHref(PLAY && STOP ? timeRef() : chapRef()) || (typeof SITE.reportPost === 'string' && /^https:\/\//.test(SITE.reportPost) ? SITE.reportPost : null); }
+$('report').addEventListener('click', () => { let h = null; try { h = reportNow(); } catch(e){} if (h) $('report').href = h; });
+$('captime').onclick = e => refCopy(timeRef(), e);
+$('captext').addEventListener('click', e => { const b = e.target.closest && e.target.closest('.lnum'); if (b) refCopy(lineRef(b.dataset.ln), e); });
+
+// ---------- shared links: ?ch=4&line=57 or ?ch=4&t=525 open that chapter at that line, paused, with one Play ----------
+// (a browser may refuse to start sound or fullscreen without a tap, so the film starts on the viewer's tap)
+const DEEP = (() => { try { const q = new URLSearchParams(location.search), ch = parseInt(q.get('ch'), 10);
+  if (!(ch > 0)) return null; return {ch, line: q.get('line'), t: q.get('t')}; } catch(e){ return null; } })();
+const dBeats = (d, r) => r === 'intro' ? (d && d.transitionIn && typeof d.transitionIn === 'object' && d.transitionIn.beats) || [] : (d && d.play && d.play.beats) || [];
+function dWhere(d, line, t){
+  if (line != null && line !== ''){ const r = /^i/i.test(line) ? 'intro' : 'play', i = parseInt(String(line).replace(/^i/i, ''), 10) - 1, bs = dBeats(d, r);
+    if (bs.length && i >= 0) return {r, i: Math.min(i, bs.length - 1)}; }
+  let ms = Math.max(0, (parseFloat(t) || 0) * 1000), last = null;
+  for (const r of ['intro', 'play']) { const bs = dBeats(d, r); for (let i = 0; i < bs.length; i++){ const p = beatPlan(bs[i]); last = {r, i}; if (ms < p) return last; ms -= p; } }
+  return last || {r: 'play', i: 0};
+}
+async function deepOpen(){
+  const D = DEEP; if (!D) return;
+  try { const q = new URLSearchParams(location.search); ['ch', 'line', 't'].forEach(k => q.delete(k)); const s = q.toString(); history.replaceState(history.state, '', location.pathname + (s ? '?' + s : '') + location.hash); } catch(e){}
+  const ps = parts(), x = ps[D.ch - 1]; if (!x) return;
+  if (cur !== x.k || MODE !== 'stop') await go(x.k);
+  const w = dWhere(STOP, D.line, D.t), bs = reelBeats(w.r); if (!bs) return;
+  const c = bs[w.i].steps.find(y => y.type === 'caption'), sc = chapterAt(w.r, w.i), ln = lineNo(w.r, w.i);
+  const t = posMs(w.r, w.i), el = $('deep');
+  el.innerHTML = `<div class="k">Shared link · Chapter ${D.ch} · ${esc(STOP.label)}</div><h2 id="deept">${esc(sc && sc.title ? sc.title : STOP.title)}</h2>` +
+    `<q>${esc(c ? c.display || c.text : '')}</q><p class="cap">Line #${ln} · ${mss(t)} into the chapter</p>` +
+    `<div class="cta"><button type="button" class="play" id="deepgo">▶ Play from here</button><button type="button" id="deepx">Chapter page</button></div>`;
+  el.hidden = false; showStep(0, false);
+  $('deepgo').onclick = e => { e.stopPropagation(); el.hidden = true; bookPlay(x.k, w.r, w.i); };
+  $('deepx').onclick = e => { e.stopPropagation(); el.hidden = true; };
+  setTimeout(() => $('deepgo').focus({preventScroll: true}), 30);
+  DEEPAT = {k: x.k, r: w.r, i: w.i};
+}
+let DEEPAT = null;
+
+// ---------- the book: one page per chapter, the index behind the ribbon ----------
+// Opened by the book button (in the film's controls, the header and the chapter page). It zooms out of the
+// button and its cover turns; pages turn with swipe, the arrows on the page or the arrow keys. Each chapter
+// page has a short summary, length and progress, Play / Resume / fact boxes / map, and its scenes (a tap plays
+// from that scene). The index lists the Book One intro and every chapter; a row opens its scenes in place and
+// "Page ›" turns the book to that chapter. ✕, a tap beside the book, Esc or the Back button close it
+// (history state, so Android's back closes the book and not the site).
+const BKICO = '<svg class="bkico" viewBox="0 0 24 24" aria-hidden="true"><rect x="5.2" y="3.1" width="15.6" height="18.6" rx="1.4" fill="#e6d3a6" stroke="#8a6a3a" stroke-width=".5"/><path d="M6.4 20.4h13.6M6.4 19.3h13.8" stroke="#bfa575" stroke-width=".4"/><rect x="3.2" y="1.8" width="16" height="18.6" rx="1.8" fill="#5a3820" stroke="#24140a" stroke-width=".7"/><path d="M3.2 3.6a1.8 1.8 0 0 1 1.8-1.8h1.6v18.6H5a1.8 1.8 0 0 1-1.8-1.8z" fill="#3e2413"/><path d="M4.1 5.2h2.2M4.1 16.9h2.2" stroke="#e0bd72" stroke-width=".7"/><path d="M17.6 2.4l1 1M3.9 19.6l.9-.9M18.2 19.4l-.8-.8" stroke="#9a6a42" stroke-width=".9" stroke-linecap="round" opacity=".8"/><rect x="8.2" y="4" width="9" height="14.2" rx=".9" fill="none" stroke="#e0bd72" stroke-width=".55" stroke-dasharray="1.05 .8" opacity=".9"/><path d="M12.7 7.6l1.7 3.5-1.7 3.5-1.7-3.5z" fill="#e0bd72"/><path d="M12.7 9.4l.8 1.7-.8 1.7-.8-1.7z" fill="#5a3820"/><path d="M15.3 20.4v3l.9-.8.9.8v-3z" fill="#a5342a"/></svg>';
+const BK = {open: false, p: 0, data: {}, from: null, resume: false, skipPop: false, exp: new Set(), anim: null};
+const minShort = ms => Math.max(1, Math.round(ms / 60000)) + ' min';
+function dScenes(d){
+  const out = [];
+  ['intro', 'play'].forEach(r => { const bs = dBeats(d, r); let c = null;
+    bs.forEach((b, i) => { if (b.chapter || !c){ c = {r, i, title: b.chapter || (r === 'intro' ? 'Intro' : 'Play'), ms: 0}; out.push(c); } c.ms += beatPlan(b); }); });
+  let at = 0; out.forEach(c => { c.at = at; at += c.ms; });
+  return out;
+}
+const dTotal = d => dScenes(d).reduce((s, c) => s + c.ms, 0);
+function bkPages(){
+  const ps = parts(), out = [{type: 'index'}];
+  ps.forEach((x, n) => out.push({type: 'ch', k: x.k, n: n + 1, s: x.s}));
+  STORY.stops.forEach((s, k) => { if (s.soon && !s.file) out.push({type: 'soon', k, n: ps.length + (out.filter(o => o.type === 'soon').length) + 1, s}); });
+  return out;
+}
+const bkPageOf = k => { const i = bkPages().findIndex(p => p.k === k); return i < 0 ? 0 : i; };
+function bkState(x){
+  const d = BK.data[x.k], tot = d ? dTotal(d) : 0, seen = seenGet(x.s.year), sc = d ? dScenes(d) : [];
+  const all = sc.length > 0 && sc.every(c => seen.has(c.r + ':' + c.i)), done = all || partDone(x.s.year);
+  let p = null; try { p = JSON.parse(localStorage.getItem(posKey(x.s.year)) || 'null'); } catch(e){}
+  if (p && !((p.r === 'intro' || p.r === 'play') && Number.isInteger(p.i) && p.t >= 0 && dBeats(d, p.r).length > p.i)) p = null;
+  if (x.k === cur && STOP && STOP.year === x.s.year) p = posGet(x.s.year);
+  return {tot, done, all, seen, p};
+}
+function bkSceneList(x){
+  const d = BK.data[x.k]; if (!d) return '';
+  const now = PLAY && x.k === cur ? {r: PLAY.reel, i: PLAY.i} : null;
+  const sc = dScenes(d), seen = seenGet(x.s.year);
+  return `<ol class="sc">` + sc.map((c, j) => { const nx = sc[j + 1], isNow = now && now.r === c.r && now.i >= c.i && (!nx || nx.r !== c.r || now.i < nx.i), ok = seen.has(c.r + ':' + c.i);
+    const cl = [isNow ? 'now' : '', ok ? 'seen' : ''].filter(Boolean).join(' ');
+    return `<li${cl ? ` class="${cl}"` : ''}><button type="button" data-act="scene" data-k="${x.k}" data-r="${c.r}" data-i="${c.i}" aria-label="${esc(c.title)}, starts at ${mss(c.at)}${ok ? ', watched' : ''}"><span class="n">${j + 1}</span><span class="t">${c.r === 'intro' ? '<span class="tag">Intro</span>' : ''}${esc(c.title)}</span><span class="m">${mss(c.at)}</span><span class="ok" aria-hidden="true">${ok ? '✓' : ''}</span></button></li>`; }).join('') + '</ol>';
+}
+function bkPageHtml(i){
+  const P = bkPages(), pg = P[i]; if (!pg) return '';
+  if (pg.type === 'index'){
+    const rows = P.slice(1).map((x, j) => {
+      if (x.type === 'soon') return `<li class="soon"><div class="row"><button type="button" class="acc" data-act="page" data-p="${j + 1}"><span class="cn">Ch ${x.n}</span><span class="ct">${esc(x.s.title)}<small>${esc(x.s.label)} · coming soon</small></span></button><button type="button" class="pg" data-act="page" data-p="${j + 1}" aria-label="Turn to the page for Chapter ${x.n}">Page ›</button></div></li>`;
+      const st = bkState(x), open = BK.exp.has(String(x.k));
+      return `<li><div class="row"><button type="button" class="acc" data-act="acc" data-x="${x.k}" aria-expanded="${open}" aria-controls="bkacc${x.k}"><span class="cn">Ch ${x.n}</span><span class="ct">${esc(x.s.title)}${st.all ? ' <span class="cok" aria-label="all scenes watched">✓</span>' : ''}<small>${esc(x.s.years || x.s.label)}${st.tot ? ' · ' + minShort(st.tot) : ''}${st.done ? ' · <span class="bktick">✓ watched</span>' : st.p ? ' · in progress' : ''}</small></span><span class="ar" aria-hidden="true">▾</span></button>` +
+        `<button type="button" class="pg" data-act="page" data-p="${j + 1}" aria-label="Turn to the page for Chapter ${x.n}">Page ›</button></div>` +
+        `<div class="body" id="bkacc${x.k}"${open ? '' : ' hidden'}>${bkSceneList(x)}</div></li>`; }).join('');
+    const io = BK.exp.has('intro');
+    return `<div class="bkpg idx"><div class="k">Index</div><h2>${esc(STORY.book || 'Book One')}: ${esc(STORY.title)}</h2>` +
+      `<p class="yrs">Tap a chapter to see its scenes, or turn to its page.</p>` + `<label class="skipi"><input type="checkbox" data-skipintro${SKIPI ? ' checked' : ''}> Skip chapter intros <small>start at the first scene</small></label>` + `<ul class="ix">` +
+      `<li class="bkintro"><div class="row"><button type="button" class="acc" data-act="acc" data-x="intro" aria-expanded="${io}" aria-controls="bkaccintro"><span class="cn" aria-hidden="true">✦</span><span class="ct">${esc(STORY.book || 'Book One')} intro<small>What this book is, before Chapter 1</small></span><span class="ar" aria-hidden="true">▾</span></button></div>` +
+      `<div class="body" id="bkaccintro"${io ? '' : ' hidden'}><p>${esc(STORY.intro)}</p><p>${esc(STORY.perspective || '')}</p><button type="button" data-act="about">About The Long Map ›</button></div></li>` +
+      rows + `</ul></div>`;
+  }
+  if (pg.type === 'soon') return `<div class="bkpg soon"><div class="k">Chapter ${pg.n}</div><h2>${esc(pg.s.title)}</h2><div class="yrs">${esc(pg.s.years || pg.s.label)}</div>` +
+    `<div class="soonflag2">Coming soon</div><p class="sum">${esc(pg.s.summary || (pg.s.soon && pg.s.soon.text) || '')}</p></div>`;
+  const x = pg, d = BK.data[x.k];
+  if (!d) return `<div class="bkpg ch"><div class="k">Chapter ${x.n}</div><h2>${esc(x.s.title)}</h2><p class="yrs">Opening the page…</p></div>`;
+  const st = bkState(x), hasEv = d.events && d.events.length;
+  const prog = st.done ? `<span class="bktick">✓ Watched</span>` : st.p ? `<span>In progress · ${mmss(st.p.t)} of ${mmss(st.tot)}</span><span class="pb"><i style="width:${Math.min(100, Math.round(100 * st.p.t / Math.max(1, st.tot)))}%"></i></span>` : `<span>Not started</span>`;
+  return `<div class="bkpg ch"><div class="k">Chapter ${x.n}</div><h2>${esc(x.s.title)}${st.all ? ' <span class="cok" aria-label="all scenes watched">✓</span>' : ''}</h2><div class="yrs">${esc(x.s.years || x.s.label)} · ${minShort(st.tot)}</div>` +
+    `<p class="sum">${esc(x.s.summary || '')}</p><div class="st">${prog}</div>` +
+    `<div class="acts"><button type="button" class="play" data-act="play" data-k="${x.k}">▶ Play chapter</button>` +
+    (st.p ? `<button type="button" class="resume" data-act="resume" data-k="${x.k}">Resume at ${mmss(st.p.t)}</button>` : '') +
+    (hasEv ? `<button type="button" data-act="read" data-k="${x.k}">Read as fact boxes</button>` : '') +
+    `<button type="button" data-act="explore" data-k="${x.k}">Explore the map</button></div>` + (dBeats(d, 'intro').length ? `<label class="skipi"><input type="checkbox" data-skipintro${SKIPI ? ' checked' : ''}> Skip chapter intros <small>start at the first scene</small></label>` : '') +
+    `<div class="sub">Scenes</div>${bkSceneList(x)}</div>`;
+}
+function bkRender(){
+  const P = bkPages(); BK.p = Math.max(0, Math.min(P.length - 1, BK.p));
+  $('bkpage').innerHTML = bkPageHtml(BK.p); $('bkpage').scrollTop = 0;
+  const pg = P[BK.p];
+  $('bkn').textContent = pg.type === 'index' ? 'Index' : `Chapter ${pg.n} · page ${BK.p} of ${P.length - 1}`;
+  $('bkprev').disabled = BK.p === 0; $('bknext').disabled = BK.p === P.length - 1;
+  $('bkbook').dataset.page = String(BK.p);
+}
+const bkLoad = () => Promise.all(parts().map(x => BK.data[x.k] ? null : getJSON(x.s.file).then(d => { BK.data[x.k] = d; }).catch(() => {})));
+function bkGo(to, animate = true){
+  const P = bkPages(); to = Math.max(0, Math.min(P.length - 1, to));
+  if (BK.anim){ try { BK.anim.finish(); } catch(e){} }
+  if (to === BK.p) return;
+  const fwd = to > BK.p, pg = $('bkpage'), box = $('bkpages');
+  if (!animate || REDUCED() || !pg.animate){ BK.p = to; bkRender(); return; }
+  const t = document.createElement('div'); t.className = 'bkturn'; t.setAttribute('aria-hidden', 'true');
+  let a;
+  if (fwd){
+    // the page turns over to the left, the next one is underneath
+    t.innerHTML = pg.innerHTML; box.append(t); t.scrollTop = pg.scrollTop; BK.p = to; bkRender();
+    a = t.animate([{transform: 'rotateY(0deg)'}, {transform: 'rotateY(-180deg)'}], {duration: 650, easing: 'cubic-bezier(.45,.05,.35,1)'});
+  } else {
+    // the page before comes back over from the left
+    t.innerHTML = bkPageHtml(to); box.append(t); BK.p = to;
+    a = t.animate([{transform: 'rotateY(-180deg)'}, {transform: 'rotateY(0deg)'}], {duration: 650, easing: 'cubic-bezier(.45,.05,.35,1)'});
+  }
+  BK.anim = a;
+  const end = () => { if (BK.anim === a) BK.anim = null; t.remove(); if (!fwd) bkRender(); };
+  a.onfinish = end; a.oncancel = end;
+}
+function bkOpen(from, page){
+  if (BK.open) return;
+  BK.open = true; BK.from = from || document.activeElement; BK.exp = new Set();
+  $('deep').hidden = true;
+  if (PLAY && !PLAY.paused){ BK.resume = true; playPause(true); } else BK.resume = false;
+  const el = $('bkwrap'), bk = $('bkbook'), cv = $('bkcover');
+  $('bkc1').textContent = STORY.book || 'Book One'; $('bkc2').textContent = STORY.title;
+  el.hidden = false; el.style.pointerEvents = ''; el.classList.remove('in'); void el.offsetWidth; el.classList.add('in');
+  BK.p = page == null ? 0 : page; bkRender();
+  bkLoad().then(() => { if (BK.open && !BK.anim) { const s = $('bkpage').scrollTop; bkRender(); $('bkpage').scrollTop = s; } });
+  try { history.pushState({tlmBook: 1}, ''); } catch(e){}
+  document.body.classList.add('bookopen');
+  const s = from && from.getBoundingClientRect ? from.getBoundingClientRect() : null;
+  if (REDUCED() || !bk.animate || !s || !s.width){ cv.hidden = true; }
+  else {
+    // the little book grows out of the button, then its cover turns open
+    cv.hidden = false;
+    const r = bk.getBoundingClientRect(), k = Math.max(0.06, s.width / r.width);
+    const dx = s.left + s.width / 2 - (r.left + r.width / 2), dy = s.top + s.height / 2 - (r.top + r.height / 2);
+    bk.animate([{transform: `translate(${dx}px, ${dy}px) scale(${k})`, opacity: .6}, {transform: 'none', opacity: 1}], {duration: 420, easing: 'cubic-bezier(.2,.7,.2,1)'});
+    const ca = cv.animate([{transform: 'rotateY(0deg)'}, {transform: 'rotateY(0deg)', offset: .4}, {transform: 'rotateY(-178deg)'}], {duration: 1100, easing: 'ease-in-out'});
+    ca.onfinish = ca.oncancel = () => { cv.hidden = true; };
+  }
+  setTimeout(() => { if (BK.open) $('bkx').focus({preventScroll: true}); }, 40);
+}
+function bkClose(how){
+  if (!BK.open) return;
+  BK.open = false; document.body.classList.remove('bookopen');
+  if (BK.anim){ try { BK.anim.finish(); } catch(e){} }
+  if (how !== 'pop' && history.state && history.state.tlmBook){ BK.skipPop = true; try { history.back(); } catch(e){ BK.skipPop = false; } }
+  const el = $('bkwrap'), bk = $('bkbook'); el.style.pointerEvents = 'none';
+  const end = () => { if (!BK.open){ el.hidden = true; el.style.pointerEvents = ''; } };
+  if (REDUCED() || !bk.animate) end();
+  else { const a = bk.animate([{transform: 'none', opacity: 1}, {transform: 'scale(.82)', opacity: 0}], {duration: 200, easing: 'ease-in'}); a.onfinish = a.oncancel = end; }
+  if (BK.resume && how !== 'nav' && PLAY) playPause(false);
+  BK.resume = false;
+  if (how !== 'nav' && BK.from && BK.from.focus && document.contains(BK.from)) BK.from.focus({preventScroll: true});
+}
+addEventListener('popstate', () => { if (BK.skipPop){ BK.skipPop = false; return; } if (BK.open) bkClose('pop'); });
+// a film that is playing is set aside (no zoom-out) when the book starts another line
+function filmHalt(){
+  if (!PLAY) return;
+  cancelAnimationFrame(PLAY.raf); if (PLAY.audio){ PLAY.audio.onended = PLAY.audio.onerror = null; PLAY.audio.pause(); }
+  if (SND.ctx && SND.ctx.state === 'suspended' && SND.on) SND.ctx.resume().catch(() => {});
+  sndStop(0.4); PLAY = null; hideChoice(); vigHide(true); $('chapcard').hidden = true; clearTimeout(chapT);
+}
+// play chapter k from a line (r, i), or from where it was left (r == null), inside the tap so sound and fullscreen are allowed
+async function bookPlay(k, r, i){
+  sndEnsure(); filmHalt();
+  if (k !== cur || MODE !== 'stop'){ enterCine(); await go(k); $('cyear').textContent = $('pill').textContent; if (MODE !== 'stop') return exitCine(); }
+  if (r == null){ const p = posGet(STOP.year); if (p){ r = p.r; i = p.i; } else { r = chapReel(); i = 0; } }
+  if (r === 'start'){ r = chapReel(); i = 0; }
+  if (!reelBeats(r)) return exitCine();
+  return playStart(r, +i || 0);
+}
+async function bookShow(k, what){
+  if (PLAY || k !== cur || MODE !== 'stop') await go(k);
+  const S = steps(); showStep(what === 'read' ? 1 : S.length - 1);
+  if (NARROW()) setTimeout(() => $('ev').scrollIntoView({block: 'start', behavior: REDUCED() ? 'auto' : 'smooth'}), CINE_MS + 80);
+}
+$('bkpages').addEventListener('click', e => {
+  const b = e.target.closest && e.target.closest('[data-act]'); if (!b) return;
+  e.stopPropagation();
+  const a = b.dataset.act, k = +b.dataset.k;
+  if (a === 'acc'){ const x = b.dataset.x, open = b.getAttribute('aria-expanded') !== 'true', body = $('bkacc' + x);
+    b.setAttribute('aria-expanded', String(open)); if (body) body.hidden = !open; open ? BK.exp.add(x) : BK.exp.delete(x); return; }
+  if (a === 'page') return bkGo(+b.dataset.p);
+  if (a === 'about'){ bkClose('nav'); if (window.__intro) window.__intro.show(); return; }
+  if (a === 'resume' && PLAY && k === cur){ bkClose(); return; }   // the film that was paused for the book goes on
+  bkClose('nav');
+  if (a === 'play') bookPlay(k, 'start', 0);
+  else if (a === 'resume') bookPlay(k, null);
+  else if (a === 'scene') bookPlay(k, b.dataset.r, +b.dataset.i);
+  else if (a === 'read' || a === 'explore') bookShow(k, a);
+});
+$('bkpages').addEventListener('change', e => { if (e.target.matches && e.target.matches('input[data-skipintro]')) setSkipIntro(e.target.checked); });
+$('bkprev').onclick = e => { e.stopPropagation(); bkGo(BK.p - 1); };
+$('bknext').onclick = e => { e.stopPropagation(); bkGo(BK.p + 1); };
+$('bkribbon').onclick = e => { e.stopPropagation(); bkGo(0); };
+$('bkx').onclick = e => { e.stopPropagation(); bkClose(); };
+$('bkback').onclick = e => { e.stopPropagation(); bkClose(); };
+// swipe: a mostly sideways drag on the page turns it (vertical drags scroll the page)
+(() => { let sx = 0, sy = 0, st = 0, id = null;
+  const P = $('bkpages');
+  P.addEventListener('pointerdown', e => { id = e.pointerId; sx = e.clientX; sy = e.clientY; st = performance.now(); });
+  P.addEventListener('pointerup', e => { if (e.pointerId !== id) return; id = null;
+    const dx = e.clientX - sx, dy = e.clientY - sy;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > 1.5 * Math.abs(dy) && performance.now() - st < 900){ BK.swiped = performance.now(); bkGo(BK.p + (dx < 0 ? 1 : -1)); } });
+  P.addEventListener('pointercancel', () => { id = null; });
+  // a swipe must not also press the button it started on
+  P.addEventListener('click', e => { if (BK.swiped && performance.now() - BK.swiped < 400){ e.stopPropagation(); e.preventDefault(); } }, true);
+})();
+document.addEventListener('keydown', e => {
+  if (!BK.open) return;
+  if (e.key === 'ArrowRight'){ e.preventDefault(); bkGo(BK.p + 1); }
+  else if (e.key === 'ArrowLeft'){ e.preventDefault(); bkGo(BK.p - 1); }
+  else if (e.key === 'Escape'){ e.preventDefault(); bkClose(); }
+  else if (e.key === 'Tab'){ const f = [...$('bkbook').querySelectorAll('button:not([disabled])')].filter(b => b.offsetParent && !b.closest('[hidden]'));
+    if (!f.length) return; const i = f.indexOf(document.activeElement); e.preventDefault(); f[(i < 0 ? 0 : i + (e.shiftKey ? f.length - 1 : 1)) % f.length].focus(); }
+  else if (e.key === ' ' && !(e.target.closest && e.target.closest('button'))) e.preventDefault();
+  else return;
+  e.stopPropagation();
+}, true);
+const bkHere = () => MODE === 'soon' ? bkPageOf(cur) : MODE === 'stop' ? bkPageOf(cur) : 0;
+$('capbook').onclick = e => { e.stopPropagation(); bkOpen(e.currentTarget, bkHere()); };
+$('bookbtn').onclick = e => { e.stopPropagation(); bkOpen(e.currentTarget, bkHere()); };
+
 window.__app = { camTarget, vigSlot: () => VIGSLOT, openObj, closeObj, showStep, go, playStart, playPause, playStop, seek: i => PLAY && seek(i), vigZoom,
   get step(){ return step; }, get K(){ return K; }, get open(){ return openId; }, get mode(){ return MODE; }, get cur(){ return cur; },
   get explored(){ return [...EXPLORED]; }, get keys(){ return [...KEYSET]; },
@@ -1350,11 +1717,16 @@ window.__app = { camTarget, vigSlot: () => VIGSLOT, openObj, closeObj, showStep,
   get cc(){ return CC; }, setCC, enterCine, exitCine, IDLE_MS,
   get snd(){ return {on: SND.on, ctx: SND.ctx ? SND.ctx.state : null, phase: SND.phase, target: SND.target, gain: SND.bus ? SND.bus.gain.value : null,
     amb: SND.amb ? SND.amb.name : null, shots: SND.shots.map(o => o.name), loaded: Object.keys(SND.buf).sort()}; }, setSnd,
-  plan: i => PLAY ? beatPlan(PLAY.beats[i]) : null, gap: i => PLAY ? breathMs(PLAY.beats[i]) : null, get audioEl(){ return PLAY ? PLAY.audio : null; }, get audioSkips(){ return PLAY ? PLAY.audioSkips || 0 : 0; }, STALL_MS, get clock(){ return PLAY ? PLAY.clock : null; } };
+  plan: i => PLAY ? beatPlan(PLAY.beats[i]) : null, gap: i => PLAY ? breathMs(PLAY.beats[i]) : null, get audioEl(){ return PLAY ? PLAY.audio : null; }, get audioSkips(){ return PLAY ? PLAY.audioSkips || 0 : 0; }, STALL_MS, get clock(){ return PLAY ? PLAY.clock : null; },
+  capFit, get capH(){ return parseFloat(getComputedStyle($('capsub')).getPropertyValue('--caph')) || 0; },
+  get time(){ return $('captime').textContent; }, timeRef: () => timeRef().text, lineRef: ln => lineRef(String(ln)).text, get lastRef(){ return LASTREF ? LASTREF.text : null; }, reportNow: () => reportNow(), reportFor: ln => reportHref(ln == null ? timeRef() : lineRef(String(ln))),
+  get deep(){ return DEEPAT; }, bookPlay, get skipIntro(){ return SKIPI; }, setSkipIntro, capMenu,
+  get book(){ const P = bkPages(); return {open: BK.open, page: BK.p, pages: P.length, type: P[BK.p] && P[BK.p].type, k: P[BK.p] && P[BK.p].k, turning: !!BK.anim}; },
+  seenKey, seen: y => [...seenGet(y == null ? STOP.year : y)], bookOpen: p => bkOpen($('bookbtn'), p), bookClose: () => bkClose(), bookGo: p => bkGo(p) };
 
 // donations: hidden until data/site.json has a donateUrl (https only)
 // "Report an error" works the same way with reportUrl
-getJSON('data/site.json').then(c => { [['donateUrl', 'donate'], ['reportUrl', 'report']].forEach(([k, id]) => { const u = c && c[k]; if (typeof u === 'string' && /^https:\/\//.test(u)){ const a = $(id); a.href = u; a.hidden = false; } }); }).catch(() => {});
+getJSON('data/site.json').then(c => { SITE = c || {}; [['donateUrl', 'donate'], ['reportUrl', 'report']].forEach(([k, id]) => { const u = c && c[k]; if (typeof u === 'string' && /^https:\/\//.test(u)){ const a = $(id); a.href = id === 'report' && typeof c.reportPost === 'string' && /^https:\/\//.test(c.reportPost) ? c.reportPost : u; a.hidden = false; } }); if (!(c && c.reportUrl) && c && typeof c.reportPost === 'string' && /^https:\/\//.test(c.reportPost)){ $('report').href = c.reportPost; $('report').hidden = false; } }).catch(() => {});
 (async function init(){
   const [base, story, srcs, lib] = await Promise.all([getJSON('data/base.topo.json'), getJSON(STORY_URL), getJSON('data/sources.json'), getJSON('data/objects/near-east.json')]);
   STORY = story; SRC = srcs; OBJS = lib.objects; OBJS.forEach(o => OBJ[o.id] = o);
@@ -1373,6 +1745,8 @@ getJSON('data/site.json').then(c => { [['donateUrl', 'donate'], ['reportUrl', 'r
   placeObjects();
   fit();
   buildTrack();
-  await go(STORY.stops.findIndex(s => s.file));
+  const dk = DEEP && parts()[DEEP.ch - 1];
+  await go(dk ? dk.k : STORY.stops.findIndex(s => s.file));
+  if (DEEP) deepOpen();
 })();
 addEventListener('resize', () => { if (CINE){ if (CINE.full) refitKeep(); } else { fit(); redrawZones(); } });
