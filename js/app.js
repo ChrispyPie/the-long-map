@@ -1422,11 +1422,11 @@ function timeTag(force){
   if (force || e.textContent !== s){ e.textContent = s; e.setAttribute('aria-label', 'Chapter time ' + s + '. Copy a link to this moment'); }
 }
 const snip = (t, n = 80) => { t = String(t || '').replace(/\s+/g, ' ').trim(); if (t.length <= n) return t; const c = t.slice(0, n); const w = c.lastIndexOf(' '); return (w > n * 0.6 ? c.slice(0, w) : c).replace(/[\s,;:.]+$/, '') + '…'; };
-function timeRef(){ const n = chapNo(cur), t = timeNow(); return {text: `The Long Map – Chapter ${n} at ${mss(t)} ${SITE_URL}?ch=${n}&t=${Math.floor(t / 1000)}`, ref: `Chapter ${n} at ${mss(t)}`}; }
+function timeRef(){ const n = chapNo(cur), t = timeNow(); return {text: `The Long Map – Chapter ${n} at ${mss(t)} ${SITE_URL}?ch=${n}&t=${Math.floor(t / 1000)}`, ref: `Chapter ${n} at ${mss(t)}`, short: `Correction for Chapter ${n} at ${mss(t)}: ${SITE_URL}?ch=${n}&t=${Math.floor(t / 1000)}`}; }
 function lineRef(ln){
   const n = chapNo(cur), r = /^i/.test(ln) ? 'intro' : 'play', i = parseInt(String(ln).replace(/^i/, ''), 10) - 1;
   const b = (reelBeats(r) || [])[i], x = b && b.steps.find(y => y.type === 'caption');
-  return {text: `The Long Map – Chapter ${n}, line #${ln}: "${snip(x ? x.display || x.text : '')}" ${SITE_URL}?ch=${n}&line=${ln}`, ref: `Chapter ${n}, line #${ln}`};
+  return {text: `The Long Map – Chapter ${n}, line #${ln}: "${snip(x ? x.display || x.text : '')}" ${SITE_URL}?ch=${n}&line=${ln}`, ref: `Chapter ${n}, line #${ln}`, short: `Correction for Chapter ${n}, #line ${ln}: ${SITE_URL}?ch=${n}&line=${ln}`};
 }
 function clipCopy(s){
   const old = () => { try { const t = document.createElement('textarea'); t.value = s; t.setAttribute('readonly', '');
@@ -1445,7 +1445,7 @@ function toast(msg, act){
 }
 function reportHref(ref){
   const u = SITE.reportUrl; if (typeof u !== 'string' || !/^https:\/\//.test(u)) return null;
-  if (u.includes('{ref}')) return u.split('{ref}').join(encodeURIComponent(ref.text));
+  if (u.includes('{ref}')) return u.split('{ref}').join(encodeURIComponent(ref.short || ref.text));   // e.g. a reply to the pinned corrections post on X (short text, well under 280)
   if (/github\.com\/[^/]+\/[^/]+\/issues\/new/.test(u)) return u + (u.includes('?') ? '&' : '?') + 'title=' + encodeURIComponent('Error: ' + ref.ref) + '&body=' + encodeURIComponent(ref.text + '\n\nWhat is wrong:\n');
   return u;   // other forms: the reference is on the clipboard already
 }
@@ -1458,6 +1458,11 @@ function refCopy(ref, ev){
   });
 }
 let LASTREF = null;
+// the footer's "Report an error": in the film it reports the moment on screen, otherwise the chapter; without a
+// reportUrl it falls back to reportPost (the pinned corrections post)
+function chapRef(){ const n = chapNo(cur); return n > 0 ? {text: `${SITE_URL}?ch=${n}`, ref: `Chapter ${n}`, short: `Correction for Chapter ${n}: ${SITE_URL}?ch=${n}`} : {text: SITE_URL, ref: 'The Long Map', short: `Correction: ${SITE_URL}`}; }
+function reportNow(){ return reportHref(PLAY && STOP ? timeRef() : chapRef()) || (typeof SITE.reportPost === 'string' && /^https:\/\//.test(SITE.reportPost) ? SITE.reportPost : null); }
+$('report').addEventListener('click', () => { let h = null; try { h = reportNow(); } catch(e){} if (h) $('report').href = h; });
 $('captime').onclick = e => refCopy(timeRef(), e);
 $('captext').addEventListener('click', e => { const b = e.target.closest && e.target.closest('.lnum'); if (b) refCopy(lineRef(b.dataset.ln), e); });
 
@@ -1714,14 +1719,14 @@ window.__app = { camTarget, vigSlot: () => VIGSLOT, openObj, closeObj, showStep,
     amb: SND.amb ? SND.amb.name : null, shots: SND.shots.map(o => o.name), loaded: Object.keys(SND.buf).sort()}; }, setSnd,
   plan: i => PLAY ? beatPlan(PLAY.beats[i]) : null, gap: i => PLAY ? breathMs(PLAY.beats[i]) : null, get audioEl(){ return PLAY ? PLAY.audio : null; }, get audioSkips(){ return PLAY ? PLAY.audioSkips || 0 : 0; }, STALL_MS, get clock(){ return PLAY ? PLAY.clock : null; },
   capFit, get capH(){ return parseFloat(getComputedStyle($('capsub')).getPropertyValue('--caph')) || 0; },
-  get time(){ return $('captime').textContent; }, timeRef: () => timeRef().text, lineRef: ln => lineRef(String(ln)).text, get lastRef(){ return LASTREF ? LASTREF.text : null; },
+  get time(){ return $('captime').textContent; }, timeRef: () => timeRef().text, lineRef: ln => lineRef(String(ln)).text, get lastRef(){ return LASTREF ? LASTREF.text : null; }, reportNow: () => reportNow(), reportFor: ln => reportHref(ln == null ? timeRef() : lineRef(String(ln))),
   get deep(){ return DEEPAT; }, bookPlay, get skipIntro(){ return SKIPI; }, setSkipIntro, capMenu,
   get book(){ const P = bkPages(); return {open: BK.open, page: BK.p, pages: P.length, type: P[BK.p] && P[BK.p].type, k: P[BK.p] && P[BK.p].k, turning: !!BK.anim}; },
   seenKey, seen: y => [...seenGet(y == null ? STOP.year : y)], bookOpen: p => bkOpen($('bookbtn'), p), bookClose: () => bkClose(), bookGo: p => bkGo(p) };
 
 // donations: hidden until data/site.json has a donateUrl (https only)
 // "Report an error" works the same way with reportUrl
-getJSON('data/site.json').then(c => { SITE = c || {}; [['donateUrl', 'donate'], ['reportUrl', 'report']].forEach(([k, id]) => { const u = c && c[k]; if (typeof u === 'string' && /^https:\/\//.test(u)){ const a = $(id); a.href = u; a.hidden = false; } }); }).catch(() => {});
+getJSON('data/site.json').then(c => { SITE = c || {}; [['donateUrl', 'donate'], ['reportUrl', 'report']].forEach(([k, id]) => { const u = c && c[k]; if (typeof u === 'string' && /^https:\/\//.test(u)){ const a = $(id); a.href = id === 'report' && typeof c.reportPost === 'string' && /^https:\/\//.test(c.reportPost) ? c.reportPost : u; a.hidden = false; } }); if (!(c && c.reportUrl) && c && typeof c.reportPost === 'string' && /^https:\/\//.test(c.reportPost)){ $('report').href = c.reportPost; $('report').hidden = false; } }).catch(() => {});
 (async function init(){
   const [base, story, srcs, lib] = await Promise.all([getJSON('data/base.topo.json'), getJSON(STORY_URL), getJSON('data/sources.json'), getJSON('data/objects/near-east.json')]);
   STORY = story; SRC = srcs; OBJS = lib.objects; OBJS.forEach(o => OBJ[o.id] = o);

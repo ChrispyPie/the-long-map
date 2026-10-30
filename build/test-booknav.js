@@ -44,7 +44,14 @@ const D = process.env.SHOTS || 'screens';
     const tr = await clip();
     ok(name + ' time copy text ' + tr, /^The Long Map – Chapter 4 at \d+:\d\d https:\/\/thelongmap\.com\/\?ch=4&t=\d+$/.test(tr || ''));
     ok(name + ' Copied ✓ toast', await p.evaluate(() => !document.getElementById('toast').hidden && /Copied ✓/.test(document.getElementById('toast').textContent)));
-    ok(name + ' no report button while reportUrl is null', await p.evaluate(() => !document.querySelector('#toast .tbtn')));
+    ok(name + ' toast offers "Report an error here"', await p.evaluate(() => { const t = document.querySelector('#toast .tbtn'); return !!t && /Report an error here/.test(t.textContent); }));
+    { const X = 'https://x.com/intent/post?in_reply_to=2116194386589397340&text=';
+      const rl = await p.evaluate(() => __app.reportFor(68)), rt = await p.evaluate(() => __app.reportFor()), rf = await p.evaluate(() => __app.reportNow());
+      const dec = h => h && h.startsWith(X) ? decodeURIComponent(h.slice(X.length)) : null;
+      ok(name + ' report for a line replies to the pinned post: ' + dec(rl), dec(rl) === 'Correction for Chapter 4, #line 68: https://thelongmap.com/?ch=4&line=68');
+      ok(name + ' report for the time: ' + dec(rt), /^Correction for Chapter 4 at \d+:\d\d: https:\/\/thelongmap\.com\/\?ch=4&t=\d+$/.test(dec(rt) || '') && dec(rt).length < 120);
+      ok(name + ' footer report link follows the moment', /^Correction for Chapter 4 at /.test(dec(rf) || ''));
+      ok(name + ' footer "Report an error" is shown', await p.evaluate(() => !document.getElementById('report').hidden)); }
     await p.evaluate(() => __app.wake());
     await (mobile ? p.tap('#captext .lnum') : p.click('#captext .lnum')); await p.waitForTimeout(200);
     const lr = await clip();
