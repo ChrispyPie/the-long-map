@@ -2,7 +2,7 @@
 // recording, no digits or brackets in spoken text, every Bible ref cites the Bible, the Play runs to c. 930 BC and
 // ends on the teaser for the next chapter. Browser (390x844): the opener and the whole Play run start to finish
 // (speed 8, voice on), every line's recording is requested, the split draws Israel and Judah, and the end is the
-// c. 930 BC 'coming soon' state.
+// c. 930 BC intro (Chapter 4) with a 'Continue to Chapter 4' button.
 // Usage: node build/test-chapter3.js [url] [noshots]; SHOTS=dir for ch3_*.png screenshots.
 const { chromium } = require('playwright');
 const fs = require('fs'), path = require('path');
@@ -19,7 +19,7 @@ const ROOT = path.join(__dirname, '..');
   const caps = b => b.steps.filter(x => x.type === 'caption');
   const s1000 = story.stops.find(s => s.year === -1000), s930 = story.stops.find(s => s.year === -930);
   ok('1000 is a live stop with its own map', s1000 && s1000.file === 'data/stories/jews/1000bc.json' && s1000.era === 'data/eras/1000bc.json' && fs.existsSync(path.join(ROOT, s1000.era)));
-  ok('930 is the next, coming soon stop', s930 && !s930.file && s930.soon && data.play.to === -930);
+  ok('930 is the next, live stop (Chapter 4)', s930 && s930.file === 'data/stories/jews/930bc.json' && !s930.soon && data.play.to === -930);
   ok('7 opener lines, 61 Play lines', IN.length === 7 && PL.length === 61);
   const sizes = all.map(b => b.audio && fs.existsSync(path.join(ROOT, b.audio)) ? fs.statSync(path.join(ROOT, b.audio)).size : -1);
   ok('every line has its recording (' + Math.round(sizes.reduce((a, s) => a + s, 0) / 1024) + ' kB)', sizes.every(s => s > 4000 && s < 80000));
@@ -42,7 +42,7 @@ const ROOT = path.join(__dirname, '..');
     await p.goto(url, {waitUntil: 'networkidle'}); await p.waitForTimeout(1500);
     await p.evaluate(() => __app.go(2)); await p.waitForTimeout(1600);
     let s = await p.evaluate(() => ({mode: __app.mode, pill: document.getElementById('pill').textContent, ammon: document.querySelectorAll('path.z-ammon').length, parts: __app.parts().length}));
-    ok(name + ' timeline to c. 1000 BC: live stop, Chapter 3 ' + JSON.stringify(s), s.mode === 'stop' && /1000/.test(s.pill) && s.ammon >= 1 && s.parts === 3);
+    ok(name + ' timeline to c. 1000 BC: live stop, Chapter 3 ' + JSON.stringify(s), s.mode === 'stop' && /1000/.test(s.pill) && s.ammon >= 1 && s.parts === 4);
     await shot('intro');
     await p.tap('#gostory'); await p.waitForTimeout(2000);
     s = await p.evaluate(() => ({play: __app.play, voice: __app.voice}));
@@ -68,8 +68,8 @@ const ROOT = path.join(__dirname, '..');
     const miss = [...Array(7).keys()].map(i => 'jews-1000-in-0' + (i + 1)).concat([...Array(61).keys()].map(i => 'jews-1000-play-' + String(i + 1).padStart(2, '0'))).filter(f => !req.has(f));
     ok(name + ' every line\'s recording requested (' + req.size + ') missing ' + JSON.stringify(miss), miss.length === 0);
     await p.waitForTimeout(2500);
-    s = await p.evaluate(() => ({mode: __app.mode, pill: document.getElementById('pill').textContent, flag: !!document.querySelector('.soonflag'), israel: document.querySelectorAll('path.added.z-israel').length, judah: document.querySelectorAll('path.added.z-judah').length, body: document.getElementById('evbody').textContent.slice(0, 300)}));
-    ok(name + ' Play ends on c. 930 BC coming soon with Israel and Judah ' + JSON.stringify({mode: s.mode, pill: s.pill, flag: s.flag, israel: s.israel, judah: s.judah}), s.mode === 'soon' && /930/.test(s.pill) && s.flag && s.israel === 1 && s.judah === 1 && /Israel and Judah/.test(s.body));
+    s = await p.evaluate(() => ({mode: __app.mode, pill: document.getElementById('pill').textContent, flag: !!document.querySelector('.soonflag'), israel: document.querySelectorAll('path.z-israel').length, judah: document.querySelectorAll('path.z-judah').length, btn: (document.getElementById('gonextch') || {}).textContent}));
+    ok(name + ' Play ends on the c. 930 BC intro with "Continue to Chapter 4", Israel and Judah on its map ' + JSON.stringify(s), s.mode === 'stop' && /930/.test(s.pill) && !s.flag && s.israel >= 1 && s.judah >= 1 && /Continue to Chapter 4/.test(s.btn || ''));
     await shot('end930');
     ok(name + ' Chapter 3 counted as watched', await p.evaluate(() => __app.parts()[2].done));
   } catch (e) { ok(name + ' ran: ' + e.message.split('\n')[0], false); }

@@ -9,6 +9,8 @@ Outputs:
   data/stories/jews/1150bc.json  the c. 1150 BC stop: opening film, explore keys and Play to c. 1000 BC
   data/eras/1000bc.json          c. 1000 BC: the c. 1150 BC layer + dashed Ammon, Moab and Edom
   data/stories/jews/1000bc.json  the c. 1000 BC stop ("Chapter 3"): opening film, fact boxes, explore keys and Play to c. 930 BC
+  data/eras/930bc.json           c. 930 BC: the c. 1000 BC layer with the hill country as two kingdoms, Israel and Judah
+  data/stories/jews/930bc.json   the c. 930 BC stop ("Chapter 4"): opening film, fact boxes, explore keys and Play to 841 BC
 """
 import json, os, sys
 sys.path.insert(0, os.path.dirname(__file__))
@@ -162,10 +164,21 @@ z1000 = dict(z1150, ammon="ammon", moab="moab", edom="edom")
 l1000 = dict(l1150, **{z: v[2] for z, v in NEIGH.items()})
 zl1000 = dict(zl1150, **{z: v[3] for z, v in NEIGH.items()})
 era1000 = {"year":-1000,"label":"c. 1000 BC","zones":{"type":"FeatureCollection","features":f1000},"zoneObjects":z1000,"labelAt":l1000,"zoneLabels":zl1000,"note":NOTE}
-stop = story_jews.STOP; stop1150 = story_jews.STOP1150; stop1000 = story_jews.STOP1000
+# c. 930 BC: the c. 1000 BC map with the hill country redrawn as the two kingdoms, exactly as the end of the
+# Chapter 3 Play left it (ISRAEL north, JUDAH south, a small gap just north of Jerusalem, dashed edges)
+import narration_jews_1000 as N1000
+f930 = [dict(f) for f in f1000 if f["properties"]["zone"] != "israel"] + [
+ {"type":"Feature","properties":{"zone":"israel","certainty":"people","kingdom":True,"part":"Kingdom of Israel, the north (drawn for c. 930 BC; borders uncertain)"},"geometry":{"type":"Polygon","coordinates":[N1000.NORTH]}},
+ {"type":"Feature","properties":{"zone":"judah","certainty":"people","kingdom":True,"part":"Kingdom of Judah, the south (drawn for c. 930 BC; borders uncertain)"},"geometry":{"type":"Polygon","coordinates":[N1000.SOUTH]}}]
+z930 = dict(z1000, israel="israelk", judah="judah")
+l930 = dict(l1000, israel=[35.24,32.22], judah=[35.13,31.62])
+zl930 = dict(zl1000, israel="ISRAEL", judah="JUDAH")
+era930 = {"year":-930,"label":"c. 930 BC","zones":{"type":"FeatureCollection","features":f930},"zoneObjects":z930,"labelAt":l930,"zoneLabels":zl930,"note":NOTE}
+stop = story_jews.STOP; stop1150 = story_jews.STOP1150; stop1000 = story_jews.STOP1000; stop930 = story_jews.STOP930
 check_stop(stop, era, "jews-1207")
 check_stop(stop1150, era1150, "jews-1150")
 check_stop(stop1000, era1000, "jews-1000")
+check_stop(stop930, era930, "jews-930")
 def w(p, d):
     os.makedirs(os.path.dirname(p), exist_ok=True)
     json.dump(d, open(p,"w"), ensure_ascii=False, separators=(",",":"))
@@ -175,11 +188,13 @@ w("data/objects/near-east.json", {"library":"near-east","note":"Shared by all st
 w("data/eras/1207bc.json", era)
 w("data/eras/1150bc.json", era1150)
 w("data/eras/1000bc.json", era1000)
+w("data/eras/930bc.json", era930)
 w("data/stories/jews/story.json", story_jews.STORY)
 w("data/stories/jews/1207bc.json", stop)
 w("data/stories/jews/1150bc.json", stop1150)
 w("data/stories/jews/1000bc.json", stop1000)
-for st in (stop, stop1150, stop1000):
+w("data/stories/jews/930bc.json", stop930)
+for st in (stop, stop1150, stop1000, stop930):
     play, tin = st["play"], st["transitionIn"]
     print(st["label"], "events", len(st["events"]), "play beats", len(play["beats"]), "words", play["words"], "voice min", round(sum(b.get("audioMs", b["duration"])+b["pauseAfter"] for b in play["beats"])/60000, 1),
           "opening beats", len(tin["beats"]) if isinstance(tin, dict) else 0, "explore keys", len(st["explore"]["key"]))

@@ -10,14 +10,15 @@ make_data.py uses ms as the line's real length and refuses lines whose text no l
 """
 import hashlib, json, os, subprocess, sys, time, urllib.request
 sys.path.insert(0, os.path.dirname(__file__))
-import narration_jews_1207 as N, narration_jews_1150 as N1150, narration_jews_1000 as N1000
+import narration_jews_1207 as N, narration_jews_1150 as N1150, narration_jews_1000 as N1000, narration_jews_930 as N930
 VOICE = "VC6vCXhVaI8BZefRtXZV"; MODEL = "eleven_multilingual_v2"; FMT = "mp3_22050_32"
 SETTINGS = {"stability": 0.32, "similarity_boost": 0.75, "style": 0.47, "use_speaker_boost": True, "speed": 1.0}
 OUT = "assets/narration"; IDX = f"{OUT}/index.json"
 # reel name -> (narration module, beats); the reel name is the mp3 file prefix
 REELS = {"jews-1207-in": (N, N.INTRO_BEATS), "jews-1207-play": (N, N.PLAY),
          "jews-1150-in": (N1150, N1150.INTRO_BEATS), "jews-1150-play": (N1150, N1150.PLAY),
-         "jews-1000-in": (N1000, N1000.INTRO_BEATS), "jews-1000-play": (N1000, N1000.PLAY)}
+         "jews-1000-in": (N1000, N1000.INTRO_BEATS), "jews-1000-play": (N1000, N1000.PLAY),
+         "jews-930-in": (N930, N930.INTRO_BEATS), "jews-930-play": (N930, N930.PLAY)}
 def sha(t): return hashlib.sha1(t.encode()).hexdigest()[:12]
 def ms(fp):
     r = subprocess.run(["ffprobe","-v","error","-show_entries","format=duration","-of","csv=p=0",fp], capture_output=True, text=True, check=True)
