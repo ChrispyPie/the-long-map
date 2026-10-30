@@ -134,7 +134,7 @@ function filmFree(noCard){
   const top = Math.min(h * .2, cy && cy.offsetHeight ? cy.getBoundingClientRect().bottom - vb.top + 6 : Math.min(h * .06, 46));
   let bot = h - 8;
   if (cap && !cap.hidden && cap.parentNode === $('vp')){
-    for (const el of [$('captext'), $('capmeta')]){ if (el && el.offsetHeight) bot = Math.min(bot, el.getBoundingClientRect().top - vb.top - 6); }
+    for (const el of [$('capbox')]){ if (el && el.offsetHeight) bot = Math.min(bot, el.getBoundingClientRect().top - vb.top - 6); }
   }
   bot = Math.max(bot, top + h * .45);   // a very long line never squeezes the picture below half the screen
   let top2 = top, left = 0, right = w; const sl = noCard ? null : VIGSLOT;
@@ -643,7 +643,7 @@ const STEP = {
     const c = $('cap'); c.classList.remove('in'); void c.offsetWidth; c.classList.add('in');
   }
 };
-// one subtitle: badge + text + its line number ('#57', tap copies a link to the line), and the source line above it.
+// one subtitle: badge + text + its line number ('#57', tap copies a link to the line), and the source line at the bottom of the same box.
 // Subtitles show digits ("display") while the voice reads the words ("text").
 const lineNo = (r, i) => (r === 'intro' ? 'i' : '') + (i + 1);
 function capFill(x, ln){
@@ -652,8 +652,9 @@ function capFill(x, ln){
   $('capsrc').textContent = x.cert === 'scene' ? 'Scene-setting only: no new facts.' : x.cert === 'frame' ? '' : 'Sources: ' + x.src.map(shortSrc).join('; ') + (x.ref ? ' · ' + x.ref : '');
   $('cap').classList.toggle('frame', x.cert === 'frame');
   $('capsrc').title = x.src.map(k => SRC[k] ? SRC[k].t : k).join('\n');
+  $('capsrc').dataset.k = x.cert === 'scene' || x.cert === 'frame' ? '' : x.src.join(' '); $('capsrc').disabled = !$('capsrc').dataset.k;
 }
-// The film's subtitle box keeps ONE height for the whole chapter: the tallest of its lines (opening and Play) at this
+// The film's subtitle box keeps ONE height for the whole chapter: the tallest of its lines (opening and Play), plus one spare line, at this
 // width and text size, measured in place (each line is put in, measured, and the real line put back, all before the
 // next paint). So the controls above it never move from one line to the next. Again on resize, rotation and text size.
 function capFit(){
@@ -661,14 +662,18 @@ function capFit(){
   if (!sub) return 0;
   if (!PLAY || !CINE || !STOP || cap.hidden){ sub.style.removeProperty('--caph'); return 0; }
   const tx = $('captext'), sr = $('capsrc');
-  const keep = {h: tx.innerHTML, s: sr.textContent, t: sr.title, f: cap.classList.contains('frame'), ch: b.classList.contains('choosing'), cc: b.classList.contains('cc-off')};
+  const keep = {h: tx.innerHTML, s: sr.textContent, t: sr.title, k: sr.dataset.k, d: sr.disabled, f: cap.classList.contains('frame'), ch: b.classList.contains('choosing'), cc: b.classList.contains('cc-off')};
   b.classList.remove('choosing', 'cc-off'); sub.style.setProperty('--caph', '0px');
   let h = 0;
   ['intro', 'play'].forEach(r => (reelBeats(r) || []).forEach((bt, i) => {
     const x = bt.steps.find(y => y.type === 'caption'); if (!x) return;
     capFill(x, lineNo(r, i)); h = Math.max(h, sub.getBoundingClientRect().height);
   }));
-  tx.innerHTML = keep.h; sr.textContent = keep.s; sr.title = keep.t; cap.classList.toggle('frame', keep.f);
+  // one spare line, so a long line never fills the box to the brim (the source line keeps its place at the bottom);
+  // left out on a very short screen (a phone on its side), where the picture needs the room more
+  const lh = parseFloat(getComputedStyle(tx).lineHeight) || 0;
+  if (h && innerHeight >= 500 && h + lh <= innerHeight * .3) h += lh;
+  tx.innerHTML = keep.h; sr.textContent = keep.s; sr.title = keep.t; sr.dataset.k = keep.k || ''; sr.disabled = keep.d; cap.classList.toggle('frame', keep.f);
   b.classList.toggle('choosing', keep.ch); b.classList.toggle('cc-off', keep.cc);
   sub.style.setProperty('--caph', Math.ceil(h) + 'px');
   return Math.ceil(h);
@@ -1241,7 +1246,7 @@ let movedUp = -1e9;
 const onVig = e => e.target && e.target.closest && e.target.closest('#vig');
 ['pointermove', 'pointerdown', 'touchstart', 'keydown'].forEach(t => addEventListener(t, e => {
   if (t === 'pointermove' && (e.pointerType !== 'mouse' || e.buttons || onVig(e))) return;   // a mouse drag pans the map, it does not wake
-  if (!CINE || ((t === 'pointerdown' || t === 'touchstart') && (onPic(e) || (e.target.closest && e.target.closest('.lnum, #captime'))))) return;   // the time and line references copy, they do not bring up the controls
+  if (!CINE || ((t === 'pointerdown' || t === 'touchstart') && (onPic(e) || (e.target.closest && e.target.closest('.lnum, #captime, #capsrc'))))) return;   // the time and line references copy, they do not bring up the controls
   if (t === 'pointermove' && document.body.classList.contains('idle')) movedUp = performance.now();
   wake(); }, {passive: true}));
 // in the film a tap (or click) on the picture shows the controls, and a tap while they show hides them again,
@@ -1281,6 +1286,7 @@ document.addEventListener('fullscreenchange', () => {
   if (document.fullscreenElement){ if (CINE) CINE.fsOn = true; return; }
   // (with the book open, the Back / Esc that left fullscreen closes the book and the film stays)
   if (BK.open && CINE && CINE.fsOn){ CINE.fsOn = false; bkClose(); return; }
+  if (SP.open && CINE && CINE.fsOn){ CINE.fsOn = false; srcClose(); return; }
   if (CINE && CINE.fsOn && !CINE.out && PLAY){ CINE.fsOn = false; playStop(false); }
 });
 $('cappp').onclick = e => { e.stopPropagation(); playPause(); };
@@ -1679,11 +1685,55 @@ document.addEventListener('keydown', e => {
   else return;
   e.stopPropagation();
 }, true);
+// The sources popup: one for every line. A tap on the source line at the bottom of the subtitle box pauses the film
+// and lists that line's sources: kind, citation, and when sources.json has them a description, links and free-licensed
+// pictures (credit and license under each). It scrolls. X, a tap outside or Esc closes it; the film plays on if it was playing.
+const SP = {open: false, resume: false, from: null};
+const SRC_KIND = {primary: 'Primary source', archaeology: 'Archaeology', scholarship: 'Scholarship', tradition: 'Tradition', map: 'Map data'};
+const safeUrl = u => /^https?:\/\//i.test(u || '') ? u : null;
+const srcHost = u => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch(e){ return u; } };
+function srcEntry(k){
+  const s = SRC[k]; if (!s) return '';
+  const links = [...(safeUrl(s.url) ? [{url: s.url}] : []), ...(s.links || []).filter(l => l && safeUrl(l.url) && l.url !== s.url)];
+  const imgs = (s.images || (s.image ? [s.image] : [])).filter(m => m && safeUrl(m.url));
+  return `<div class="sre" data-k="${esc(k)}">${SRC_KIND[s.kind] ? `<span class="srk">${esc(SRC_KIND[s.kind])}</span>` : ''}<p class="srt">${esc(s.t)}</p>` +
+    (s.description ? `<p class="srd">${esc(s.description)}</p>` : '') +
+    (links.length ? `<ul class="srl">${links.map(l => `<li><a href="${esc(l.url)}" target="_blank" rel="noopener noreferrer">${esc(l.label || srcHost(l.url))} ↗</a></li>`).join('')}</ul>` : '') +
+    imgs.map(m => `<figure><img src="${esc(m.url)}" alt="${esc(m.alt || '')}" loading="lazy" decoding="async"><figcaption>${esc([m.caption, m.credit, m.license].filter(Boolean).join(' · '))}</figcaption></figure>`).join('') + '</div>';
+}
+function srcOpen(keys, from){
+  keys = (keys || []).filter(k => SRC[k]); if (!keys.length) return;
+  if (!SP.open){ SP.resume = !!(PLAY && !PLAY.paused && !PLAY.wait); if (SP.resume) playPause(true); }
+  SP.open = true; SP.from = from || document.activeElement;
+  $('srcbody').innerHTML = keys.map(srcEntry).join(''); $('srcbody').scrollTop = 0;
+  const w = $('srcwrap'); w.hidden = false; w.classList.remove('in'); void w.offsetWidth; w.classList.add('in');
+  document.body.classList.add('srcopen');
+  setTimeout(() => { if (SP.open) $('srcx').focus({preventScroll: true}); }, 30);
+}
+function srcClose(){
+  if (!SP.open) return;
+  SP.open = false; $('srcwrap').hidden = true; document.body.classList.remove('srcopen');
+  if (SP.resume && PLAY && PLAY.paused) playPause(false);
+  SP.resume = false;
+  if (SP.from && SP.from.focus && SP.from.isConnected) SP.from.focus({preventScroll: true});
+}
+$('capsrc').addEventListener('click', e => { e.stopPropagation(); const k = (e.currentTarget.dataset.k || '').split(' ').filter(Boolean); if (k.length) srcOpen(k, e.currentTarget); });
+$('srcx').onclick = e => { e.stopPropagation(); srcClose(); };
+$('srcback').onclick = e => { e.stopPropagation(); srcClose(); };
+$('srcwrap').addEventListener('pointerdown', e => e.stopPropagation());
+document.addEventListener('keydown', e => {
+  if (!SP.open) return;
+  if (e.key === 'Escape'){ e.preventDefault(); srcClose(); }
+  else if (e.key === 'Tab'){ const f = [$('srcx'), ...$('srcbody').querySelectorAll('a')]; const i = f.indexOf(document.activeElement); e.preventDefault(); f[(i < 0 ? 0 : i + (e.shiftKey ? f.length - 1 : 1)) % f.length].focus(); }
+  else if (e.key === ' ' && !(e.target.closest && e.target.closest('button, a'))) e.preventDefault();
+  else return;
+  e.stopPropagation();
+}, true);
 const bkHere = () => MODE === 'soon' ? bkPageOf(cur) : MODE === 'stop' ? bkPageOf(cur) : 0;
 $('capbook').onclick = e => { e.stopPropagation(); bkOpen(e.currentTarget, bkHere()); };
 $('bookbtn').onclick = e => { e.stopPropagation(); bkOpen(e.currentTarget, bkHere()); };
 
-window.__app = { camTarget, vigSlot: () => VIGSLOT, openObj, closeObj, showStep, go, playStart, playPause, playStop, seek: i => PLAY && seek(i), vigZoom,
+window.__app = { srcOpen, srcClose, get srcIsOpen(){ return SP.open; }, camTarget, vigSlot: () => VIGSLOT, openObj, closeObj, showStep, go, playStart, playPause, playStop, seek: i => PLAY && seek(i), vigZoom,
   get step(){ return step; }, get K(){ return K; }, get open(){ return openId; }, get mode(){ return MODE; }, get cur(){ return cur; },
   get explored(){ return [...EXPLORED]; }, get keys(){ return [...KEYSET]; },
   get play(){ return PLAY ? {i: PLAY.i, n: PLAY.beats.length, paused: PLAY.paused, reel: PLAY.reel, hold: !!(PLAY.hold || PLAY.wait), chapter: chapterAt(PLAY.reel, PLAY.i).n, choice: !$('choice').hidden} : null; },
