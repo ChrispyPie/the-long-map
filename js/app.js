@@ -214,10 +214,12 @@ function drawZones(era){
   g.selectAll('path.halo').data(states.filter(f => f.properties.certainty === 'unsure')).join('path').attr('class', f => 'halo z-' + f.properties.zone);
   g.selectAll('path.zone').data(states).join('path').attr('class', f => `zone tap ${f.properties.certainty} z-${f.properties.zone}`)
     .on('click', (e, f) => open(e, f.properties.zone));
-  g.selectAll('path.israel').data(people).join('path').attr('class','israel tap').on('click', (e, f) => open(e, f.properties.zone));
+  // a kingdom drawn on the era map (c. 930 BC: Israel and Judah) keeps the sharp dashed edge the Play gave it
+  g.selectAll('path.israel').data(people).join('path').attr('class', f => 'israel tap' + (f.properties.kingdom ? ' kingdom z-' + f.properties.zone : '')).on('click', (e, f) => open(e, f.properties.zone));
+  const kingdoms = new Set(people.filter(f => f.properties.kingdom).map(f => f.properties.zone));
   const ids = [...new Set(feats.map(f => f.properties.zone))];
   g.selectAll('text.zlabel').data(ids.map(id => ({id, c: (era.labelAt||{})[id] || centroidOf(feats.filter(f => f.properties.zone === id))}))).join('text')
-    .attr('class', d => 'zlabel tap' + (d.id === 'israel' ? ' zl-people' : '')).text(d => (era.zoneLabels || {})[d.id] || zoneObj(d.id).name.replace(/ \(.*\)/,''))
+    .attr('class', d => 'zlabel tap' + (d.id === 'israel' || kingdoms.has(d.id) ? ' zl-people' : '')).text(d => (era.zoneLabels || {})[d.id] || zoneObj(d.id).name.replace(/ \(.*\)/,''))
     .attr('x', d => projection(d.c)[0]).attr('y', d => projection(d.c)[1])
     .on('click', (e, d) => open(e, d.id));
   // generous tap target for the small "people" area

@@ -1,6 +1,7 @@
 import narration_jews_1207 as NAR
 import narration_jews_1150 as NAR1150
 import narration_jews_1000 as NAR1000
+import narration_jews_930 as NAR930
 A,D,T = "attested","disputed","tradition"
 STORY = {
  "id":"jews","title":"Story of the Jews","site":"The Long Map",
@@ -14,11 +15,11 @@ STORY = {
   {"year":-1207,"label":"1207 BC","title":"Israel is named","era":"data/eras/1207bc.json","file":"data/stories/jews/1207bc.json"},
   {"year":-1150,"label":"c. 1150 BC","title":"Villages in the hills","era":"data/eras/1150bc.json","file":"data/stories/jews/1150bc.json"},
   {"year":-1000,"label":"c. 1000 BC","title":"David and Solomon: tradition and evidence","era":"data/eras/1000bc.json","file":"data/stories/jews/1000bc.json"},
-  {"year":-930,"label":"c. 930 BC","title":"Israel and Judah",
-   # reached at the end of the c. 1000 BC Play (Chapter 3 ends on Shishak and the Karnak list); hl/focus: what the map shows there
-   "soon":{"title":"Israel and Judah","text":"Next chapter coming soon. The map now shows two kingdoms in the hills: Israel in the north, ruled from Shechem, and Judah in the south, ruled from Jerusalem by the House of David. In the Bible, Pharaoh Shishak marches north into the land. On a wall at Karnak, Egypt carved its own list of the places he took. Whether Jerusalem is on it is where the next chapter begins.",
-     "hl":["jerusalem","shechem","bethel","dan","israelp","judah"],"focus":{"c":[35.2,32.0],"k":4.6}}},
-  {"year":-722,"label":"722 BC","title":"Assyria takes Samaria"},
+  {"year":-930,"label":"c. 930 BC","title":"Israel and Judah","era":"data/eras/930bc.json","file":"data/stories/jews/930bc.json"},
+  {"year":-722,"label":"722 BC","title":"Assyria takes Samaria",
+   # reached at the end of the c. 930 BC Play (Chapter 4 ends in 841 BC on Jehu's tribute and the Black Obelisk)
+   "soon":{"title":"Assyria takes Samaria","text":"Next chapter coming soon. In 841 BC Jehu of Israel paid tribute to Shalmaneser III of Assyria, and Hazael of Damascus pressed on Israel's lands. A century later Assyria came back to stay, and the kingdom of Israel, ruled from Samaria, came to its end. That is where the next chapter begins.",
+     "hl":["samaria","jerusalem","damascus","kalhu","israelk","judah","assyria"],"focus":{"c":[38.5,33.8],"k":2.0}}},
   {"year":-586,"label":"586 BC","title":"The First Temple destroyed"},
   {"year":-538,"label":"538 BC","title":"Return under Persia"},
   {"year":-516,"label":"516 BC","title":"The Second Temple"},
@@ -171,4 +172,63 @@ STOP1000 = {
   "zoneObjects":{"philistia":"philistines","israel":"israelp","ammon":"ammon","moab":"moab","edom":"edom","judah":"judah"},
   "ambient":"desert",
   "beats":NAR1000.clean(NAR1000.PLAY)}
+}
+
+STOP930 = {
+ "story":"jews","year":-930,"label":"c. 930 BC","title":"Israel and Judah",
+ "keyObjects":["israelk","judah","samaria","jerusalem","jezreelcity","tirzah","dan","damascus","qarqar","dibon","kalhu","tyre"],
+ "transitionIn":{"text":"About 930 BC. Two kingdoms share the hills: Israel in the north and Judah in the south, ruled from Jerusalem by the House of David. Egypt's Shoshenq has passed through, and Assyria is about to march west.",
+   "title":"c. 930 BC: Israel and Judah","ambient":"desert","beats":NAR930.clean(NAR930.INTRO_BEATS)},
+ "transitionOut":{"to":-722,"text":"Next: wars between the two kingdoms, the House of Omri and its capital Samaria, Elijah in tradition, Ahab at Qarqar, Mesha's revolt in Moab, and Jehu and Hazael. Here, for the first time, Israel's neighbours name its kings in their own inscriptions."},
+ "events":[
+  {"id":"shoshenq","kicker":"Egypt's side","title":"The pharaoh's list at Karnak","date":"c. 925 BC","cert":A,
+   "text":"On the Bubastite Portal at Karnak, Shoshenq I, founder of Egypt's 22nd Dynasty, carved a long list of places in the land. Many names can be read: Megiddo, Taanach, Beth-shean, Gibeon, Mahanaim and Penuel across the Jordan, and many small places in the Negev. Jerusalem is not among the names that survive. A fragment of a stone with his name was found at Megiddo.",
+   "why":"The Bible says Shishak came up against Jerusalem and took the temple treasures (1 Kings 14:25–26). Karnak is Egypt's own record of a campaign the Bible also tells, so the two can be read side by side.",
+   "claims":[["Shoshenq I's list at Karnak names Megiddo, Taanach, Beth-shean, Gibeon and places east of the Jordan and in the Negev.",A,["wilson2005","kitchen1996"]],["Jerusalem is not among the names that survive; the list is partly damaged.",A,["wilson2005"]],["Rehoboam paid tribute and Jerusalem was spared.",D,["kitchen1996"]],["Shishak takes the treasures of the temple: 1 Kings 14:25–26.",T,["bible"]],["A Shoshenq fragment was found at Megiddo in 1925–26; perhaps from a building inscription rather than a stele.",A,["bendorfink2023"]]],
+   "src":["wilson2005","kitchen1996","bendorfink2023","bible"],"objects":["thebes","megiddo","gibeon","bethshean","negev"],"focus":{"c":[34.0,29.5],"k":1.9},"hl":["thebes","megiddo","gibeon"]},
+  {"id":"samaria","kicker":"Archaeology","title":"Samaria, Omri's capital","date":"c. 880–841 BC","cert":A,
+   "text":"Omri moved Israel's capital from Tirzah to a new site, Samaria. On the summit, excavators found a royal compound with walls of finely cut stone and, nearby, carved ivories in Phoenician style. Jezreel, above the great valley, had a large enclosure with a moat. Israel Finkelstein groups these sites as 'Omride architecture'.",
+   "why":"The Bible gives Omri only a few verses and judges him harshly. Archaeology and his neighbours show a strong king: Assyria called Israel 'the House of Omri', and Moab remembered his rule.",
+   "claims":[["Omri bought the hill of Samaria from Shemer for two talents of silver: 1 Kings 16:24.",T,["bible"]],["The first palace on the summit (Building Period I) is Omride.",D,["franklin2004","fink2000"]],["Phoenician-style ivories from Samaria.",A,["crowfoot1938"]],["The royal enclosure at Jezreel: 9th century BC, short-lived.",A,["ussishkin1997"]],["Assyrian texts call Israel the House of Omri.",A,["grayson1996"]]],
+   "src":["franklin2004","fink2000","crowfoot1938","ussishkin1997","grayson1996","bible"],"objects":["samaria","jezreelcity","tirzah","megiddo"],"focus":{"c":[35.27,32.42],"k":9},"hl":["samaria","jezreelcity","tirzah"]},
+  {"id":"elijah","kicker":"Jewish tradition","title":"Elijah the prophet","date":"Tradition: 9th century BC","cert":T,
+   "text":"In the Book of Kings, Elijah confronts Ahab and Jezebel. He calls the people to choose on Mount Carmel, hears a 'still small voice' at Horeb, condemns the killing of Naboth at Jezreel, and is taken to heaven in a chariot of fire. The prophet Malachi says God will send Elijah before the great day of the Lord.",
+   "why":"Elijah lives on in Jewish practice: a cup of wine is poured for him at every Passover Seder, a chair is set for him at every circumcision, and the words of the people on Carmel, 'The Lord, He is God', close the Yom Kippur prayers. Many scholars think the stories took their present shape long after Ahab's time.",
+   "claims":[["Elijah's stories: 1 Kings 17–19, 21 and 2 Kings 1–2; Malachi 3:23.",T,["bible"]],["The cup of Elijah at the Passover Seder.",A,["ejelijahcup"]],["The chair of Elijah at circumcision.",A,["jeelijahchair"]],["'The Lord, He is God' said seven times at the end of Yom Kippur.",A,["neilah623"]],["The Elijah–Elisha stories were added to Kings in the exilic and post-exilic periods.",D,["otto2003"]]],
+   "src":["bible","ejelijahcup","jeelijahchair","neilah623","otto2003"],"objects":["carmel","zarephath","jezreelcity","samaria"],"focus":{"c":[35.2,32.9],"k":6},"hl":["carmel","zarephath","jezreelcity"]},
+  {"id":"qarqar","kicker":"Assyria's side","title":"Qarqar, 853 BC: Ahab on an Assyrian stone","date":"853 BC","cert":A,
+   "text":"Shalmaneser III of Assyria marched west and met a coalition of twelve kings at Qarqar on the Orontes. His Kurkh Monolith lists them: Hadad-ezer of Damascus, Irhuleni of Hamath, and 'Ahab the Israelite' with 2,000 chariots and 10,000 soldiers, as well as troops from Egypt and Byblos, and Gindibu the Arab with 1,000 camels. Shalmaneser claims a great victory, but he did not take Damascus or Hamath and fought the same alliance again in 849, 848 and 845 BC.",
+   "why":"It is one of the earliest records outside the Bible to name a king of Israel, and it shows Israel as a major power of its day. The Bible does not mention the battle.",
+   "claims":[["Kurkh Monolith: the coalition at Qarqar, with Ahab the Israelite, 2,000 chariots and 10,000 troops.",A,["grayson1996","bmkurkh"]],["The 2,000 chariots may be a scribal error, perhaps for 200.",D,["naaman1976"]],["Gindibu the Arab, the earliest mention of Arabs.",A,["ephal1982"]],["Qarqar was a check on Assyria; Shalmaneser came back in 849, 848 and 845 BC.",D,["yamada2000"]],["Ahab dies in battle at Ramoth-gilead: 1 Kings 22.",T,["bible"]]],
+   "src":["grayson1996","bmkurkh","yamada2000","naaman1976","ephal1982","bible"],"objects":["qarqar","hamath","kurkh","damascus","byblos"],"focus":{"c":[37.5,35.6],"k":3.2},"hl":["qarqar","hamath","kurkh"]},
+  {"id":"mesharevolt","kicker":"A neighbour's voice","title":"Mesha's revolt: Moab's side","date":"c. 850–840 BC","cert":A,
+   "text":"Mesha of Moab wrote that Omri had oppressed Moab 'for many days' and that he himself had beaten Omri's son. He took Ataroth, where 'the men of Gad' had lived from of old, and Nebo, from where he carried off 'the vessels of Yahweh'. He also took Medeba and Yahaz. The Bible tells of a campaign by Israel, Judah and Edom against him, which ended when Mesha offered his eldest son on the wall.",
+   "why":"It is one of the oldest mentions of the name of Israel's God outside the Bible, and a rare case where both sides of a war speak. Mesha boasts that 'Israel has perished forever'; it had not.",
+   "claims":[["Omri, his son, Ataroth and the men of Gad, Nebo and the vessels of Yahweh, Medeba: the Mesha stele.",A,["dearman1989","louvremesha"]],["Which son of Omri is meant, and how Mesha's 40 years fit, is debated.",D,["dearman1989"]],["Mesha the sheep breeder, the campaign of three kings and the end on the wall: 2 Kings 3.",T,["bible"]],["Found at Dhiban in 1868; broken in 1869; restored from a squeeze.",A,["louvremesha","dearman1989"]]],
+   "src":["dearman1989","louvremesha","bible"],"objects":["dibon","ataroth","nebo","medeba","moab"],"focus":{"c":[35.75,31.6],"k":8},"hl":["dibon","ataroth","nebo","medeba"]},
+  {"id":"teldanjehu","kicker":"Aram's side","title":"Who killed the two kings?","date":"841 BC","cert":D,
+   "text":"The Bible says the army commander Jehu killed Joram, king of Israel, and Ahaziah, king of Judah, at Jezreel, and ended the House of Omri. A broken Aramaic stele from Tel Dan, very likely set up by Hazael of Damascus, has its king claim that he killed '[Jo]ram son of [Ahab], king of Israel' and '[Ahaz]iah ... of the House of David'. The names are partly restored.",
+   "why":"Two sources, two killers. William Schniedewind suggests both may be partly right: Jehu may have acted as Hazael's ally. Either way, the stele is the clearest early text naming the House of David.",
+   "claims":[["Jehu kills Joram and Ahaziah: 2 Kings 9.",T,["bible"]],["The Tel Dan stele: a king of Aram claims to have killed the king of Israel and the king of the House of David.",A,["biran1995"]],["The names Joram and Ahaziah are restored.",D,["biran1995","schniedewind1996"]],["Hazael as author; Jehu as his agent.",D,["schniedewind1996"]]],
+   "src":["biran1995","schniedewind1996","bible"],"objects":["dan","jezreelcity","damascus","aramdamascus"],"focus":{"c":[35.6,32.9],"k":6},"hl":["dan","jezreelcity","damascus"]},
+  {"id":"blackobelisk","kicker":"Assyria's side","title":"The Black Obelisk: Jehu's tribute","date":"841 BC","cert":A,
+   "text":"In 841 BC Shalmaneser III marched west again, shut Hazael up in Damascus, and took tribute from Tyre, Sidon and 'Jehu of the house of Omri'. On his Black Obelisk from Nimrud, a panel shows a man kneeling before the king, with the words 'tribute of Jehu ... silver, gold, a gold bowl ... tin ... spears'.",
+   "why":"It shows Israel's new place in the world: a small kingdom paying a great empire. And Assyria still called Israel 'the house of Omri', though Jehu had just ended Omri's line.",
+   "claims":[["Year 18 (841 BC): Hazael at Damascus, and tribute of Tyre, Sidon and Jehu.",A,["grayson1996"]],["The Black Obelisk epigraph of Jehu's tribute; now in the British Museum.",A,["grayson1996","bmblackobelisk"]],["Whether the kneeling man is Jehu himself or his envoy is not certain.",D,["bmblackobelisk"]],["Jehu's coup ends the House of Omri: 2 Kings 9–10.",T,["bible"]]],
+   "src":["grayson1996","bmblackobelisk","bible"],"objects":["kalhu","samaria","damascus","tyre"],"focus":{"c":[39.5,34.5],"k":2.2},"hl":["kalhu","samaria","damascus"]},
+  {"id":"ajrud","kicker":"Archaeology","title":"Yahweh and his Asherah","date":"c. 800 BC","cert":D,
+   "text":"At Kuntillet Ajrud, a way station in the Sinai from about 800 BC, travellers left inscriptions on large jars and on plaster. Some bless 'by Yahweh of Samaria and his Asherah', others 'by Yahweh of Teman and his Asherah'.",
+   "why":"They show that worship of Israel's God was more varied than the Bible's ideal, in the same century as Elijah and the prophets who fought against Baal. What 'his Asherah' meant, a goddess or a sacred symbol, is debated.",
+   "claims":[["Blessings by 'Yahweh of Samaria and his Asherah' and 'Yahweh of Teman and his Asherah', c. 800 BC.",A,["meshel2012"]],["Whether Asherah here is a goddess or a cult object is debated.",D,["meshel2012","smith2002"]]],
+   "src":["meshel2012","smith2002"],"objects":["ajrud","samaria"],"focus":{"c":[34.8,31.2],"k":3.4},"hl":["ajrud","samaria"]}
+ ],
+ "explore":{
+  "key":["israelk","judah","samaria","jerusalem","jezreelcity","tirzah","dan","damascus","qarqar","dibon","kalhu","tyre"],
+  "text":"Open each key place or people on the map to read its fact box. Unexplored ones glow; explored ones get a check. Your progress is saved on this device. When you are ready, press Play to follow the story to 841 BC."},
+ "play":{
+  "to":-722, "title":"From c. 930 BC to 841 BC",
+  "intro":"Plays full screen like a short narrated film, with subtitles (CC). Pause, step back or forward, or change speed at any time. Stop whenever you like: it remembers your chapter.",
+  "zoneObjects":{"philistia":"philistines","israel":"israelk","ammon":"ammon","moab":"moab","edom":"edom","judah":"judah","aram":"aramdamascus"},
+  "ambient":"desert",
+  "beats":NAR930.clean(NAR930.PLAY)}
 }
