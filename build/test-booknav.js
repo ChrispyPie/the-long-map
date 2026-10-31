@@ -75,12 +75,12 @@ const D = process.env.SHOTS || 'screens';
     ok(name + ' no chapter tick before every scene is done', await p.evaluate(() => !document.querySelector('#bkpage h2 .cok')));
     await shot('booknav_chapter');
     await p.keyboard.press('ArrowRight'); await p.waitForTimeout(800);
-    bk = await p.evaluate(() => __app.book); ok(name + ' arrow flips to the coming-soon page', bk.type === 'soon');
+    bk = await p.evaluate(() => __app.book); ok(name + ' arrow flips to the Chapter 5 page', bk.type === 'ch' && bk.k !== k4 && /Chapter 5/.test(await p.textContent('#bkpage')));
     await p.keyboard.press('ArrowLeft'); await p.waitForTimeout(800);
     bk = await p.evaluate(() => __app.book); ok(name + ' arrow flips back', bk.k === k4);
     const pb = await p.evaluate(() => { const r = document.getElementById('bkpage').getBoundingClientRect(); return {x: r.left + r.width / 2, y: r.top + r.height * 0.3}; });
     await p.mouse.move(pb.x + 110, pb.y); await p.mouse.down(); await p.mouse.move(pb.x - 40, pb.y + 8, {steps: 5}); await p.mouse.move(pb.x - 110, pb.y + 10, {steps: 3}); await p.mouse.up(); await p.waitForTimeout(800);
-    bk = await p.evaluate(() => __app.book); ok(name + ' swipe left turns the page', bk.type === 'soon');
+    bk = await p.evaluate(() => __app.book); ok(name + ' swipe left turns the page', bk.type === 'ch' && bk.k !== k4);
     await p.mouse.move(pb.x - 110, pb.y); await p.mouse.down(); await p.mouse.move(pb.x + 110, pb.y, {steps: 6}); await p.mouse.up(); await p.waitForTimeout(800);
     bk = await p.evaluate(() => __app.book); ok(name + ' swipe right turns back', bk.k === k4);
     await (mobile ? p.tap('#bkribbon') : p.click('#bkribbon')); await p.waitForTimeout(800);
@@ -103,7 +103,7 @@ const D = process.env.SHOTS || 'screens';
       if (w === 412) await p.screenshot({path: '/workspace/tlm-shots/bookindex-412-2026-10-30.png'});
     }
     if (mobile){ await p.setViewportSize({width: vw, height: vh}); await p.waitForTimeout(350); }
-    ok(name + ' index: Book One intro and every chapter', await p.evaluate(() => { const li = [...document.querySelectorAll('#bkpage ul.ix > li')]; return li[0].classList.contains('bkintro') && /Book One intro/.test(li[0].textContent) && li.length === 6 && li[5].classList.contains('soon'); }));
+    ok(name + ' index: Book One intro and every chapter', await p.evaluate(() => { const li = [...document.querySelectorAll('#bkpage ul.ix > li')]; return li[0].classList.contains('bkintro') && /Book One intro/.test(li[0].textContent) && li.length === 7 && li[6].classList.contains('soon'); }));
     await p.click('#bkpage button[data-x="' + k3 + '"]'); await p.waitForTimeout(200);
     ok(name + ' accordion opens a chapter\'s scenes', await p.evaluate(k => { const b = document.getElementById('bkacc' + k); return !b.hidden && b.querySelectorAll('li').length === 7 && document.querySelector('button[data-x="' + k + '"]').getAttribute('aria-expanded') === 'true'; }, k3));
     await shot('booknav_index');

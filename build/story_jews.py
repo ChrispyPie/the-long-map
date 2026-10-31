@@ -2,6 +2,7 @@ import narration_jews_1207 as NAR
 import narration_jews_1150 as NAR1150
 import narration_jews_1000 as NAR1000
 import narration_jews_930 as NAR930
+import narration_jews_722 as NAR722
 A,D,T = "attested","disputed","tradition"
 STORY = {
  "id":"jews","title":"Story of the Jews","site":"The Long Map",
@@ -20,10 +21,12 @@ STORY = {
    "years":"c. 1000–930 BC","summary":"The Bible tells of David's Jerusalem and Solomon's temple, and archaeologists still debate how large their kingdom was. Tradition and evidence are told side by side, until the kingdom divides into Israel and Judah."},
   {"year":-930,"label":"c. 930 BC","title":"Israel and Judah","era":"data/eras/930bc.json","file":"data/stories/jews/930bc.json",
    "years":"c. 930–841 BC","summary":"Israel and Judah live side by side among Aram, Moab and a rising Assyria. Omri makes Samaria a capital, and stones from Qarqar, Moab, Dan and Nimrud name Israel's kings, down to Jehu's tribute in 841 BC."},
-  {"year":-722,"label":"722 BC","title":"Assyria takes Samaria","years":"722 BC","summary":"Coming soon. Assyria returns to the west, and in 722 BC Samaria, the capital of Israel, falls.",
-   # reached at the end of the c. 930 BC Play (Chapter 4 ends in 841 BC on Jehu's tribute and the Black Obelisk)
-   "soon":{"title":"Assyria takes Samaria","text":"Next chapter coming soon. In 841 BC Jehu of Israel paid tribute to Shalmaneser III of Assyria, and Hazael of Damascus pressed on Israel's lands. A century later Assyria came back to stay, and the kingdom of Israel, ruled from Samaria, came to its end. That is where the next chapter begins.",
-     "hl":["samaria","jerusalem","damascus","kalhu","israelk","judah","assyria"],"focus":{"c":[38.5,33.8],"k":2.0}}},
+  {"year":-722,"label":"722 BC","title":"Fall of Samaria","era":"data/eras/722bc.json","file":"data/stories/jews/722bc.json",
+   "years":"c. 841–722 BC","summary":"Aram presses on Israel, then Assyria returns to stay. Jeroboam II's Israel prospers and Amos and Hosea speak out, until Tiglath-pileser III takes Galilee and Samaria falls. Its people are carried off, and Judah stands alone."},
+  {"year":-701,"label":"701 BC","title":"Sennacherib at Jerusalem","years":"701 BC","summary":"Coming soon. Sennacherib of Assyria marches on Judah, takes Lachish and shuts Hezekiah up in Jerusalem.",
+   # reached at the end of the 722 BC Play (Chapter 5 ends c. 720 BC with Judah alone, a vassal of Assyria)
+   "soon":{"title":"Sennacherib at Jerusalem","text":"Next chapter coming soon. Samaria has fallen and Israel is an Assyrian province. In 701 BC a new king of Assyria, Sennacherib, marches on Judah. He takes Lachish and shuts Hezekiah up in Jerusalem, 'like a bird in a cage'. That is where the next chapter begins.",
+     "hl":["jerusalem","lachish","nineveh","judah","assyria"],"focus":{"c":[39.0,33.6],"k":1.9}}},
   {"year":-586,"label":"586 BC","title":"The First Temple destroyed"},
   {"year":-538,"label":"538 BC","title":"Return under Persia"},
   {"year":-516,"label":"516 BC","title":"The Second Temple"},
@@ -235,4 +238,68 @@ STOP930 = {
   "zoneObjects":{"philistia":"philistines","israel":"israelk","ammon":"ammon","moab":"moab","edom":"edom","judah":"judah","aram":"aramdamascus"},
   "ambient":"desert",
   "beats":NAR930.clean(NAR930.PLAY)}
+}
+
+STOP722 = {
+ "story":"jews","year":-722,"label":"722 BC","title":"Fall of Samaria",
+ "keyObjects":["israelk","judah","samaria","jerusalem","damascus","assyria","rimah","bethel","hazor","dursharrukin","gozan","gerizim"],
+ "transitionIn":{"text":"722 BC. Samaria, the capital of Israel, is under Assyrian siege. To see how it came to this, the chapter goes back to 841 BC, where Chapter 4 ended.",
+   "title":"722 BC: Fall of Samaria","ambient":"desert","beats":NAR722.clean(NAR722.INTRO_BEATS)},
+ "transitionOut":{"to":-701,"text":"Next: Aram's pressure and Joash on an Assyrian stele, Jeroboam II's Israel and the prophets Amos and Hosea, Tiglath-pileser III, the fall of Damascus and Galilee, the siege and fall of Samaria, the exile of its people, and Judah left alone."},
+ "events":[
+  {"id":"rimahjoash","kicker":"Assyria's side","title":"Joash the Samarian","date":"c. 796 BC","cert":A,
+   "text":"Around 796 BC Adad-nirari III of Assyria marched west and took a great tribute from the king of Damascus. A stele found at Tell al-Rimah in northern Iraq in 1967 lists another king who paid: 'Joash the Samarian'. He is Jehu's grandson, the king who, says the Bible, won back Israel's towns from Aram.",
+   "why":"It ties a king of the Bible to an Assyrian text, and shows the pattern of the century: when Assyria struck Damascus, Israel could breathe again. Assyria now names Israel after its capital, Samaria.",
+   "claims":[["Tribute of Joash (Iu'asu) the Samarian on the Tell al-Rimah stele of Adad-nirari III.",A,["page1968","grayson1996"]],["Hazael and his son oppress Israel; a 'deliverer'; Joash wins back the towns: 2 Kings 13.",T,["bible"]],["Assyria's campaigns against Damascus gave Israel room to recover.",D,["fink2013","grayson1996"]]],
+   "src":["page1968","grayson1996","fink2013","bible"],"objects":["rimah","damascus","samaria","aramdamascus"],"focus":{"c":[39.0,34.6],"k":2.2},"hl":["rimah","damascus","samaria"]},
+  {"id":"jeroboam2","kicker":"Archaeology","title":"Jeroboam II: oil, wine and a lion seal","date":"c. 788–747 BC","cert":D,
+   "text":"The Bible gives Jeroboam II 41 years and a border from Lebo-hamath to the Dead Sea, in just a few verses. At Samaria, the Harvard expedition found over a hundred inscribed sherds, the Samaria Ostraca, recording wine and oil sent to the capital. At Megiddo in 1904, a jasper seal with a roaring lion was found, reading 'belonging to Shema, servant of Jeroboam'.",
+   "why":"Israel Finkelstein sees these years as the peak of the northern kingdom. The ostraca's personal names, some built with Yahu and some with Baal, give a rare glimpse of ordinary faith.",
+   "claims":[["Jeroboam II reigns 41 years and restores the border: 2 Kings 14:23–29.",T,["bible"]],["The Samaria Ostraca record deliveries of wine and oil; names with Yahu and Baal.",A,["reisner1924"]],["The ostraca date to the first half of the 8th century BC.",D,["fink2013","reisner1924"]],["The Shema seal, found in 1904, is lost and known from casts; its 'Jeroboam' is probably Jeroboam II.",D,["ussishkin1994"]],["The 8th century BC as the peak of the northern kingdom.",D,["fink2013"]]],
+   "src":["reisner1924","ussishkin1994","fink2013","bible"],"objects":["samaria","megiddo","israelk"],"focus":{"c":[35.2,32.45],"k":10},"hl":["samaria","megiddo"]},
+  {"id":"amoshosea","kicker":"Jewish tradition","title":"Amos and Hosea","date":"Tradition: c. 760–725 BC","cert":T,
+   "text":"Amos, a herdsman from Tekoa in Judah, speaks at the royal shrine of Bethel against those who 'lie on beds of ivory' while the poor are crushed: 'Let justice roll down like waters'. Hosea, from the north, speaks of Israel as an unfaithful wife whom God still loves. Their books are among the oldest of the prophets.",
+   "why":"Their words, against wealth without justice and faith without loyalty, became part of the Hebrew Bible and are still read in synagogues today. Ivory inlays like those Amos condemns were found at Samaria.",
+   "claims":[["Amos at Bethel; beds of ivory; 'Let justice roll down': Amos 1:1; 5:24; 6:4–6; 7:10–15.",T,["bible"]],["Hosea's marriage and God's love: Hosea 1–3; 11.",T,["bible"]],["Ivory furniture inlays from Samaria.",A,["crowfoot1938"]],["Yadin linked a destruction at Hazor with the earthquake of Amos 1:1.",D,["yadin1972"]]],
+   "src":["bible","crowfoot1938","yadin1972"],"objects":["bethel","tekoa","samaria","hazor"],"focus":{"c":[35.3,32.2],"k":7},"hl":["bethel","tekoa","samaria"]},
+  {"id":"tiglath","kicker":"Assyria's side","title":"Tiglath-pileser III names three kings","date":"745–727 BC","cert":A,
+   "text":"Tiglath-pileser III made the conquered lands into provinces and moved whole peoples. His annals and lists of tribute name Menahem of Samaria, Jehoahaz (Ahaz) of Judah, and Pekah, whom 'they overthrew', and Hoshea, whom 'I set as king over them'. In Babylon he ruled under the name Pulu, the 'Pul' of the Bible.",
+   "why":"For the first time, Assyrian texts and the Book of Kings can be read almost year by year side by side. Each king of Israel and Judah had to choose between paying Assyria and resisting it.",
+   "claims":[["Menahem of Samaria, Jehoahaz of Judah, Pekah and Hoshea in Tiglath-pileser III's inscriptions.",A,["tadmor2011"]],["Tiglath-pileser III's accession in 745 BC.",A,["millard1994","tadmor2011"]],["His policy of provinces and two-way deportations.",A,["tadmor2011","oded1979"]],["Menahem pays Pul a thousand talents; Ahaz: 'I am your servant and your son': 2 Kings 15:19–20; 16:7–8.",T,["bible"]],["Rezin and Pekah against Ahaz; the sign of Immanuel: Isaiah 7.",T,["bible"]]],
+   "src":["tadmor2011","millard1994","oded1979","bible"],"objects":["kalhu","samaria","jerusalem","damascus"],"focus":{"c":[39.0,34.2],"k":2.1},"hl":["kalhu","samaria","jerusalem"]},
+  {"id":"galilee732","kicker":"Archaeology","title":"732 BC: Damascus, Galilee and Hazor","date":"733–732 BC","cert":A,
+   "text":"After campaigns 'to Damascus' in 733 and 732 BC, Tiglath-pileser took Damascus and made Aram a province. Israel lost Galilee and Gilead. At Hazor, the city of this time ended in fire under a thick layer of ash. The Bible names the towns taken, from Ijon to Hazor, and says their people were carried off to Assyria.",
+   "why":"Within a few years the northern kingdom shrank to the hills around Samaria. It was the first great deportation of Israelites.",
+   "claims":[["Campaigns 'to Damascus' in 733 and 732 BC.",A,["millard1994"]],["Damascus becomes an Assyrian province.",A,["tadmor2011"]],["Hazor Stratum V destroyed by fire, with a thick ash layer, in 732 BC.",A,["yadin1972"]],["Ijon, Abel-beth-maacah, Hazor, Gilead, Galilee and Naphtali taken and deported: 2 Kings 15:29.",T,["bible"]]],
+   "src":["millard1994","tadmor2011","yadin1972","bible"],"objects":["damascus","hazor","aramdamascus","israelk"],"focus":{"c":[35.9,33.0],"k":5.5},"hl":["damascus","hazor"]},
+  {"id":"samariafall","kicker":"Two kings, one city","title":"Who took Samaria?","date":"722–720 BC","cert":D,
+   "text":"The Bible says Shalmaneser V besieged Samaria for three years and took it. A Babylonian chronicle says only that Shalmaneser 'ravaged Shamara'in'. His successor Sargon II claims the conquest for himself: '27,290 people' in his palace at Khorsabad, '27,280' and 200 chariots on a prism from Nimrud. In 720 BC Samaria joined a revolt led by Hamath, which Sargon crushed at Qarqar.",
+   "why":"Hayim Tadmor proposed that Samaria was taken twice, by Shalmaneser in 722 and again by Sargon in 720 BC, and many follow him. On the summit itself, Ron Tappy found little sign of a great burning.",
+   "claims":[["The siege of three years: 2 Kings 17:5–6; 18:9–10.",T,["bible"]],["'He ravaged Shamara'in': Babylonian Chronicle 1.",A,["grayson1975"]],["Sargon's Khorsabad inscriptions: Samaria conquered, 27,290 deported, 50 chariots.",A,["fuchs1994","frame2021"]],["The Nimrud Prism: 27,280 deported and 200 chariots; Samaria resettled 'greater than before'.",A,["gadd1954"]],["The revolt of 720 BC crushed at Qarqar.",A,["frame2021","naaman1990"]],["Two conquests, 722 and 720 BC.",D,["tadmor1958","becking1992"]],["No clear destruction layer on the summit.",D,["tappy2001"]]],
+   "src":["grayson1975","fuchs1994","frame2021","gadd1954","tadmor1958","becking1992","naaman1990","tappy2001","bible"],"objects":["samaria","dursharrukin","kalhu","qarqar"],"focus":{"c":[39.0,34.6],"k":2.1},"hl":["samaria","dursharrukin","qarqar"]},
+  {"id":"deportations","kicker":"Exile","title":"Carried off: Israel in Assyria","date":"732–c. 700 BC","cert":A,
+   "text":"The Bible says Israel was settled 'in Halah, on the Habor, the river of Gozan, and in the cities of the Medes'. Assyrian documents bear it out: Israelite names, built with the name of Israel's God, appear in the following decades at Gozan, Kalhu and other cities, and a unit of Samarian charioteers served in the Assyrian army.",
+   "why":"Scholars think many Israelites stayed on the land; Assyria's own figure covers only part of the population. But those who were taken away mostly vanish from history, and that became the tradition of the ten lost tribes.",
+   "claims":[["Halah, Habor, Gozan and the cities of the Medes: 2 Kings 17:6.",T,["bible"]],["Israelite names in Assyrian documents after 720 BC.",A,["becking1992","younger1998","oded1979"]],["Samarian charioteers in the Nimrud Horse Lists.",A,["dalley1985"]],["The deportations were partial; many stayed.",D,["younger1998"]]],
+   "src":["becking1992","younger1998","oded1979","dalley1985","bible"],"objects":["gozan","media","kalhu"],"focus":{"c":[42.0,35.6],"k":1.9},"hl":["gozan","media","kalhu"]},
+  {"id":"samaritans","kicker":"Two traditions","title":"The Samaritans and the ten tribes","date":"After 720 BC","cert":T,
+   "text":"The Bible says Assyria brought people from Babylon, Cuthah, Hamath and other places to Samaria, and that they learned to fear the God of the land from a priest at Bethel. Later Jewish writings call the Samaritans 'Kutim'. The Samaritans tell a different story: they are Israelites who never left, keepers of the Torah on Mount Gerizim. A small community still lives there today.",
+   "why":"Jewish tradition remembers the exiles as the ten lost tribes. Rabbi Akiva taught in the Mishnah that they would not return; others hoped they would. The same events gave rise to two traditions that still live.",
+   "claims":[["Settlers from Babylon, Cuthah, Avva, Hamath and Sepharvaim; the priest at Bethel: 2 Kings 17:24–28.",T,["bible"]],["Sargon settled conquered peoples, and later Arabs, in Samaria.",A,["frame2021"]],["Samaritan self-understanding; 'Kutim'; Mount Gerizim; the community today.",A,["pummer2016"]],["Rabbi Akiva: the ten tribes will not return (Mishnah Sanhedrin 10:3).",T,["mishnahsanh"]],["Traditions of the ten lost tribes.",T,["je1906lost"]]],
+   "src":["pummer2016","frame2021","mishnahsanh","je1906lost","bible"],"objects":["gerizim","cuthah","bethel","samaria"],"focus":{"c":[39.5,33.0],"k":2.0},"hl":["gerizim","cuthah","samaria"]},
+  {"id":"jerusalemgrows","kicker":"Archaeology","title":"Jerusalem grows","date":"Late 8th century BC","cert":D,
+   "text":"In the late 8th century BC Jerusalem spread from the old City of David onto the western hill and grew several times over. Magen Broshi and Israel Finkelstein linked the growth with refugees from the fallen north. Nadav Na'aman argues it had other causes and began later.",
+   "why":"Whatever its cause, Jerusalem became Judah's great city just as Israel disappeared, and the traditions of the north, carried south, became part of Judah's story.",
+   "claims":[["Jerusalem's growth onto the western hill, late 8th century BC.",A,["broshi1992","naaman2007"]],["Refugees from the north as the cause.",D,["broshi1992"]],["Na'aman's doubts.",D,["naaman2007"]],["Hezekiah invites Ephraim and Manasseh to the Passover: 2 Chronicles 30.",T,["bible"]]],
+   "src":["broshi1992","naaman2007","bible"],"objects":["jerusalem","judah"],"focus":{"c":[35.2,31.75],"k":12},"hl":["jerusalem"]}
+ ],
+ "explore":{
+  "key":["israelk","judah","samaria","jerusalem","damascus","assyria","rimah","bethel","hazor","dursharrukin","gozan","gerizim"],
+  "text":"Open each key place or people on the map to read its fact box. Unexplored ones glow; explored ones get a check. Your progress is saved on this device. When you are ready, press Play to follow the story from 841 BC to the fall of Samaria."},
+ "play":{
+  "to":-701, "title":"From 841 BC to 720 BC",
+  "intro":"Plays full screen like a short narrated film, with subtitles (CC). Pause, step back or forward, or change speed at any time. Stop whenever you like: it remembers your chapter.",
+  "zoneObjects":{"philistia":"philistines","israel":"israelk","ammon":"ammon","moab":"moab","edom":"edom","judah":"judah","aram":"aramdamascus","assyria":"assyria"},
+  "ambient":"desert",
+  "beats":NAR722.clean(NAR722.PLAY)}
 }

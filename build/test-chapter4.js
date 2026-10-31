@@ -2,7 +2,7 @@
 // 9 opener + 68 Play lines, each with its recording, no digits or brackets in spoken text, every Bible ref cites
 // the Bible, every vignette matches one line, the Play runs to 722 BC and ends on the teaser for the next chapter.
 // Browser (390x844): the opener and the whole Play run start to finish (speed 8, voice on), every line's recording
-// is requested, Israel and Judah are drawn, vignettes show, and the end is the 722 BC 'coming soon' state.
+// is requested, Israel and Judah are drawn, vignettes show, and the end is the 722 BC intro (Chapter 5) with a 'Continue to Chapter 5' button.
 // Usage: node build/test-chapter4.js [url] [noshots]; SHOTS=dir for ch4_*.png screenshots.
 const { chromium } = require('playwright');
 const fs = require('fs'), path = require('path');
@@ -19,7 +19,7 @@ const ROOT = path.join(__dirname, '..');
   const caps = b => b.steps.filter(x => x.type === 'caption');
   const s930 = story.stops.find(s => s.year === -930), s722 = story.stops.find(s => s.year === -722);
   ok('930 is a live stop with its own map', s930 && s930.file === 'data/stories/jews/930bc.json' && s930.era === 'data/eras/930bc.json' && fs.existsSync(path.join(ROOT, s930.era)));
-  ok('722 is the next, coming soon stop', s722 && !s722.file && s722.soon && data.play.to === -722);
+  ok('722 is the next, live stop (Chapter 5)', s722 && s722.file === 'data/stories/jews/722bc.json' && !s722.soon && data.play.to === -722);
   ok('8 events, each claim sourced and labelled', data.events.length === 8 && data.events.every(e => (e.claims || []).length && e.claims.every(c => Array.isArray(c[2]) && c[2].length && ['attested', 'disputed', 'tradition'].includes(c[1]))));
   const vig = all.filter(b => b.vignette);
   ok('vignettes on ' + vig.length + ' lines, files present', vig.length >= 20 && vig.every(b => fs.existsSync(path.join(ROOT, b.vignette.src))));
@@ -45,7 +45,7 @@ const ROOT = path.join(__dirname, '..');
     await p.goto(url, {waitUntil: 'networkidle'}); await p.waitForTimeout(1500);
     await p.evaluate(() => __app.go(3)); await p.waitForTimeout(1600);
     let s = await p.evaluate(() => ({mode: __app.mode, pill: document.getElementById('pill').textContent, judah: document.querySelectorAll('path.z-judah').length, parts: __app.parts().length}));
-    ok(name + ' timeline to c. 930 BC: live stop, Chapter 4 ' + JSON.stringify(s), s.mode === 'stop' && /930/.test(s.pill) && s.judah >= 1 && s.parts === 4);
+    ok(name + ' timeline to c. 930 BC: live stop, Chapter 4 ' + JSON.stringify(s), s.mode === 'stop' && /930/.test(s.pill) && s.judah >= 1 && s.parts === 5);
     await shot('intro');
     await p.tap('#gostory'); await p.waitForTimeout(2000);
     s = await p.evaluate(() => ({play: __app.play, voice: __app.voice}));
@@ -72,8 +72,8 @@ const ROOT = path.join(__dirname, '..');
     ok(name + ' every line\'s recording requested (' + req.size + ') missing ' + JSON.stringify(miss), miss.length === 0);
     ok(name + ' Chapter 4 vignettes shown during Play (' + vigSeen.size + ')', vigSeen.size >= 10);
     await p.waitForTimeout(2500);
-    s = await p.evaluate(() => ({mode: __app.mode, pill: document.getElementById('pill').textContent, flag: !!document.querySelector('.soonflag')}));
-    ok(name + ' Play ends on 722 BC coming soon ' + JSON.stringify(s), s.mode === 'soon' && /722/.test(s.pill) && s.flag);
+    s = await p.evaluate(() => ({mode: __app.mode, pill: document.getElementById('pill').textContent, flag: !!document.querySelector('.soonflag'), btn: (document.getElementById('gonextch') || {}).textContent}));
+    ok(name + ' Play ends on the 722 BC intro with "Continue to Chapter 5" ' + JSON.stringify(s), s.mode === 'stop' && /722/.test(s.pill) && !s.flag && /Continue to Chapter 5/.test(s.btn || ''));
     await shot('end722');
     ok(name + ' Chapter 4 counted as watched', await p.evaluate(() => __app.parts()[3].done));
   } catch (e) { ok(name + ' ran: ' + e.message.split('\n')[0], false); }
