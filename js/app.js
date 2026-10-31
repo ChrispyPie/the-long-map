@@ -1695,7 +1695,7 @@ const srcHost = u => { try { return new URL(u).hostname.replace(/^www\./, ''); }
 function srcEntry(k){
   const s = SRC[k]; if (!s) return '';
   const links = [...(safeUrl(s.url) ? [{url: s.url}] : []), ...(s.links || []).filter(l => l && safeUrl(l.url) && l.url !== s.url)];
-  const imgs = (s.images || (s.image ? [s.image] : [])).filter(m => m && safeUrl(m.url));
+  const imgs = (s.images || (s.image ? [s.image] : [])).filter(m => m && (safeUrl(m.url) || /^images\/[\w\/.-]+$/.test(m.url || '')));  // absolute http(s) or our own images/ folder
   return `<div class="sre" data-k="${esc(k)}">${SRC_KIND[s.kind] ? `<span class="srk">${esc(SRC_KIND[s.kind])}</span>` : ''}<p class="srt">${esc(s.t)}</p>` +
     (s.description ? `<p class="srd">${esc(s.description)}</p>` : '') +
     (links.length ? `<ul class="srl">${links.map(l => `<li><a href="${esc(l.url)}" target="_blank" rel="noopener noreferrer">${esc(l.label || srcHost(l.url))} ↗</a></li>`).join('')}</ul>` : '') +
