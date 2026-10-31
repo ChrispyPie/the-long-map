@@ -6,7 +6,7 @@ const D = process.env.SHOTS || 'screens';
   const b = await chromium.launch();
   const errs = [], notes = [];
   const ok = (n, c) => notes.push((c ? 'PASS ' : 'FAIL ') + n);
-  process.on('unhandledRejection', e => { console.log(notes.join('\n')); console.log('CRASH', e.message.split('\n')[0]); process.exit(1); });
+  process.on('unhandledRejection', e => { console.log(notes.join('\n')); console.log('CRASH', e.message.split('\n').slice(0,14).join(' | ')); process.exit(1); });
   for (const [name, vw, vh, mobile] of [['mobile',393,852,true],['desktop',1280,800,false]]) {
     const ctx = await b.newContext({viewport:{width:vw,height:vh}, deviceScaleFactor:2, isMobile:mobile, hasTouch:mobile});
     if (process.env.TS) await ctx.addInitScript(t => localStorage.setItem('tlm.textsize', t), process.env.TS); // TS=xl runs the suite at a saved text size
@@ -20,7 +20,7 @@ const D = process.env.SHOTS || 'screens';
     notes.push(name+' bytes on load: '+bytes);
     const tap = async (x,y) => mobile ? p.touchscreen.tap(x,y) : p.mouse.click(x,y);
     // film controls fade out after a few seconds; a touch or mouse move brings them back first
-    const ctl = async sel => { await p.evaluate(()=>dispatchEvent(new PointerEvent('pointermove'))); await p.waitForTimeout(80); return p.click(sel); };
+    const ctl = async sel => { await p.evaluate(()=>{ dispatchEvent(new PointerEvent('pointermove')); if (__app.wake) __app.wake(); }); await p.waitForTimeout(120); return p.click(sel); };
     const st = () => p.evaluate(() => ({open: __app.open, step: __app.step, K: __app.K, tr: document.querySelector('#map > g').getAttribute('transform'), n: document.getElementById('evn').textContent, title: document.title}));
     let s = await st(); ok(name+' title "'+s.title+'"', s.title.includes('Story of the Jews'));
     ok(name+' objects drawn: '+await p.evaluate(()=>document.querySelectorAll('g.obj, g.lobj').length), true);
@@ -144,7 +144,7 @@ const D = process.env.SHOTS || 'screens';
     await p.waitForTimeout(2500);
     ok(name+' stays on the 1150 intro (no auto-continue)', await p.evaluate(()=>__app.mode === 'stop' && !__app.play && /1150/.test(document.getElementById('pill').textContent)));
     ok(name+' recap has no scene lines, scene captions exist in data', await p.evaluate(()=>![...document.querySelectorAll('#evbody .cb')].some(b=>b.textContent==='Imagine')));
-    ok(name+' donate link hidden (donateUrl null)', await p.evaluate(()=>document.getElementById('donate').hidden && getComputedStyle(document.getElementById('donate')).display === 'none'));
+    ok(name+' donate link follows site.json donateUrl', await p.evaluate(()=>fetch('data/site.json').then(r=>r.json()).then(c=>{ const d=document.getElementById('donate'); return c.donateUrl ? (!d.hidden && d.href===c.donateUrl) : (d.hidden && getComputedStyle(d).display==='none'); })));
     ok(name+' play ends at the live c. 1150 stop (its own map, no soon flag): '+JSON.stringify(end), end.big === 'c. 1150 BC' && !end.flag && end.phil >= 1 && end.isr >= 1 && end.added === 0 && end.hatti === 0 && end.cap && !end.xp);
     if (shots) { if (mobile) await toEv(); await p.screenshot({path:D+'/faktaruta_1150'+(mobile?'':'_desktop')+'.png'}); await p.evaluate(()=>scrollTo(0,0)); }
     // visible zone labels never overlap (PHILISTIA hides next to ISRAEL when zoomed far out)
@@ -169,7 +169,9 @@ const D = process.env.SHOTS || 'screens';
     await p.evaluate(()=>__app.go(3)); await p.waitForTimeout(1500);
     ok(name+' timeline to c. 930 BC: a live stop (Chapter 4) with its own map, Israel and Judah drawn', await p.evaluate(()=>__app.mode==='stop' && /930/.test(document.getElementById('pill').textContent) && !document.querySelector('.soonflag') && document.querySelectorAll('path.z-judah').length>=1 && document.querySelectorAll('path.z-israel').length>=1));
     await p.evaluate(()=>__app.go(4)); await p.waitForTimeout(600);
-    ok(name+' timeline to 722 BC: the end of the 930 Play, coming soon', await p.evaluate(()=>__app.mode==='soon' && /722/.test(document.getElementById('pill').textContent) && !!document.querySelector('.soonflag')));
+    ok(name+' timeline to 722 BC: a live stop (Chapter 5) with its own map', await p.evaluate(()=>__app.mode==='stop' && /722/.test(document.getElementById('pill').textContent) && !document.querySelector('.soonflag') && document.querySelectorAll('path.z-aram').length>=1));
+    await p.evaluate(()=>__app.go(5)); await p.waitForTimeout(600);
+    ok(name+' timeline to 701 BC: the end of the 722 Play, coming soon', await p.evaluate(()=>__app.mode==='soon' && /701/.test(document.getElementById('pill').textContent) && !!document.querySelector('.soonflag')));
     await p.evaluate(()=>__app.go(0)); await p.waitForTimeout(1200);
     await ctx.close();
   }

@@ -42,7 +42,7 @@ const ROOT = path.join(__dirname, '..');
     await p.goto(url, {waitUntil: 'networkidle'}); await p.waitForTimeout(1500);
     await p.evaluate(() => __app.go(2)); await p.waitForTimeout(1600);
     let s = await p.evaluate(() => ({mode: __app.mode, pill: document.getElementById('pill').textContent, ammon: document.querySelectorAll('path.z-ammon').length, parts: __app.parts().length}));
-    ok(name + ' timeline to c. 1000 BC: live stop, Chapter 3 ' + JSON.stringify(s), s.mode === 'stop' && /1000/.test(s.pill) && s.ammon >= 1 && s.parts === 4);
+    ok(name + ' timeline to c. 1000 BC: live stop, Chapter 3 ' + JSON.stringify(s), s.mode === 'stop' && /1000/.test(s.pill) && s.ammon >= 1 && s.parts === 5);
     await shot('intro');
     await p.tap('#gostory'); await p.waitForTimeout(2000);
     s = await p.evaluate(() => ({play: __app.play, voice: __app.voice}));
