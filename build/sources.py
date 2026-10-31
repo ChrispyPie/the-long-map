@@ -134,4 +134,12 @@ S = {
  "ne": ("map","Natural Earth (public domain): coastlines, rivers, lakes.","https://www.naturalearthdata.com/","opened"),
 }
 def export():
-    return {k:{"kind":v[0],"t":v[1],"url":v[2],"checked":v[3]} for k,v in S.items()}
+    out = {k:{"kind":v[0],"t":v[1],"url":v[2],"checked":v[3]} for k,v in S.items()}
+    try: from source_info import INFO   # optional popup extras: description, links, images
+    except ImportError: INFO = {}
+    for k, x in INFO.items():
+        if k not in out: continue
+        if x.get("description"): out[k]["description"] = x["description"]
+        if x.get("links"): out[k]["links"] = [{"label": a, "url": u} for a, u in x["links"]]
+        if x.get("images"): out[k]["images"] = x["images"]
+    return out
