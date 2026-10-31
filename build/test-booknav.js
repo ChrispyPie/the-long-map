@@ -85,6 +85,24 @@ const D = process.env.SHOTS || 'screens';
     bk = await p.evaluate(() => __app.book); ok(name + ' swipe right turns back', bk.k === k4);
     await (mobile ? p.tap('#bkribbon') : p.click('#bkribbon')); await p.waitForTimeout(800);
     bk = await p.evaluate(() => __app.book); ok(name + ' ribbon opens the index', bk.type === 'index' && bk.page === 0);
+    // the Index ribbon never covers the heading (each line of its text), at 360, 412 and 458 wide; index rows centred,
+    // Page › and the chevrons still full-size targets
+    if (mobile) for (const w of [360, 412, 458]){
+      await p.setViewportSize({width: w, height: vh}); await p.waitForTimeout(350);
+      const m = await p.evaluate(() => { const rb = document.getElementById('bkribbon').getBoundingClientRect(), hit = [];
+        for (const e of document.querySelectorAll('#bkpage .k, #bkpage h2')){ const rg = document.createRange(); rg.selectNodeContents(e);
+          for (const r of rg.getClientRects()) if (r.width && Math.min(r.right, rb.right) > Math.max(r.left, rb.left) && Math.min(r.bottom, rb.bottom + 8) > Math.max(r.top, rb.top)) hit.push(e.tagName); }
+        // also the room the title may use (a wider font on a phone fills more of it): its content box ends left of the ribbon
+        for (const e of document.querySelectorAll('#bkpage .k, #bkpage h2')){ const r = e.getBoundingClientRect(), cr = r.right - parseFloat(getComputedStyle(e).paddingRight);
+          if (Math.min(r.bottom, rb.bottom + 8) > Math.max(r.top, rb.top) && cr > rb.left - 4) hit.push(e.tagName + ' box'); }
+        const ct = [...document.querySelectorAll('#bkpage ul.ix .acc .ct')].map(e => getComputedStyle(e).textAlign);
+        const tg = [...document.querySelectorAll('#bkpage ul.ix .pg, #bkpage ul.ix .acc')].map(e => e.getBoundingClientRect()).map(r => Math.min(r.width, r.height));
+        return {hit, ct: [...new Set(ct)], min: Math.round(Math.min(...tg))}; });
+      ok(`${name} ${w}px: Index ribbon clear of the heading ${JSON.stringify(m.hit)}`, !m.hit.length);
+      ok(`${name} ${w}px: index rows centred ${JSON.stringify(m.ct)}, Page › and rows >= 44px (${m.min})`, m.ct.length === 1 && m.ct[0] === 'center' && m.min >= 44);
+      if (w === 412) await p.screenshot({path: '/workspace/tlm-shots/bookindex-412-2026-10-30.png'});
+    }
+    if (mobile){ await p.setViewportSize({width: vw, height: vh}); await p.waitForTimeout(350); }
     ok(name + ' index: Book One intro and every chapter', await p.evaluate(() => { const li = [...document.querySelectorAll('#bkpage ul.ix > li')]; return li[0].classList.contains('bkintro') && /Book One intro/.test(li[0].textContent) && li.length === 6 && li[5].classList.contains('soon'); }));
     await p.click('#bkpage button[data-x="' + k3 + '"]'); await p.waitForTimeout(200);
     ok(name + ' accordion opens a chapter\'s scenes', await p.evaluate(k => { const b = document.getElementById('bkacc' + k); return !b.hidden && b.querySelectorAll('li').length === 7 && document.querySelector('button[data-x="' + k + '"]').getAttribute('aria-expanded') === 'true'; }, k3));
