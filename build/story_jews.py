@@ -112,6 +112,11 @@ STOP["play"] = {
 }
 
 
+# ---------- quick version: the whole chapter in about two minutes (build/narration_jews_1207.py QUICK) ----------
+# Offered next to the full film when the chapter starts ("Quick" or "Full"); deep link ?ch=1&quick=1.
+# It ends on the same map as Play, so Chapter 2 follows on. A later "story so far" recap would be one more reel like this.
+STOP["quick"] = {"title":"Chapter 1 in brief", "ambient":"desert", "beats":NAR.clean(NAR.QUICK)}
+
 # ---------- c. 1150 BC: villages in the hills (opening film + Play to c. 1000 BC, build/narration_jews_1150.py) ----------
 # No big fact boxes (events) yet: this stop is told by its two films. The map is the end state of the
 # 1207 BC Play (data/eras/1150bc.json, built in make_data.py). David's kingdom gets no border.

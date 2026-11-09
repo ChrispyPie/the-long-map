@@ -23,7 +23,7 @@ const url = process.argv[2] || 'http://127.0.0.1:8852/';
       await p.goto(url, {waitUntil: 'networkidle'}); await p.waitForTimeout(600);
       await p.evaluate(() => __app.showStep(0)); await p.waitForTimeout(400);
       await p.evaluate(() => document.getElementById('gostory').scrollIntoView({block: 'center'}));
-      mobile ? await p.tap('#gostory') : await p.click('#gostory');
+      mobile ? await p.tap('#gostory') : await p.click('#gostory'); await p.waitForTimeout(300); if (await p.evaluate(() => !!__app.lenPick)) await p.click('#lpfull'); /* Chapter 1: Quick or Full */
       await p.waitForFunction(() => __app.cine && __app.cine.full && document.getElementById('captext').offsetHeight > 0, null, {timeout: 8000});
       await p.waitForTimeout(300);
       const vp = await R('#vp');

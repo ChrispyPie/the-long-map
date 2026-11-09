@@ -34,7 +34,7 @@ const ROOT = process.env.ROOT || path.join(__dirname, '..');
       await p.evaluate(() => { const b = document.getElementById('playbtn') || document.querySelector('[data-play], #play'); });
       await p.evaluate(() => __app.showStep(0)); await p.waitForTimeout(500);
       await p.evaluate(() => document.getElementById('gostory').scrollIntoView({block: 'center'}));
-      mobile ? await p.tap('#gostory') : await p.click('#gostory');
+      mobile ? await p.tap('#gostory') : await p.click('#gostory'); await p.waitForTimeout(300); if (await p.evaluate(() => !!__app.lenPick)) await p.click('#lpfull'); /* Chapter 1: Quick or Full */
       await p.waitForTimeout(2500);
       // a spot on the picture away from the subtitles and controls
       const spot = await p.evaluate(() => { const v = document.getElementById('vp').getBoundingClientRect(); return [v.left + v.width * .5, v.top + v.height * .3]; });

@@ -43,12 +43,12 @@ const ROOT = process.env.ROOT || path.join(__dirname, '..');
     // the intro panel: watch the opening (about a minute), explore, or read
     await p.evaluate(() => __app.showStep(0)); await p.waitForTimeout(900);
     const ip = await p.evaluate(() => ({go: document.getElementById('gostory').textContent, map: !!document.getElementById('goexplore'), read: !!document.getElementById('goread'), ch: document.querySelectorAll('#evbody .chlist .chb').length}));
-    ok(name+' intro panel: '+JSON.stringify(ip), /▶ Play Chapter \d+ intro · \d+ min/.test(ip.go) && ip.map && ip.read && ip.ch === 3);
+    ok(name+' intro panel: '+JSON.stringify(ip), /▶ Play Chapter \d+( intro · \d+ min)?$/.test(ip.go) && ip.map && ip.read && ip.ch === 3);
     const chIn = await p.evaluate(() => __app.chapters('intro'));
     ok(name+' opener plan '+Math.round(chIn[0].ms/1000)+' s (60-90), chapters '+chIn.map(c => c.title+' '+Math.round(c.ms/1000)+'s').join(' | '), chIn.length === 3 && chIn[0].ms >= 60000 && chIn[0].ms <= 90000 && chIn[0].end === iChoice + 1);
     if (shots){ await p.evaluate(() => document.getElementById('gostory').scrollIntoView({block:'center'})); await p.waitForTimeout(300); }
     if (shots) await panelShot('#gostory', 'narr_intro_panel');
-    await tap('#gostory'); await p.waitForTimeout(2200);
+    await tap('#gostory'); await p.waitForTimeout(300); if (await p.evaluate(() => !!__app.lenPick)) await p.click('#lpfull'); /* Chapter 1: Quick or Full */ await p.waitForTimeout(2200);
     let pl = await P(), v = await p.evaluate(() => __app.voice);
     ok(name+' opening film starts: '+JSON.stringify(pl), pl && pl.reel === 'intro' && pl.i === 0 && pl.chapter === 1);
     ok(name+' the narrator speaks line 1 '+(v.src || '').split('/').pop(), v.on && v.playing && /jews-1207-in-01\.mp3$/.test(v.src));
@@ -97,7 +97,7 @@ const ROOT = process.env.ROOT || path.join(__dirname, '..');
     await wake(); await p.evaluate(() => document.getElementById('capskip').click()); await p.waitForTimeout(2200);
     ok(name+' Skip ends the opener on the map', await p.evaluate(() => __app.play === null && __app.step === 9 && __app.resume('intro') === 0));
     // Explore the map from the choice: lands on the map, chapter 2 offered later
-    await p.evaluate(() => __app.showStep(0)); await p.waitForTimeout(600); await tap('#gostory'); await p.waitForTimeout(1500);
+    await p.evaluate(() => __app.showStep(0)); await p.waitForTimeout(600); await tap('#gostory'); await p.waitForTimeout(300); if (await p.evaluate(() => !!__app.lenPick)) await p.click('#lpfull'); /* Chapter 1: Quick or Full */ await p.waitForTimeout(1500);
     await p.evaluate(i => { __app.speed = 1.25; __app.seek(i); }, iChoice);
     await p.waitForFunction(() => __app.play && __app.play.choice, null, {timeout: 25000}).catch(() => {});
     await tap('#choicemap'); await p.waitForTimeout(2200);

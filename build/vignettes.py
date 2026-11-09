@@ -21,6 +21,7 @@ Optional keys:
 """
 
 D = "images/vignettes/"
+def _q(line, name): return {"line": line, "_name": name}
 
 VIGNETTES = {
     # story-stop prefix (as in the narration file names) -> reel ("intro" = transitionIn, "play") -> list
@@ -81,6 +82,23 @@ VIGNETTES = {
             {"line": "Down on the coast and along the trade roads", "src": D + "c1-copper-trade.webp", "alt": "Ox-hide shaped copper ingots unloaded from a ship, donkeys waiting", "caption": "The copper trade (impression)", "fx": "waves"},
             {"line": "Imagine a winter evening", "src": D + "c1-winter-evening.webp", "alt": "A family around a fire inside a stone house at night, goats resting nearby", "caption": "A winter evening (impression)", "fx": "fire"},
             {"line": "In Jewish tradition, this is the age of the Judges", "src": D + "c1-judges-palm.webp", "alt": "A woman seated under a palm tree in the hills, people walking toward her", "caption": "Deborah's palm (impression)"},
+        ],
+        # Quick version (about two minutes): the same pictures as the full film, one per main line
+        "quick": [
+            _q("About twelve hundred and seven BC", "c1-hattusa-gate.webp"),
+            _q("Between them lay Canaan", "c1-egyptian-garrison.webp"),
+            _q("Pharaoh Merneptah carved a victory hymn", "c1-merneptah-plate.webp"),
+            _q("In Jewish tradition, the story begins earlier", "c1-sinai.webp"),
+            _q("Then the old world of palaces began to fall", "c1-palace-ruins.webp"),
+            _q("The port of Ugarit was destroyed", "c1-ugarit-burns.webp"),
+            _q("Egyptian temple walls show peoples on the move", "c1-ox-carts.webp"),
+            _q("Around eleven seventy-seven BC", "c1-sea-battle.webp"),
+            _q("Among them were the Philistines", "c1-ashkelon.webp"),
+            _q("During the twelfth century", "c1-beth-shean.webp"),
+            _q("In the hills, small farming villages spread", "c1-village-ring.webp"),
+            _q("Many archaeologists see these villagers", "c1-pillared-house.webp"),
+            _q("In Jewish tradition, this is the age of the Judges, when", "c1-judges-palm.webp"),
+            _q("For now, this is a people of villages", "c1-hills-evening.webp"),
         ],
     },
     "jews-1150": {
@@ -224,3 +242,16 @@ VIGNETTES = {
         ],
     },
 }
+
+
+# the quick reel reuses the full film's pictures (same alt, caption and fx), looked up by file name
+def _find(name):
+    for reels in VIGNETTES.values():
+        for where, vs in reels.items():
+            if where == "quick": continue
+            for v in vs:
+                if v.get("src", "").endswith("/" + name): return v
+    raise KeyError(name)
+for _reels in VIGNETTES.values():
+    for _v in _reels.get("quick", []):
+        _base = _find(_v.pop("_name")); _v.update({k: x for k, x in _base.items() if k != "line"})

@@ -30,7 +30,7 @@ const israelCheck = p => p.evaluate(() => {
       await p.goto(url, {waitUntil: 'networkidle'}); await p.waitForTimeout(800);
       await p.evaluate(() => __app.showStep(0)); await p.waitForTimeout(600);
       await p.evaluate(() => document.getElementById('gostory').scrollIntoView({block: 'center'}));
-      mobile ? await p.tap('#gostory') : await p.click('#gostory');
+      mobile ? await p.tap('#gostory') : await p.click('#gostory'); await p.waitForTimeout(300); if (await p.evaluate(() => !!__app.lenPick)) await p.click('#lpfull'); /* Chapter 1: Quick or Full */
       await p.waitForTimeout(1500);
       const iChoice = await p.evaluate(() => __app.chapters('intro')[0].end - 1);
       await p.evaluate(i => { __app.speed = 1.25; __app.seek(i); }, iChoice);
