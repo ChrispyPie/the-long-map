@@ -60,7 +60,7 @@ const D = process.env.SHOTS || 'screens';
       await p.evaluate(() => document.querySelector('.parts').scrollIntoView({block: 'center'})); await p.waitForTimeout(300); await shot('continue');
       // Part 1's opener run to its end marks Part 1 as watched
       await p.evaluate(() => { localStorage.removeItem('tlm.done.jews.-1207'); });
-      await tap('#gostory'); await p.waitForFunction(() => __app.play && __app.play.reel === 'intro', null, {timeout: 15000});
+      await tap('#gostory'); await p.waitForTimeout(300); if (await p.evaluate(() => !!__app.lenPick)) await p.click('#lpfull'); /* Chapter 1: Quick or Full */ await p.waitForFunction(() => __app.play && __app.play.reel === 'intro', null, {timeout: 15000});
       const n = await p.evaluate(() => __app.play.n); await p.evaluate(n => __app.seek(n - 1), n);
       for (let i = 0; i < 80 && await p.evaluate(() => !!__app.play); i++){ if (await p.evaluate(() => __app.play && __app.play.choice)) await tap('#choicego'); await p.waitForTimeout(500); }
       ok(name + ' Part 1 opener to the end marks Part 1 watched', await p.evaluate(() => !__app.play && localStorage.getItem('tlm.done.jews.-1207') === '1'));
