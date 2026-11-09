@@ -48,10 +48,9 @@ OPENER = [
    claims=[["By about one thousand BC, the Bible tells of kings. First Saul, then David.",T,["bible"]],
            ["How much of that story is history is one of the great debates in archaeology.",D,["mazar2010","finksilb2006"]]],
    ref="1 Samuel 9 – 2 Samuel 5"),
- B("That is the world of this year. You can stay with the story, or explore the map on your own.", F),
+ B("That is the world of this chapter. Now the story begins.", F),
 ]
 OPENER[0]["chapter"] = "The world of 1150 BC"
-OPENER[-1]["choice"] = True
 
 # ---------------- Play: c. 1150 BC to c. 1000 BC ----------------
 COAST = [

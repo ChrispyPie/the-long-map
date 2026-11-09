@@ -63,7 +63,7 @@ def check_stop(stop, era, reel_prefix):
     def check_reel(where, beats, frame_ok):
         where_ = f"{stop['label']} {where}"
         assert beats and "chapter" in beats[0], f"{where_}: the first beat opens a chapter"
-        assert sum(1 for b in beats if b.get("choice")) == (1 if where == "intro" else 0), f"{where_}: choice beats"
+        assert not any(b.get("choice") for b in beats), f"{where_}: no choice beats (the choice comes at the end of the chapter, in the app)"
         for n,b in enumerate(beats):
             caps = [x for x in b["steps"] if x["type"]=="caption"]
             assert len(caps) == 1, f"{where_} beat {n} needs exactly one caption"

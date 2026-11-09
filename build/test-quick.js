@@ -2,7 +2,7 @@
 // Data: every line recorded, sourced and labelled, ~250-320 words, vignettes reuse Chapter 1 pictures, and the reel
 // ends on the same map as Play. Browser (390x844 touch, and 1280x800): Play Chapter 1 asks Quick or Full first
 // (✕ / Esc cancel), Quick runs the quick reel with its own line markers (#q1) and links, a short tap on the map
-// never pauses, the sources popup pauses and resumes, the reel runs to the end and lands on Chapter 2 ("Continue to
+// never pauses, the sources popup pauses and resumes, the reel runs to the end, the end-of-chapter choice, Stay with the story opens Chapter 2's card ("Continue to
 // Chapter 2") with Chapter 1 watched; Full still starts the opening film; Chapter 2 has no chooser; the book's
 // Play chapter asks too; ?ch=1&quick=1 and ?ch=1&line=q5 open the quick version.
 // Usage: node build/test-quick.js [url] [noshots]; SHOTS=dir for screenshots (default /workspace).
@@ -86,7 +86,7 @@ const ROOT = path.join(__dirname, '..');
       await p.evaluate(() => __app.seek(0)); await p.waitForTimeout(300);
       await p.evaluate(() => { __app.speed = 8; });
       let maxI = 0, phil = false, isr = false;
-      for (let i = 0; i < 400 && await p.evaluate(() => !!__app.play); i++){
+      for (let i = 0; i < 400 && await p.evaluate(() => !!__app.play && !__app.ended); i++){
         const t = await p.evaluate(() => ({i: __app.play ? __app.play.i : -1, ph: document.querySelectorAll('path.added.z-philistia').length, is: document.querySelectorAll('path.added.z-highlands').length}));
         maxI = Math.max(maxI, t.i); if (t.ph) phil = true; if (t.is) isr = true;
         await p.waitForTimeout(400);
@@ -95,13 +95,12 @@ const ROOT = path.join(__dirname, '..');
       ok(name + ' Philistia and Israel drawn', phil && isr);
       const miss = Q.map((_, i) => 'jews-1207-quick-' + String(i + 1).padStart(2, '0')).filter(f => !req.has(f));
       ok(name + ' every quick recording requested, missing ' + JSON.stringify(miss), !miss.length);
-      await p.waitForTimeout(3000);
-      s = await p.evaluate(() => ({mode: __app.mode, cur: __app.cur, btn: (document.getElementById('gonextch') || {}).textContent, done: __app.parts()[0].done, pos: __app.pos(-1207)}));
-      ok(name + ' ends on Chapter 2 with Continue, Chapter 1 watched ' + JSON.stringify(s), s.mode === 'stop' && s.cur === 1 && /Continue to Chapter 2/.test(s.btn || '') && s.done && !s.pos);
-      // Chapter 2 has no quick version: it starts as before
-      await tap('#gonextch'); await p.waitForTimeout(800);
-      s = await p.evaluate(() => ({lp: __app.lenPick, play: __app.play}));
-      ok(name + ' Continue to Chapter 2 asks Quick or Full too ' + JSON.stringify(s), s.lp && !s.play);
+      await p.waitForTimeout(1000);
+      s = await p.evaluate(() => ({ended: __app.ended, sub: document.getElementById('choicesub').textContent, done: __app.parts()[0].done, pos: __app.pos(-1207)}));
+      ok(name + ' ends on the choice (next: Chapter 2), Chapter 1 watched ' + JSON.stringify(s), s.ended && /Chapter 2/.test(s.sub) && s.done && !s.pos);
+      await tap('#choicego'); await p.waitForTimeout(800);
+      s = await p.evaluate(() => ({lp: __app.lenPick, txt: document.getElementById('lenpick').textContent}));
+      ok(name + ' Stay with the story → Chapter 2 asks Quick or Full ' + JSON.stringify(s.lp), s.lp && /Chapter 2/.test(s.txt));
       await tap('#lpfull'); await p.waitForTimeout(1500);
       s = await p.evaluate(() => ({lp: __app.lenPick, play: __app.play}));
       ok(name + ' Chapter 2 Full starts its opening film ' + JSON.stringify(s), !s.lp && s.play && s.play.reel === 'intro');
@@ -169,11 +168,14 @@ const ROOT = path.join(__dirname, '..');
       if (shots && dev.mob){ await p.evaluate(() => __app.seek(13)); await p.waitForTimeout(7000); await p.evaluate(() => __app.wake()); await p.waitForTimeout(200); await p.screenshot({path: D + '/quick-ch2-film-phone.png'}); }
       await p.evaluate(() => __app.seek(0)); await p.evaluate(() => { __app.speed = 8; });
       let maxI = 0;
-      for (let i = 0; i < 400 && await p.evaluate(() => !!__app.play); i++){ maxI = Math.max(maxI, await p.evaluate(() => __app.play ? __app.play.i : -1)); await p.waitForTimeout(400); }
+      for (let i = 0; i < 400 && await p.evaluate(() => !!__app.play && !__app.ended); i++){ maxI = Math.max(maxI, await p.evaluate(() => __app.play ? __app.play.i : -1)); await p.waitForTimeout(400); }
       ok(name + ' Ch2 quick ran every line (' + maxI + ')', maxI === 17);
-      await p.waitForTimeout(3000);
-      s = await p.evaluate(() => ({cur: __app.cur, btn: (document.getElementById('gonextch') || {}).textContent, done: __app.parts()[1].done}));
-      ok(name + ' Ch2 quick ends on Chapter 3 ' + JSON.stringify(s), s.cur === 2 && /Continue to Chapter 3/.test(s.btn || '') && s.done);
+      await p.waitForTimeout(1000);
+      s = await p.evaluate(() => ({ended: __app.ended, sub: document.getElementById('choicesub').textContent, done: __app.parts()[1].done}));
+      ok(name + ' Ch2 quick ends on the choice, next Chapter 3 ' + JSON.stringify(s), s.ended && /Chapter 3/.test(s.sub) && s.done);
+      await tap('#choicego'); await p.waitForTimeout(800);
+      ok(name + ' Stay → Chapter 3 card', await p.evaluate(() => __app.lenPick && /Chapter 3/.test(document.getElementById('lenpick').textContent)));
+      await tap('#lpx'); await p.waitForTimeout(300);
       for (const k of [2, 3, 4]){ await p.evaluate(k => __app.go(k), k); await p.waitForTimeout(1500); ok(name + ' terrain on Chapter ' + (k + 1), await ter()); }
       await p.evaluate(() => __app.bookPlay(1, 'intro', 1)); await p.waitForTimeout(2000);
       ok(name + ' terrain under the Ch2 opening film', (await p.evaluate(() => __app.play && __app.play.reel === 'intro')) && await ter());
@@ -224,11 +226,14 @@ const ROOT = path.join(__dirname, '..');
         if (shots){ await p.evaluate(n => __app.seek(n), Math.floor(c.n_ * 0.6)); await p.waitForTimeout(7000); await p.evaluate(() => __app.wake()); await p.waitForTimeout(200); await p.screenshot({path: `${D}/quick-ch${c.n}-film-phone.png`}); }
         await p.evaluate(() => __app.seek(0)); await p.evaluate(() => { __app.speed = 8; });
         let maxI = 0;
-        for (let i = 0; i < 400 && await p.evaluate(() => !!__app.play); i++){ maxI = Math.max(maxI, await p.evaluate(() => __app.play ? __app.play.i : -1)); await p.waitForTimeout(400); }
+        for (let i = 0; i < 400 && await p.evaluate(() => !!__app.play && !__app.ended); i++){ maxI = Math.max(maxI, await p.evaluate(() => __app.play ? __app.play.i : -1)); await p.waitForTimeout(400); }
         ok(`${name} Ch${c.n} quick ran every line (${maxI})`, maxI === c.n_ - 1);
-        await p.waitForTimeout(3000);
-        s = await p.evaluate(() => ({cur: __app.cur, mode: __app.mode, btn: (document.getElementById('gonextch') || {}).textContent}));
-        ok(`${name} Ch${c.n} quick ends on the next chapter ${JSON.stringify(s)}`, c.n < 5 ? s.cur === c.k + 1 && new RegExp('Continue to Chapter ' + (c.n + 1)).test(s.btn || '') : s.mode === 'soon');
+        await p.waitForTimeout(1000);
+        ok(`${name} Ch${c.n} quick ends on the choice`, await p.evaluate(() => __app.ended && !document.getElementById('choice').hidden));
+        await p.tap('#choicego'); await p.waitForTimeout(c.n < 5 ? 800 : 2500);
+        s = await p.evaluate(() => ({lp: __app.lenPick, txt: document.getElementById('lenpick').textContent, mode: __app.mode, play: !!__app.play}));
+        ok(`${name} Ch${c.n} Stay with the story → ${c.n < 5 ? 'next chapter card' : '701 coming soon'} ${JSON.stringify([s.lp, s.mode])}`, c.n < 5 ? s.lp && s.txt.includes('Chapter ' + (c.n + 1)) : s.mode === 'soon' && !s.play);
+        if (c.n < 5){ await p.tap('#lpx'); await p.waitForTimeout(300); }
         ok(`${name} Ch${c.n} counted as watched`, await p.evaluate(k => __app.parts()[k].done, c.k));
       }
       // 'Play Chapter 5 again' on the coming-soon page: Quick or Full first
@@ -242,8 +247,8 @@ const ROOT = path.join(__dirname, '..');
       let r = await p.evaluate(() => __app.play && {reel: __app.play.reel, n: __app.play.n, cur: __app.cur});
       ok(`${name} replay → Quick plays Chapter 5 quick ${JSON.stringify(r)}`, r && r.reel === 'quick' && r.cur === 4);
       await p.evaluate(() => __app.seek(__app.play.n - 1)); await p.waitForTimeout(300);
-      for (let i = 0; i < 100 && await p.evaluate(() => !!__app.play); i++) await p.waitForTimeout(400);
-      await p.waitForTimeout(2500);
+      for (let i = 0; i < 100 && await p.evaluate(() => !!__app.play && !__app.ended); i++) await p.waitForTimeout(400);
+      await p.waitForTimeout(800); await p.tap('#choicego'); await p.waitForTimeout(2500);
       await p.tap('#replay'); await p.waitForTimeout(500); await p.tap('#lpfull'); await p.waitForTimeout(2000);
       r = await p.evaluate(() => __app.play && {reel: __app.play.reel, cur: __app.cur});
       ok(`${name} replay → Full plays the full Chapter 5 ${JSON.stringify(r)}`, r && r.reel !== 'quick' && r.cur === 4);

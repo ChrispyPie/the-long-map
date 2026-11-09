@@ -1,4 +1,4 @@
-// The opener's choice ("The world is set. What next?") must be fully visible and tappable on every screen:
+// The end-of-chapter choice ("End of Chapter 1. What next?" Stay with the story / Explore the map) must be fully visible and tappable on every screen:
 // both buttons inside the screen, not covered by the subtitle, chapter strip, controls, year or letterbox.
 // Usage: node build/test-choice.js [url] [noshots]; TS=s|m|l|xl for a saved text size; SHOTS=dir for choice_<w>x<h>.png screenshots.
 const { chromium } = require('playwright');
@@ -32,9 +32,9 @@ const israelCheck = p => p.evaluate(() => {
       await p.evaluate(() => document.getElementById('gostory').scrollIntoView({block: 'center'}));
       mobile ? await p.tap('#gostory') : await p.click('#gostory'); await p.waitForTimeout(300); if (await p.evaluate(() => !!__app.lenPick)) await p.click('#lpfull'); /* Chapter 1: Quick or Full */
       await p.waitForTimeout(1500);
-      const iChoice = await p.evaluate(() => __app.chapters('intro')[0].end - 1);
-      await p.evaluate(i => { __app.speed = 1.25; __app.seek(i); }, iChoice);
-      await p.waitForFunction(() => __app.play && __app.play.choice, null, {timeout: 30000});
+      // the opening film runs on into Play; the choice comes after Play's last line
+      await p.evaluate(() => { __app.speed = 1.25; __app.playStart('play', 999); }); await p.waitForTimeout(1500);
+      await p.waitForFunction(() => __app.play && __app.play.choice && __app.ended, null, {timeout: 40000});
       await p.waitForTimeout(900);
       // wake the controls (the worst case: everything on screen at once)
       await p.mouse.move(vw / 2, vh / 3); await p.mouse.move(vw / 2 + 4, vh / 3 + 3); await p.waitForTimeout(500);
@@ -64,8 +64,9 @@ const israelCheck = p => p.evaluate(() => {
       if (shots) await p.screenshot({path: D + '/choice_' + name + '.png'});
       // after the choice the subtitles and controls come back
       mobile ? await p.tap('#choicego') : await p.click('#choicego'); await p.waitForTimeout(800);
-      const after = await p.evaluate(() => ({choice: __app.play && __app.play.choice, i: __app.play && __app.play.i, choosing: document.body.classList.contains('choosing'), cap: getComputedStyle(document.getElementById('captext')).display}));
-      ok(name + ' Continue works, subtitles back ' + JSON.stringify(after), after.choice === false && !after.choosing && after.cap !== 'none');
+      const after = await p.evaluate(() => ({lp: __app.lenPick, txt: document.getElementById('lenpick').textContent}));
+      ok(name + ' Stay with the story opens Chapter 2\'s Quick/Full card', after.lp && /Chapter 2/.test(after.txt));
+      await p.evaluate(() => document.getElementById('lpx').click()); await p.waitForTimeout(300);
       // Play: the c. 1150 BC hill-country label (added by a border step)
       if (vw === 390 || vw === 1280 || vw === 844){
         await p.evaluate(() => __app.playStop && __app.playStop(false)); await p.waitForTimeout(800);

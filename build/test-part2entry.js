@@ -39,13 +39,12 @@ const D = process.env.SHOTS || 'screens';
       const vb = await p.evaluate(() => { const r = document.getElementById('vp').getBoundingClientRect(); return {x: r.left + r.width / 2, y: r.top + r.height * 0.4}; });
       mobile ? await p.touchscreen.tap(vb.x, vb.y) : await p.mouse.click(vb.x, vb.y); await p.waitForTimeout(500);
       ok(name + ' tap on the picture does not pause', await p.evaluate(() => __app.play && __app.play.paused === false));
-      // to the opener's end: its choice marks Part 2 as watched, and Continue goes on into Play
+      // to the opener's end: it goes straight on into Play; the chapter is not 'watched' until its end
       await p.evaluate(() => __app.seek(6));
-      await p.waitForFunction(() => __app.play && __app.play.choice, null, {timeout: 40000});
-      ok(name + ' Part 2 remembered as watched at its choice', await p.evaluate(() => localStorage.getItem('tlm.done.jews.-1150') === '1'));
-      await tap('#choicego'); await p.waitForTimeout(1200);
+      await p.waitForFunction(() => __app.play && __app.play.reel === 'play', null, {timeout: 40000}); await p.waitForTimeout(600);
+      ok(name + ' Part 2 not yet watched mid-chapter', await p.evaluate(() => localStorage.getItem('tlm.done.jews.-1150') !== '1'));
       s = await p.evaluate(() => __app.play);
-      ok(name + ' Continue goes on into the c. 1150 to c. 1000 BC Play ' + JSON.stringify(s), s && s.reel === 'play' && s.n === 53);
+      ok(name + ' the opener goes on into the c. 1150 to c. 1000 BC Play ' + JSON.stringify(s), s && s.reel === 'play' && s.n === 53);
       await p.evaluate(() => __app.playStop(false)); await p.waitForTimeout(1500);
       await p.evaluate(() => __app.showStep(0)); await p.waitForTimeout(400);
       l = await list();
@@ -58,12 +57,14 @@ const D = process.env.SHOTS || 'screens';
       l = await list();
       ok(name + ' after Part 1, Part 2 is highlighted "Continue" ' + JSON.stringify(l.map(x => x.t)), l[1].go && /Continue/.test(l[1].t));
       await p.evaluate(() => document.querySelector('.parts').scrollIntoView({block: 'center'})); await p.waitForTimeout(300); await shot('continue');
-      // Part 1's opener run to its end marks Part 1 as watched
+      // Part 1 run to its end (opener, then Play) marks Part 1 as watched
       await p.evaluate(() => { localStorage.removeItem('tlm.done.jews.-1207'); });
       await tap('#gostory'); await p.waitForTimeout(300); if (await p.evaluate(() => !!__app.lenPick)) await p.click('#lpfull'); /* Chapter 1: Quick or Full */ await p.waitForFunction(() => __app.play && __app.play.reel === 'intro', null, {timeout: 15000});
-      const n = await p.evaluate(() => __app.play.n); await p.evaluate(n => __app.seek(n - 1), n);
-      for (let i = 0; i < 80 && await p.evaluate(() => !!__app.play); i++){ if (await p.evaluate(() => __app.play && __app.play.choice)) await tap('#choicego'); await p.waitForTimeout(500); }
-      ok(name + ' Part 1 opener to the end marks Part 1 watched', await p.evaluate(() => !__app.play && localStorage.getItem('tlm.done.jews.-1207') === '1'));
+      await p.evaluate(() => { __app.speed = 8; __app.seek(__app.play.n - 1); });
+      await p.waitForFunction(() => __app.play && __app.play.reel === 'play', null, {timeout: 40000});
+      await p.evaluate(() => __app.seek(__app.play.n - 1));
+      for (let i = 0; i < 80 && !(await p.evaluate(() => __app.ended)); i++) await p.waitForTimeout(500);
+      ok(name + ' Part 1 to the end marks Part 1 watched', await p.evaluate(() => __app.ended && localStorage.getItem('tlm.done.jews.-1207') === '1'));
     } catch (e) { ok(name + ' ran: ' + e.message.split('\n')[0], false); }
     await ctx.close();
   }

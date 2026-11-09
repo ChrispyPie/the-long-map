@@ -43,11 +43,10 @@ OPENER = [
    vis=[fo([38.5,33.0],1.9,["egypt","assyria"])]),
  B("On the map, two kingdoms. Israel in the north, larger and richer. Judah in the south, ruled from Jerusalem by the House of David.", A, ["fink2013","mazar2010","biran1995"],
    vis=[fo([35.3,32.2],5.0,["israelk","judah"])]),
- B("That is the world of this year. You can stay with the story, or explore the map on your own.", F,
+ B("That is the world of this chapter. Now the story begins.", F,
    vis=[fo([35.6,32.4],3.6)]),
 ]
 OPENER[0]["chapter"] = "The world of 930 BC"
-OPENER[-1]["choice"] = True
 
 # ---------------- Play: c. 930 BC to 841 BC ----------------
 WAR = [

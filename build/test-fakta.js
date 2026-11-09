@@ -138,6 +138,10 @@ const D = process.env.SHOTS || 'screens';
     ok(name+' Hatti faded', await p.evaluate(()=>[...document.querySelectorAll('path.z-hatti.zone')].every(e=>e.classList.contains('gone'))));
     // run to the end quickly
     await p.evaluate(()=>{ __app.speed = 12; __app.seek(__app.play.n - 6); });
+    // the chapter ends on its choice; Explore the map, then the next chapter's page (c. 1150 BC)
+    await p.waitForFunction(()=>__app.ended, null, {timeout:30000});
+    await p.evaluate(()=>document.getElementById('choicemap').click()); await p.waitForTimeout(1800);
+    await p.evaluate(()=>__app.go(1));
     await p.waitForFunction(()=>__app.mode === 'stop' && !__app.play && /1150/.test(document.getElementById('pill').textContent), null, {timeout:30000});
     await p.waitForTimeout(1600);
     const end = await p.evaluate(()=>({big:document.getElementById('big').textContent, flag:!!document.querySelector('.soonflag'), phil:document.querySelectorAll('path.z-philistia').length, isr:document.querySelectorAll('path.israel').length, added:document.querySelectorAll('path.added').length, hatti:document.querySelectorAll('path.z-hatti').length, cap:document.getElementById('cap').hidden, xp:document.getElementById('xp').hidden}));

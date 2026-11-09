@@ -41,7 +41,7 @@ STORY = {
 STOP = {
  "story":"jews","year":-1207,"label":"1207 BC","title":"Israel is named",
  "keyObjects":["israelp","hills","jerusalem","shechem","ashkelon","gezer","yenoam","jordan"],
- # the opening film: a short opener that ends on a choice, then chapters 2 and 3 (see narration_jews_1207.py)
+ # the opening film: a short opener and a bridge line, then chapters 2 and 3 (see narration_jews_1207.py)
  "transitionIn":{"text":"The first chapter of the Jewish story on this map. Egypt, Hatti, Assyria and Babylon are the great powers. In the hills of Canaan lives a people called Israel.",
    "title":"The world of 1207 BC","ambient":"desert","beats":NAR.clean(NAR.INTRO_BEATS)},
  "transitionOut":{"to":-1150,"text":"Next: the hill villages grow over the following generations. In Jewish memory this is the time of the Judges, when the tribes lived without a king."},

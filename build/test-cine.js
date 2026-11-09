@@ -94,15 +94,17 @@ const D = process.env.SHOTS || 'screens';
     if (mobile && !rm) await shot('cine_film_cc_off');
     await p.reload({waitUntil:'networkidle'}); await p.waitForTimeout(700);
     ok(name+' CC choice remembered after reload', await p.evaluate(()=>__app.cc===false && document.getElementById('capcc').getAttribute('aria-pressed')==='false'));
-    // replay with CC on, skip to the end: zoom back out to the explore UI on the new year
+    // replay with CC on, skip to the end: the end-of-chapter choice; Explore the map zooms back out to the explore UI (the map as the chapter left it)
     await p.evaluate(()=>__app.showStep(9)); await p.waitForTimeout(1200);
     await p.evaluate(()=>document.getElementById('playbtn').scrollIntoView({block:'center'}));
     await tap('#playbtn'); await p.waitForTimeout(300); if (await p.evaluate(() => !!__app.lenPick)) await p.click('#lpfull'); /* Quick or Full */ await p.waitForTimeout(1500);
     await tap('#capcc'); await p.waitForTimeout(100);
     ok(name+' CC back on', await p.evaluate(()=>__app.cc===true && getComputedStyle(document.getElementById('captext')).display!=='none'));
     await p.evaluate(()=>__app.seek(__app.play.n - 1)); await p.waitForTimeout(rm ? 300 : 500);
-    // let the last beat finish by itself
-    for (let i = 0; i < 40 && await p.evaluate(()=>!!__app.play); i++) await p.waitForTimeout(500);
+    // let the last beat finish by itself: the end-of-chapter choice, then Explore the map zooms out
+    for (let i = 0; i < 40 && !(await p.evaluate(()=>__app.ended)); i++) await p.waitForTimeout(500);
+    await p.waitForTimeout(400);
+    await p.evaluate(()=>document.getElementById('choicemap').click());
     await p.waitForTimeout(rm ? 200 : 350);
     const zo = await p.evaluate(()=>({cine: !!__app.cine, vp: document.getElementById('vp').getBoundingClientRect().height}));
     await p.waitForTimeout(1600);
