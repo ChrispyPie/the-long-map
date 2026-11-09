@@ -26,7 +26,7 @@ const ROOT = path.join(__dirname, '..');
   ok('audioMs measured for every line', all.every(b => b.audioMs > 2000 && b.audioMs < 20000));
   ok('spoken text has no digits or brackets', all.every(b => caps(b).every(c => !/[()\d]/.test(c.text))));
   ok('every Bible ref cites the Bible', all.every(b => caps(b).every(c => !c.ref || (c.src || []).includes('bible'))));
-  ok('exactly one choice, at the end of the opener', IN.filter(b => b.choice).length === 1 && IN[IN.length - 1].choice && PL.every(b => !b.choice));
+  ok('no choice inside the films (it comes at the end of the chapter), the opener ends on a lead-in', IN.every(b => !b.choice) && PL.every(b => !b.choice) && /begin/.test(IN[IN.length - 1].steps.find(x => x.type === 'caption').text));
   ok('ends on the teaser for the next chapter', /next chapter begins\.$/.test(caps(PL[PL.length - 1])[0].text));
   const b = await chromium.launch({args: ['--autoplay-policy=no-user-gesture-required']});
   const ctx = await b.newContext({viewport: {width: 390, height: 844}, deviceScaleFactor: 2, isMobile: true, hasTouch: true});
@@ -48,15 +48,14 @@ const ROOT = path.join(__dirname, '..');
     s = await p.evaluate(() => ({play: __app.play, voice: __app.voice}));
     ok(name + ' opener runs with voice ' + JSON.stringify(s.play), s.play && s.play.reel === 'intro' && s.play.n === 7 && /jews-1000-in-01/.test(s.voice.src || ''));
     await p.evaluate(() => { __app.speed = 8; });
-    await p.waitForFunction(() => __app.play && __app.play.choice, null, {timeout: 120000});
-    await shot('choice');
-    await p.evaluate(() => document.getElementById('choicego').scrollIntoView({block: 'center'}));
-    await p.tap('#choicego'); await p.waitForTimeout(1500);
+    // the opener runs straight on into Play (no choice in between)
+    await p.waitForFunction(() => __app.play && __app.play.reel === 'play', null, {timeout: 120000});
+    await p.waitForTimeout(300);
     s = await p.evaluate(() => __app.play);
-    ok(name + ' Continue goes on into Play ' + JSON.stringify(s), s && s.reel === 'play' && s.n === 61);
+    ok(name + ' the opener goes straight on into Play ' + JSON.stringify(s), s && s.reel === 'play' && s.n === 61);
     await p.evaluate(() => { __app.speed = 8; });
     let maxI = 0, splitSeen = false, lastCap = '';
-    for (let i = 0; i < 600 && await p.evaluate(() => !!__app.play); i++){
+    for (let i = 0; i < 600 && await p.evaluate(() => !!__app.play && !__app.ended); i++){
       const t = await p.evaluate(() => ({i: __app.play ? __app.play.i : -1, n: __app.play ? __app.play.n : 0, judah: document.querySelectorAll('path.added.z-judah').length, cap: document.getElementById('cap').textContent}));
       maxI = Math.max(maxI, t.i); if (t.judah) splitSeen = true; if (t.i === t.n - 1) lastCap = t.cap;
       if (t.i === 56 && shots && !fs.existsSync(D + '/ch3_split.png')) await shot('split');
@@ -67,9 +66,14 @@ const ROOT = path.join(__dirname, '..');
     ok(name + ' last subtitle is the teaser ' + JSON.stringify(lastCap.slice(0, 60)), /next chapter begins/.test(lastCap));
     const miss = [...Array(7).keys()].map(i => 'jews-1000-in-0' + (i + 1)).concat([...Array(61).keys()].map(i => 'jews-1000-play-' + String(i + 1).padStart(2, '0'))).filter(f => !req.has(f));
     ok(name + ' every line\'s recording requested (' + req.size + ') missing ' + JSON.stringify(miss), miss.length === 0);
-    await p.waitForTimeout(2500);
+    await p.waitForTimeout(1500);
+    ok(name + ' the chapter ends on Stay with the story / Explore the map', await p.evaluate(() => __app.ended && !document.getElementById('choice').hidden && /Stay with the story/.test(document.getElementById('choicego').textContent)));
+    await shot('endchoice');
+    await p.tap('#choicego'); await p.waitForTimeout(800);
+    ok(name + ' Stay with the story → Chapter 4 Quick/Full card', await p.evaluate(() => __app.lenPick && /Chapter 4/.test(document.getElementById('lenpick').textContent)));
+    await p.tap('#lpfull'); await p.waitForTimeout(2500); await p.evaluate(() => __app.playStop(false)); await p.waitForTimeout(1500); await p.evaluate(() => __app.showStep(0)); await p.waitForTimeout(600);
     s = await p.evaluate(() => ({mode: __app.mode, pill: document.getElementById('pill').textContent, flag: !!document.querySelector('.soonflag'), israel: document.querySelectorAll('path.z-israel').length, judah: document.querySelectorAll('path.z-judah').length, btn: (document.getElementById('gonextch') || {}).textContent}));
-    ok(name + ' Play ends on the c. 930 BC intro with "Continue to Chapter 4", Israel and Judah on its map ' + JSON.stringify(s), s.mode === 'stop' && /930/.test(s.pill) && !s.flag && s.israel >= 1 && s.judah >= 1 && /Continue to Chapter 4/.test(s.btn || ''));
+    ok(name + ' Stay leads into Chapter 4 (c. 930 BC), Israel and Judah on its map ' + JSON.stringify(s), s.mode === 'stop' && /930/.test(s.pill) && !s.flag && s.israel >= 1 && s.judah >= 1);
     await shot('end930');
     ok(name + ' Chapter 3 counted as watched', await p.evaluate(() => __app.parts()[2].done));
   } catch (e) { ok(name + ' ran: ' + e.message.split('\n')[0], false); }

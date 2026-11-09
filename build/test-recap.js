@@ -106,13 +106,14 @@ const ROOT = path.join(__dirname, '..');
     // finishing a chapter, then Continue to the next one right away: the recap plays (no auto-skip)
     await startCh(2, 'quick'); await p.tap('#recapskip'); await p.waitForTimeout(1500);
     await p.evaluate(() => { __app.speed = 8; __app.seek(__app.play.n - 1); });
-    for (let i = 0; i < 80 && await p.evaluate(() => !!__app.play); i++) await p.waitForTimeout(500);
-    await p.waitForTimeout(3000);
+    for (let i = 0; i < 80 && !(await p.evaluate(() => __app.ended)); i++) await p.waitForTimeout(500);
+    await p.waitForTimeout(800);
     ok(`${name} finishing Ch3 records when`, await p.evaluate(() => Date.now() - (+localStorage.getItem('tlm.doneat.jews.-1000') || 0) < 120e3));
-    const btn = await p.$('#gonextch');
-    if (btn){ await btn.tap(); await p.waitForTimeout(500); if (await p.evaluate(() => __app.lenPick)) await p.tap('#lpfull'); await p.waitForTimeout(1800); }
+    // Stay with the story at the end → Chapter 4's card (recap ticked) → Full: the recap plays
+    const btn = await p.$('#choicego');
+    if (btn){ await btn.tap(); await p.waitForTimeout(500); ok(`${name} the next chapter's card has the recap ticked`, await p.evaluate(() => __app.lenPick && document.getElementById('lprecap').checked)); await p.tap('#lpfull'); await p.waitForTimeout(1800); }
     s = await st();
-    ok(`${name} Continue to Chapter 4 right after → recap plays ${JSON.stringify(s)}`, !!btn && s.reel === 'recap' && s.cur === 3);
+    ok(`${name} Stay with the story right after → Chapter 4 with its recap ${JSON.stringify(s)}`, !!btn && s.reel === 'recap' && s.cur === 3);
     await stop();
   } catch (e) { ok(name + ' ran: ' + e.message.split('\n')[0], false); }
   await b.close();

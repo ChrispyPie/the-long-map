@@ -1,4 +1,4 @@
-// Narration: recorded lines drive the timing; the opening film ends on a choice; chapters, resume,
+// Narration: recorded lines drive the timing; the opening film runs on without a choice (it comes at the end of the chapter); chapters, resume,
 // the narrator switch, digits in subtitles ("display"), frame lines without a badge, Bible refs.
 // Usage: node build/test-narration.js [url] [noshots]; SHOTS=dir for narr_*.png screenshots.
 const { chromium } = require('playwright');
@@ -18,8 +18,9 @@ const ROOT = process.env.ROOT || path.join(__dirname, '..');
   ok('audioMs measured for every line', all.every(b => b.audioMs > 2000 && b.audioMs < 20000));
   ok('transitionIn keeps its text fallback', typeof data.transitionIn.text === 'string' && data.transitionIn.text.length > 40);
   ok('spoken text has no digits or brackets', all.every(b => b.steps.filter(x => x.type === 'caption').every(c => !/[()\d]/.test(c.text))));
-  ok('exactly one choice, at the end of the opener', IN.filter(b => b.choice).length === 1 && PL.every(b => !b.choice));
-  const iChoice = IN.findIndex(b => b.choice), iDisp = IN.findIndex(b => b.steps.some(x => x.display && /\d/.test(x.display) && x.cert !== 'frame'));
+  ok('no choice inside the films (it comes at the end of the chapter), the opener ends on a lead-in', IN.every(b => !b.choice) && PL.every(b => !b.choice) && /begin/.test(IN[IN.length - 1].steps.find(x => x.type === 'caption').text));
+  const iChoice = IN.findIndex((b, i) => i > 0 && b.chapter) - 1,  // the bridge line before scene 2 (once the choice)
+    iDisp = IN.findIndex(b => b.steps.some(x => x.display && /\d/.test(x.display) && x.cert !== 'frame'));
   const iRef = PL.findIndex(b => b.steps.some(x => x.ref && /\d/.test(x.ref)));
   const b = await chromium.launch({args: ['--autoplay-policy=user-gesture-required']});
   for (const [name, vw, vh, mobile] of [['desktop',1280,800,false],['mobile',393,852,true]]) {
@@ -45,7 +46,7 @@ const ROOT = process.env.ROOT || path.join(__dirname, '..');
     const ip = await p.evaluate(() => ({go: document.getElementById('gostory').textContent, map: !!document.getElementById('goexplore'), read: !!document.getElementById('goread'), ch: document.querySelectorAll('#evbody .chlist .chb').length}));
     ok(name+' intro panel: '+JSON.stringify(ip), /▶ Play Chapter \d+( intro · \d+ min)?$/.test(ip.go) && ip.map && ip.read && ip.ch === 3);
     const chIn = await p.evaluate(() => __app.chapters('intro'));
-    ok(name+' opener plan '+Math.round(chIn[0].ms/1000)+' s (60-90), chapters '+chIn.map(c => c.title+' '+Math.round(c.ms/1000)+'s').join(' | '), chIn.length === 3 && chIn[0].ms >= 60000 && chIn[0].ms <= 90000 && chIn[0].end === iChoice + 1);
+    ok(name+' opener plan '+Math.round(chIn[0].ms/1000)+' s (60-90), chapters '+chIn.map(c => c.title+' '+Math.round(c.ms/1000)+'s').join(' | '), chIn.length === 3 && chIn[0].ms >= 60000 && chIn[0].ms <= 90000 && chIn[0].end === iChoice + 1 && !IN.some(b => b.choice));
     if (shots){ await p.evaluate(() => document.getElementById('gostory').scrollIntoView({block:'center'})); await p.waitForTimeout(300); }
     if (shots) await panelShot('#gostory', 'narr_intro_panel');
     await tap('#gostory'); await p.waitForTimeout(300); if (await p.evaluate(() => !!__app.lenPick)) await p.click('#lpfull'); /* Chapter 1: Quick or Full */ await p.waitForTimeout(2200);
@@ -69,17 +70,15 @@ const ROOT = process.env.ROOT || path.join(__dirname, '..');
     ok(name+' narrator off: silent, remembered '+JSON.stringify(v), !v.v.on && !v.v.playing && v.ls === 'off' && v.pr === 'false');
     await wake(); await tap('#capvoice'); await p.waitForTimeout(200);
     ok(name+' narrator button turns it back on', await p.evaluate(() => __app.voice.on && localStorage.getItem('tlm.voice') === 'on'));
-    // the choice: the opener's last line, then the film waits
+    // the bridge line (once the choice): the film does not wait, scene 2 follows on its own
     await p.evaluate(i => { __app.speed = 1.25; __app.seek(i); }, iChoice);
-    await p.waitForFunction(() => __app.play && __app.play.choice, null, {timeout: 25000}).catch(() => {});
-    await p.waitForTimeout(2500); pl = await P();
-    const ch = await p.evaluate(() => { const r = id => { const e = document.getElementById(id).getBoundingClientRect(); return e.width > 80 && e.height >= 44 && e.bottom <= innerHeight && e.top >= 0; }; return {go: r('choicego'), map: r('choicemap'), q: document.querySelector('#choice .q').textContent, sub: document.getElementById('choicesub').textContent}; });
-    ok(name+' choice shown and the film waits: '+JSON.stringify(pl)+' '+JSON.stringify(ch), pl.i === iChoice && pl.hold && pl.choice && ch.go && ch.map && /Scene 2/.test(ch.sub));
+    await p.waitForFunction(i => __app.play && __app.play.i === i + 1, iChoice, {timeout: 25000}).catch(() => {});
+    await p.waitForTimeout(300); pl = await P();
+    ok(name+' no choice mid-film: scene 2 follows the bridge line '+JSON.stringify(pl), pl.i === iChoice + 1 && pl.chapter === 2 && !pl.choice && !pl.hold);
+    await wake(); await p.waitForTimeout(200);
     const row1 = await p.evaluate(() => { const bs = [...document.querySelectorAll('.cap2 .crow button')].map(e => e.getBoundingClientRect()); return {rows: new Set(bs.map(x => Math.round(x.top))).size, r: Math.max(...bs.map(x => x.right)), W: innerWidth}; });
     ok(name+' controls on one row (two on a phone) at 1.25x too '+JSON.stringify(row1), row1.rows === (row1.W <= 640 ? 2 : 1) && row1.r <= row1.W);
-    if (shots){ await wake(); await p.screenshot({path: D+'/narr_choice'+(mobile ? '' : '_desktop')+'.png'}); }
-    await tap('#choicego'); await p.waitForTimeout(700); pl = await P();
-    ok(name+' Continue the story: chapter 2 begins '+JSON.stringify(pl), pl.i === iChoice + 1 && pl.chapter === 2 && !pl.choice && /Scene 2 of 3/.test(await p.textContent('#chapcard')));
+    ok(name+' chapter card: Scene 2 of 3', /Scene 2 of 3/.test(await p.textContent('#chapcard')));
     // chapter strip: one segment per chapter, a click jumps there
     await wake();
     const segs = await p.evaluate(() => [...document.querySelectorAll('#capch .chs')].map(e => ({t: e.textContent, w: Math.round(e.getBoundingClientRect().width), cur: e.classList.contains('cur')})));
@@ -93,15 +92,11 @@ const ROOT = process.env.ROOT || path.join(__dirname, '..');
     ok(name+' intro panel offers Resume of this chapter at its scene 3 line', /Resume Chapter 1 at \d+:\d\d · /.test(await p.evaluate(() => (document.getElementById('goresume') || {}).textContent || '')));
     await tap('#goresume'); await p.waitForTimeout(2200); pl = await P();
     ok(name+' resume plays from chapter 3 '+JSON.stringify(pl), pl && pl.reel === 'intro' && pl.i === chIn[2].i);
-    // Skip in the opener goes to the map
+    // Skip in the opener goes straight on into Play; closing the film then lands on the Explore step
     await wake(); await p.evaluate(() => document.getElementById('capskip').click()); await p.waitForTimeout(2200);
-    ok(name+' Skip ends the opener on the map', await p.evaluate(() => __app.play === null && __app.step === 9 && __app.resume('intro') === 0));
-    // Explore the map from the choice: lands on the map, chapter 2 offered later
-    await p.evaluate(() => __app.showStep(0)); await p.waitForTimeout(600); await tap('#gostory'); await p.waitForTimeout(300); if (await p.evaluate(() => !!__app.lenPick)) await p.click('#lpfull'); /* Chapter 1: Quick or Full */ await p.waitForTimeout(1500);
-    await p.evaluate(i => { __app.speed = 1.25; __app.seek(i); }, iChoice);
-    await p.waitForFunction(() => __app.play && __app.play.choice, null, {timeout: 25000}).catch(() => {});
-    await tap('#choicemap'); await p.waitForTimeout(2200);
-    ok(name+' Explore the map: film closed, Explore step, chapter 2 to resume', await p.evaluate(i => __app.play === null && __app.step === 9 && __app.resume('intro') === i, iChoice + 1));
+    ok(name+' Skip ends the opener and starts Play', await p.evaluate(() => __app.play && __app.play.reel === 'play' && __app.resume('intro') === 0));
+    await p.evaluate(() => document.getElementById('capx').click()); await p.waitForTimeout(2200);
+    ok(name+' closing the film: Explore step', await p.evaluate(() => __app.play === null && __app.step === 9));
     // Play: four chapters of about 2-3 minutes, markers, Bible reference after the sources
     const exp = await p.evaluate(() => ({btn: document.getElementById('playbtn') && document.querySelector('#playbtn + .cap').textContent, ch: document.querySelectorAll('#evbody .chlist .chb').length}));
     ok(name+' explore panel: '+JSON.stringify(exp).slice(0, 120), /in 4 scenes/.test(exp.btn) && exp.ch === 4);

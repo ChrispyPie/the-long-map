@@ -77,7 +77,7 @@ INTRO = [
    ref="Exodus 22:21 (22:20 in the Hebrew numbering)"),
  B("Pharaoh's stone said that Israel was finished. More than three thousand two hundred years later, the name of Israel lives on in the Jewish people.", A, ["stele","hasel"],
    vis=[fo([35.0,31.95],5.5,["israelp"])]),
- B("Explore the map. When you are ready, press Play, and watch this old world begin to change.", F),
+ B("Now watch this old world begin to change.", F),  # lead-in: the film runs straight on into Play
 ]
 
 # ---------------- Play: 1207 BC to c. 1150 BC ----------------
@@ -192,13 +192,12 @@ PLAY = [
    note="Closing line. Let it settle; the map then opens c. 1150 BC."),
 ]
 
-# ---------- the opening film: a short opener that ends on a choice, then chapter 2 ----------
-CHOICE = B("That is the world of this year. You can stay with the story, or explore the map on your own.", F)
+# ---------- the opening film: a short opener with a bridge line (CHOICE, no longer a choice), then chapter 2 ----------
+CHOICE = B("That is the land. Now, the great powers around it.", F)  # a bridge into the next scene (the film no longer stops here)
 OPEN_IX = (0, 1, 2, 5, 11, 12)
 OPENER = [INTRO[i] for i in OPEN_IX] + [CHOICE]
 REST = [b for i, b in enumerate(INTRO) if i not in OPEN_IX]
 OPENER[0]["chapter"] = "The world of 1207 BC"
-OPENER[-1]["choice"] = True
 REST[0]["chapter"] = "Egypt and the great powers"
 next(b for b in REST if b["steps"][-1]["text"].startswith("We know Israel's name"))["chapter"] = "Israel's name in stone"
 INTRO_BEATS = OPENER + REST

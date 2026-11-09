@@ -49,10 +49,9 @@ OPENER = [
  B("In the hills, the Hebrew Bible tells of a king. David, son of Jesse, who rules from Hebron, and then from Jerusalem.", T, ["bible"], ref="2 Samuel 2–5",
    vis=[fo([35.17,31.65],10,["hebron","jerusalem"])]),
  B("How large his kingdom was, and how much of the story is history, is still debated. So the map draws no border for it.", D, ["mazar2010","finksilb2006"]),
- B("That is the world of this year. You can stay with the story, or explore the map on your own.", F),
+ B("That is the world of this chapter. Now the story begins.", F),
 ]
 OPENER[0]["chapter"] = "The world of 1000 BC"
-OPENER[-1]["choice"] = True
 
 # ---------------- Play: c. 1000 BC to c. 930 BC ----------------
 CITY = [

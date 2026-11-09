@@ -370,6 +370,14 @@ function showStep(i, fly = true){
           : `<div class="cta"><button type="button" class="play" id="gostory">Start the story ›</button><button type="button" id="goexplore">Explore the map</button></div>`) +
         `<div class="sub">Key places and peoples</div>${chips(STOP.keyObjects)}` +
         `<div class="legend2">${badge('attested')} found in ancient evidence · ${badge('disputed')} scholars disagree · ${badge('tradition')} Jewish tradition and the Hebrew Bible</div>`;
+  } else if (e.explore && XEND === cur){
+    // after the chapter: the map as the narration left it, the checklist, and Continue to the next chapter
+    const k = nextOf(), s = k >= 0 ? STORY.stops[k] : null;
+    h = `<div class="kicker">Chapter ${chapNo(cur)} · ${esc(STOP.label)} · Explore</div><h2>The map at the end of Chapter ${chapNo(cur)}</h2>` +
+        `<p>This is the map as the story left it. Open each key place or people to read its fact box; unexplored ones glow, explored ones get a check.</p>` +
+        (s ? `<div class="cta"><button type="button" class="play big" id="xpnext">${s.file ? `Continue to Chapter ${chapNo(k)} ▶` : `Next: ${esc(s.label)} · coming soon ›`}</button></div>` : '') +
+        `<div class="sub xpcount"></div><ul class="checklist"></ul>` +
+        `<button type="button" class="linkish" id="xpreset">Reset progress</button>`;
   } else if (e.explore){
     const pl = STOP.play;
     h = `<div class="kicker">${esc(STOP.label)} · Explore</div><h2>Explore ${esc(STOP.label)}</h2>` +
@@ -406,6 +414,7 @@ function showStep(i, fly = true){
     $('xpreset').onclick = ev => { ev.stopPropagation(); EXPLORED.clear(); saveExplored(); drawKeys(); renderChecklist(); };
     // ▶ Play: <scene title> on the Explore step: Quick or Full first when the chapter has a quick version
     // (Quick = the quick reel from its start, Full = the Play part as before)
+    if ($('xpnext')) $('xpnext').onclick = ev => { ev.stopPropagation(); storyNext(ev.currentTarget); };
     if ($('playbtn')) $('playbtn').onclick = ev => { ev.stopPropagation(); if (quickBeats()) lenPick(STOP, cur, w => w === 'quick' ? chapStart('quick') : playStart('play'), ev.currentTarget); else playStart(); };
   }
   closeObj();
@@ -854,7 +863,7 @@ function seek(i){
 }
 async function playStart(reel = 'play', from = 0, after = null){
   if (typeof reel !== 'string') reel = 'play';
-  ARRIVE = -1; sndEnsure(); // inside the Play click: the browser allows audio from here on
+  ARRIVE = -1; XEND = -1; sndEnsure(); // inside the Play click: the browser allows audio from here on
   // the narrated part runs as a small film: the map grows to fill the screen first
   const film = enterCine();
   if (MODE !== 'stop') await go(liveBefore(cur));
@@ -895,7 +904,7 @@ function showChoice(i){
     if (intoPlay) posSet('play', 0); else posSet(r, i + 1); };
   setTimeout(() => { if (!c.hidden) $('choicego').focus({preventScroll: true}); }, 50);
 }
-function hideChoice(){ const c = $('choice'); if (c) c.hidden = true; document.body.classList.remove('choosing'); }
+function hideChoice(){ const c = $('choice'); if (c) c.hidden = true; document.body.classList.remove('choosing', 'chapend'); }
 function placeChoice(){
   const c = $('choice'); if (!c || c.hidden) return;
   const vb = $('vp').getBoundingClientRect(), cap = $('cap'), cy = $('cyear');
@@ -904,8 +913,9 @@ function placeChoice(){
   c.style.setProperty('--choice-top', Math.max(8, Math.round(yb - vb.top) + 8) + 'px');
   c.style.setProperty('--choice-bottom', Math.max(8, Math.round(vb.bottom - capTop) + 8) + 'px');
 }
-// the opening film ends by handing over to the map: zoom out onto the Explore step
-function introEnd(){ resumeSet('intro', 0); if (!STOP.play) posClear(STOP.year); else posSet('play', 0); partSet(); playStop(false); }
+// the opening film runs straight on into the chapter's Play (no stop on the map in between); the choice
+// 'Stay with the story' / 'Explore the map' comes at the end of the chapter (chapterEnd)
+function introEnd(){ resumeSet('intro', 0); if (!STOP.play){ posClear(STOP.year); partSet(); playStop(false); return; } posSet('play', 0); playStart('play'); }
 // a chapter card at the start of each chapter, and chapter segments above the film controls
 let chapT = 0;
 function showChapter(c, r){
@@ -960,11 +970,7 @@ const playToLabel = () => { const s = STOP && STOP.play && STORY.stops.find(s =>
 function playEnd(){
   // the transition ends on the new year's intro and stays there (no auto-continue)
   resumeSet('play', 0); posClear(STOP.year); partSet();
-  const to = STOP.play.to;
-  const k = STORY.stops.findIndex(s => s.year === to);
-  // zoom back out to the explore view first, then land on the new year: its intro when the stop is built,
-  // otherwise the 'coming soon' end state
-  playStop(true).then(() => { if (PLAY) return; if (STORY.stops[k].file){ ARRIVE = k; go(k); } else arriveSoon(k, false); });
+  chapterEnd();
 }
 // the quick version ends like Play: the chapter counts as watched and the map lands on the next chapter
 // ("Continue to Chapter N"); the full film's saved place, if any, is kept. It closes gently: the last line stays
@@ -977,7 +983,45 @@ function quickEnd(){
   let left = QUICK_CLOSE_MS;
   const tick = () => { if (PLAY !== P) return; if (!P.paused) left -= 200; if (left > 0) return setTimeout(tick, 200); landNext(); };
   setTimeout(tick, 200);
-  const landNext = () => playStop(true).then(() => { if (PLAY) return; if (k >= 0 && STORY.stops[k].file){ ARRIVE = k; go(k); } else if (k >= 0) arriveSoon(k, false); });
+  const landNext = () => chapterEnd();
+}
+// ---------- the end of a chapter (Full or Quick): 'Stay with the story' or 'Explore the map' ----------
+// The film stops on the map as the chapter leaves it. Stay with the story opens the Quick/Full card (with the recap
+// checkbox) for the next chapter, or the 'coming soon' page after the last one. Explore the map leaves the film on
+// that same map (zones and borders as the narration left them) with the chapter's Explore checklist and a Continue
+// button for the next chapter. ✕ in the film does the same as Explore.
+let XEND = -1;   // the stop whose end-of-chapter map is being explored (-1: none)
+const nextOf = () => STORY.stops.findIndex(s => STOP && STOP.play && s.year === STOP.play.to);
+function storyNext(from){
+  const k = nextOf(); if (k < 0) return;
+  const s = STORY.stops[k];
+  if (!s.file){ const go_ = () => arriveSoon(k, false); if (PLAY) playStop(true).then(go_); else go_(); XEND = -1; return; }
+  const start = w => { filmHalt(); XEND = -1; partStart(k, 'over', w || 'full'); };
+  stopData(k).then(d => { if (d && d.quick && d.quick.beats && d.quick.beats.length) lenPick(d, k, start, from); else start('full'); });
+}
+function chapterEnd(){
+  const P = PLAY; if (!P) return;
+  P.wait = true; P.ended = true; P.clockOn = false; if (P.audio) P.audio.pause();
+  vigHide(); $('chapcard').hidden = true; sndAmbient(null);
+  // the map steps back to show the whole region as the chapter leaves it; arrows and battle markers belong to the film
+  gFx.selectAll('*').interrupt().transition().duration(700).style('opacity', 0).remove();
+  gFxTop.selectAll('*').transition().duration(700).style('opacity', 0).remove();
+  setHighlight([]); flyTo([35.6, 33.2], 3.2, REDUCED() ? 0 : 1400);
+  const k = nextOf(), s = k >= 0 ? STORY.stops[k] : null, n = chapNo(cur);
+  const c = $('choice'); document.body.classList.add('choosing', 'chapend');
+  c.querySelector('.q').textContent = `End of Chapter ${n}. What next?`;
+  $('choicego').textContent = 'Stay with the story ›';
+  $('choicesub').textContent = s ? (s.file ? `Next: Chapter ${chapNo(k)} · ${s.label} · ${s.title}` : `Next: ${s.label} · coming soon`) : '';
+  c.hidden = false; c.classList.remove('in'); void c.offsetWidth; c.classList.add('in'); wake(); placeChoice();
+  $('choicego').onclick = e => { e.stopPropagation(); if (PLAY !== P) return; storyNext(e.currentTarget); };
+  $('choicemap').onclick = e => { e.stopPropagation(); if (PLAY !== P) return; exploreEnd(); };
+  setTimeout(() => { if (!c.hidden) $('choicego').focus({preventScroll: true}); }, 50);
+}
+// explore the map as the chapter left it: out of the film, the map kept, the chapter's Explore step with Continue
+function exploreEnd(){
+  if (!PLAY) return;
+  XEND = cur; const yl = $('cyear').textContent;
+  playStop(true).then(() => { if (PLAY) return; if (yl){ $('big').textContent = yl; $('pill').textContent = yl; } drawKeys(); showStep(steps().length - 1); });
 }
 // ---------- vignettes: a picture card over the map while the narrator describes something ----------
 // beat.vignette = {src, alt, caption?, beats?} comes from build/vignettes.py. The card appears once the
@@ -1395,7 +1439,7 @@ $('cappp').onclick = e => { e.stopPropagation(); playPause(); };
 $('capnext').onclick = e => { e.stopPropagation(); if (PLAY) seek(PLAY.i + 1 < PLAY.beats.length ? PLAY.i + 1 : PLAY.i) ; };
 $('capprev').onclick = e => { e.stopPropagation(); if (PLAY) seek(PLAY.i - 1); };
 $('capspd').onclick = e => { e.stopPropagation(); setSpeed(SPEEDS[(SPEEDS.indexOf(SPEED) + 1) % SPEEDS.length] || 1); };
-$('capx').onclick = e => { e.stopPropagation(); playStop(false); };
+$('capx').onclick = e => { e.stopPropagation(); if (PLAY && PLAY.ended) return exploreEnd(); playStop(false); };
 // the small settings menu in the controls (for now one switch: skip chapter intros)
 function capMenu(open){
   const m = $('capmenu'), b = $('capset'); open = open === undefined ? m.hidden : !!open;
@@ -1418,7 +1462,7 @@ function setVoice(on){
 }
 $('capvoice').onclick = e => { e.stopPropagation(); setVoice(!VOICE); };
 setVoice(VOICE);
-$('capskip').onclick = e => { e.stopPropagation(); if (PLAY && PLAY.reel === 'recap') return recapEnd(); if (PLAY && PLAY.reel === 'intro'){ resumeSet('intro', 0); posClear(STOP.year); playStop(false); return; } if (PLAY){ svg.interrupt(); PLAY.anims = []; PLAY.events = []; resetMap(); YEAR = STOP.year; PLAY.clockOn = false; PLAY.beats.forEach((b, j) => applyInstant(j)); playEnd(); } };
+$('capskip').onclick = e => { e.stopPropagation(); if (PLAY && PLAY.ended) return; if (PLAY && PLAY.reel === 'recap') return recapEnd(); if (PLAY && PLAY.reel === 'intro'){ resumeSet('intro', 0); if (STOP.play){ posSet('play', 0); playStart('play'); } else { posClear(STOP.year); playStop(false); } return; } if (PLAY){ svg.interrupt(); PLAY.anims = []; PLAY.events = []; resetMap(); YEAR = STOP.year; PLAY.clockOn = false; PLAY.beats.forEach((b, j) => applyInstant(j)); playEnd(); } };
 // a tap on the map never pauses Play (too easy by accident); tapping an object opens its box, which pauses
 
 // a stop that is not built yet, reached at the end of Play: the map keeps the end state
@@ -1473,7 +1517,7 @@ function timelineState(s){
 }
 async function go(i){
   if (PLAY) playStop(true);
-  cur = Math.max(0, Math.min(STORY.stops.length - 1, i));
+  cur = Math.max(0, Math.min(STORY.stops.length - 1, i)); XEND = -1;
   if (cur !== ARRIVE) ARRIVE = -1;
   const s = STORY.stops[cur];
   timelineState(s);
@@ -1578,6 +1622,8 @@ async function deepOpen(){
   try { const q = new URLSearchParams(location.search); ['ch', 'line', 't', 'quick'].forEach(k => q.delete(k)); const s = q.toString(); history.replaceState(history.state, '', location.pathname + (s ? '?' + s : '') + location.hash); } catch(e){}
   const ps = parts(), x = ps[D.ch - 1]; if (!x) return;
   if (cur !== x.k || MODE !== 'stop') await go(x.k);
+  // ?ch=N alone opens the chapter's page at its start (Play Chapter N asks Quick or Full)
+  if (!D.line && !D.t && !D.quick){ showStep(0, false); DEEPAT = {k: x.k, r: 'start', i: 0}; return; }
   const w = dWhere(STOP, D.line, D.t, D.quick), bs = reelBeats(w.r); if (!bs) return;
   const c = bs[w.i].steps.find(y => y.type === 'caption'), sc = chapterAt(w.r, w.i), ln = lineNo(w.r, w.i);
   const t = posMs(w.r, w.i), el = $('deep'), qk = w.r === 'quick', qm = qk ? mmss(playTotal('quick')) : '';
@@ -1863,7 +1909,7 @@ window.__app = { srcOpen, srcClose, get srcIsOpen(){ return SP.open; }, camTarge
   plan: i => PLAY ? beatPlan(PLAY.beats[i]) : null, gap: i => PLAY ? breathMs(PLAY.beats[i]) : null, get audioEl(){ return PLAY ? PLAY.audio : null; }, get audioSkips(){ return PLAY ? PLAY.audioSkips || 0 : 0; }, STALL_MS, get clock(){ return PLAY ? PLAY.clock : null; },
   capFit, get capH(){ return parseFloat(getComputedStyle($('capsub')).getPropertyValue('--caph')) || 0; },
   get time(){ return $('captime').textContent; }, timeRef: () => timeRef().text, lineRef: ln => lineRef(String(ln)).text, get lastRef(){ return LASTREF ? LASTREF.text : null; }, reportNow: () => reportNow(), reportFor: ln => reportHref(ln == null ? timeRef() : lineRef(String(ln))),
-  get deep(){ return DEEPAT; }, bookPlay, get lenPick(){ return LP.open; }, quickLen: () => quickBeats() ? playTotal('quick') : 0, get skipIntro(){ return SKIPI; }, setSkipIntro, get recaps(){ return RECAPS; }, setRecaps, recapDue, chapStart, capMenu,
+  get deep(){ return DEEPAT; }, bookPlay, get lenPick(){ return LP.open; }, get xend(){ return XEND; }, get ended(){ return !!(PLAY && PLAY.ended); }, exploreEnd, storyNext, quickLen: () => quickBeats() ? playTotal('quick') : 0, get skipIntro(){ return SKIPI; }, setSkipIntro, get recaps(){ return RECAPS; }, setRecaps, recapDue, chapStart, capMenu,
   get book(){ const P = bkPages(); return {open: BK.open, page: BK.p, pages: P.length, type: P[BK.p] && P[BK.p].type, k: P[BK.p] && P[BK.p].k, turning: !!BK.anim}; },
   seenKey, seen: y => [...seenGet(y == null ? STOP.year : y)], bookOpen: p => bkOpen($('bookbtn'), p), bookClose: () => bkClose(), bookGo: p => bkGo(p) };
 

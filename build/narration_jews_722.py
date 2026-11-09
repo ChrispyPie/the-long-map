@@ -35,11 +35,10 @@ OPENER = [
    vis=[fo([38.0,33.6],2.0,["israelk","judah","aramdamascus","assyria"])]),
  B("By the end of this chapter, one of those kingdoms will be gone from the map.", A, ["tadmor2011","frame2021"],
    vis=[fo([35.6,32.4],5.0,["israelk","judah"])]),
- B("That is the world of this chapter. You can stay with the story, or explore the map on your own.", F,
+ B("That is the world of this chapter. Now the story begins.", F,
    vis=[fo([35.6,32.6],3.6)]),
 ]
 OPENER[0]["chapter"] = "The world of 722 BC"
-OPENER[-1]["choice"] = True
 
 # ---------------- Play: 841 BC to 720 BC ----------------
 ARAM = [
