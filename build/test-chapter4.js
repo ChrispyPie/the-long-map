@@ -33,7 +33,7 @@ const ROOT = path.join(__dirname, '..');
   ok('ends on the teaser for the next chapter', /next chapter begins\.$/.test(caps(PL[PL.length - 1])[0].text));
   const b = await chromium.launch({args: ['--autoplay-policy=no-user-gesture-required']});
   const ctx = await b.newContext({viewport: {width: 390, height: 844}, deviceScaleFactor: 2, isMobile: true, hasTouch: true});
-  await ctx.addInitScript(() => localStorage.setItem('tlm.notice.v1', 'seen'));
+  await ctx.addInitScript(() => (localStorage.setItem('tlm.notice.v1', 'seen'), localStorage.setItem('tlm.recaps', 'off')));
   const p = await ctx.newPage();
   const name = 'mobile';
   try {

@@ -34,7 +34,7 @@ const ROOT = process.env.ROOT || path.join(__dirname, '..');
   const views = [['phone', 390, 844, true, false], ['desktop', 1280, 800, false, false], ['phone-reduced', 390, 844, true, true]];
   for (const [name, vw, vh, mobile, reduced] of views){
     const ctx = await b.newContext({viewport: {width: vw, height: vh}, deviceScaleFactor: 1, isMobile: mobile, hasTouch: mobile, reducedMotion: reduced ? 'reduce' : 'no-preference'});
-    await ctx.addInitScript(() => { localStorage.setItem('tlm.notice.v1', 'seen'); localStorage.setItem('tlm.snd', 'off'); });
+    await ctx.addInitScript(() => { (localStorage.setItem('tlm.notice.v1', 'seen'), localStorage.setItem('tlm.recaps', 'off')); localStorage.setItem('tlm.snd', 'off'); });
     const p = await ctx.newPage();
     p.on('pageerror', e => errs.push(name + ' pageerror: ' + e.message));
     await p.goto(url, {waitUntil: 'networkidle'}); await p.waitForTimeout(600);

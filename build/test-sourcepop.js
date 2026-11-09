@@ -13,7 +13,7 @@ const shots = process.argv[3] || null;
   const b = await chromium.launch();
   for (const [name, vw, vh, mobile] of [['phone-360', 360, 740, true], ['phone-412', 412, 915, true], ['desktop', 1280, 800, false]]){
     const ctx = await b.newContext({viewport: {width: vw, height: vh}, deviceScaleFactor: shots ? 2 : 1, isMobile: mobile, hasTouch: mobile});
-    await ctx.addInitScript(() => { localStorage.setItem('tlm.notice.v1', 'seen'); localStorage.setItem('tlm.snd', 'off'); });
+    await ctx.addInitScript(() => { (localStorage.setItem('tlm.notice.v1', 'seen'), localStorage.setItem('tlm.recaps', 'off')); localStorage.setItem('tlm.snd', 'off'); });
     const p = await ctx.newPage();
     p.on('pageerror', e => errs.push(name + ' pageerror: ' + e.message));
     // optional fields (description, links, images) are rendered when sources.json has them: add them to one source here

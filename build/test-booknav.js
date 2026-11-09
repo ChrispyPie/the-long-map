@@ -11,7 +11,7 @@ const D = process.env.SHOTS || 'screens';
   for (const [name, vw, vh, mobile] of [['mobile', 412, 915, true], ['desktop', 1280, 800, false]]) {
     const ctx = await b.newContext({viewport: {width: vw, height: vh}, deviceScaleFactor: 2, isMobile: mobile, hasTouch: mobile});
     await ctx.grantPermissions(['clipboard-read', 'clipboard-write'], {origin: new URL(url).origin});
-    await ctx.addInitScript(() => localStorage.setItem('tlm.notice.v1', 'seen'));
+    await ctx.addInitScript(() => (localStorage.setItem('tlm.notice.v1', 'seen'), localStorage.setItem('tlm.recaps', 'off')));
     const p = await ctx.newPage();
     p.on('console', m => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) errs.push(name + ': ' + m.text()); });
     p.on('pageerror', e => errs.push(name + ' pageerror: ' + e.message));

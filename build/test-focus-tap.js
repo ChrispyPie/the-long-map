@@ -30,7 +30,7 @@ const ROOT = process.env.ROOT || path.join(__dirname, '..');
   const inside = (pt, r, m = 0) => r && pt[0] > r[0] - m && pt[0] < r[2] + m && pt[1] > r[1] - m && pt[1] < r[3] + m;
   for (const [name, vw, vh, mobile] of [['phone', 390, 844, true], ['desktop', 1280, 800, false]]){
     const ctx = await b.newContext({viewport: {width: vw, height: vh}, deviceScaleFactor: 1, isMobile: mobile, hasTouch: mobile});
-    await ctx.addInitScript(() => { localStorage.setItem('tlm.notice.v1', 'seen'); localStorage.setItem('tlm.snd', 'off'); localStorage.setItem('tlm.ctlhint', '9'); });
+    await ctx.addInitScript(() => { (localStorage.setItem('tlm.notice.v1', 'seen'), localStorage.setItem('tlm.recaps', 'off')); localStorage.setItem('tlm.snd', 'off'); localStorage.setItem('tlm.ctlhint', '9'); });
     const p = await ctx.newPage();
     p.on('pageerror', e => errs.push(name + ' pageerror: ' + e.message));
     const cdp = mobile ? await ctx.newCDPSession(p) : null;

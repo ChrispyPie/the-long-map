@@ -13,7 +13,7 @@ const url = process.argv[2] || 'http://127.0.0.1:8852/';
   for (const [name, vw, vh, mobile] of [['phone', 390, 844, true], ['phone-small', 360, 640, true], ['phone-landscape', 844, 390, true], ['desktop', 1280, 800, false]]){
     const ctx = await b.newContext({viewport: {width: vw, height: vh}, deviceScaleFactor: 1, isMobile: mobile, hasTouch: mobile});
     await ctx.grantPermissions(['clipboard-read', 'clipboard-write'], {origin: new URL(url).origin});
-    await ctx.addInitScript(() => { localStorage.setItem('tlm.notice.v1', 'seen'); localStorage.setItem('tlm.snd', 'off'); localStorage.setItem('tlm.review', '1'); localStorage.setItem('tlm.ctlhint', '9'); });
+    await ctx.addInitScript(() => { (localStorage.setItem('tlm.notice.v1', 'seen'), localStorage.setItem('tlm.recaps', 'off')); localStorage.setItem('tlm.snd', 'off'); localStorage.setItem('tlm.review', '1'); localStorage.setItem('tlm.ctlhint', '9'); });
     const p = await ctx.newPage();
     p.on('pageerror', e => errs.push(name + ' pageerror: ' + e.message));
     // desktop: the mouse moving onto a spot brings the controls up by design, so a test click first moves there and

@@ -22,7 +22,7 @@ const israelCheck = p => p.evaluate(() => {
     const name = vw + 'x' + vh;
     const ctx = await b.newContext({viewport: {width: vw, height: vh}, deviceScaleFactor: 2, isMobile: !!mobile, hasTouch: !!mobile});
     if (process.env.TS) await ctx.addInitScript(t => localStorage.setItem('tlm.textsize', t), process.env.TS); // TS=xl runs the suite at a saved text size
-    await ctx.addInitScript(() => { localStorage.setItem('tlm.notice.v1', 'seen'); localStorage.setItem('tlm.voice', 'off'); localStorage.setItem('tlm.snd', 'off'); });
+    await ctx.addInitScript(() => { (localStorage.setItem('tlm.notice.v1', 'seen'), localStorage.setItem('tlm.recaps', 'off')); localStorage.setItem('tlm.voice', 'off'); localStorage.setItem('tlm.snd', 'off'); });
     const p = await ctx.newPage();
     p.on('pageerror', e => errs.push(name + ' pageerror: ' + e.message));
     p.on('console', m => { if (m.type() === 'error') errs.push(name + ': ' + m.text()); });

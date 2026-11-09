@@ -39,7 +39,7 @@ const ROOT = path.join(__dirname, '..');
   const b = await chromium.launch({args: ['--autoplay-policy=no-user-gesture-required']});
   for (const dev of [{name: 'phone', vp: {width: 390, height: 844}, mob: true}, {name: 'desktop', vp: {width: 1280, height: 800}, mob: false}]){
     const ctx = await b.newContext({viewport: dev.vp, deviceScaleFactor: 2, isMobile: dev.mob, hasTouch: dev.mob});
-    await ctx.addInitScript(() => localStorage.setItem('tlm.notice.v1', 'seen'));
+    await ctx.addInitScript(() => (localStorage.setItem('tlm.notice.v1', 'seen'), localStorage.setItem('tlm.recaps', 'off')));
     const p = await ctx.newPage(), name = dev.name;
     const tap = async sel => dev.mob ? p.tap(sel) : p.click(sel);
     const req = new Set();
@@ -151,7 +151,7 @@ const ROOT = path.join(__dirname, '..');
   
   for (const dev of [{name: 'phone2', vp: {width: 390, height: 844}, mob: true}, {name: 'desktop2', vp: {width: 1280, height: 800}, mob: false}]){
     const ctx = await b.newContext({viewport: dev.vp, deviceScaleFactor: 2, isMobile: dev.mob, hasTouch: dev.mob});
-    await ctx.addInitScript(() => localStorage.setItem('tlm.notice.v1', 'seen'));
+    await ctx.addInitScript(() => (localStorage.setItem('tlm.notice.v1', 'seen'), localStorage.setItem('tlm.recaps', 'off')));
     const p = await ctx.newPage(), name = dev.name, tap = async sel => dev.mob ? p.tap(sel) : p.click(sel);
     p.on('console', m => { if (m.type() === 'error' && !/favicon/.test(m.location().url || '')) errs.push(name + ': ' + m.text()); });
     p.on('pageerror', e => errs.push(name + ' pageerror: ' + e.message));
@@ -204,7 +204,7 @@ const ROOT = path.join(__dirname, '..');
   }
   {
     const ctx = await b.newContext({viewport: {width: 390, height: 844}, deviceScaleFactor: 2, isMobile: true, hasTouch: true});
-    await ctx.addInitScript(() => localStorage.setItem('tlm.notice.v1', 'seen'));
+    await ctx.addInitScript(() => (localStorage.setItem('tlm.notice.v1', 'seen'), localStorage.setItem('tlm.recaps', 'off')));
     const p = await ctx.newPage(), name = 'phone3-5';
     p.on('console', m => { if (m.type() === 'error' && !/favicon/.test(m.location().url || '')) errs.push(name + ': ' + m.text()); });
     p.on('pageerror', e => errs.push(name + ' pageerror: ' + e.message));
