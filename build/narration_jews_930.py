@@ -240,3 +240,11 @@ for b in INTRO_BEATS + PLAY:
 for a, _ in DIGITS: assert any(a in b["steps"][-1]["text"] for b in INTRO_BEATS + PLAY), a
 
 speech, clean = N1000.speech, N1000.clean
+
+# ---------------- Quick version of Chapter 4 (about two minutes; reel jews-930-quick), see build/quick.py ----------------
+# Skeleton from the big fact boxes: Shoshenq at Megiddo, Omri's Samaria, Elijah, Kuntillet Ajrud, Qarqar, Mesha,
+# Jehu and the Tel Dan stele, Hazael's gains (the Play's border step) and the Black Obelisk.
+import quick as _quick
+QUICK, QUICK_FROM = _quick.build(__import__(__name__), "Chapter 4 in brief",
+    ["in07","in05","pl08","pl21","pl23","pl28","pl34","pl36","pl45","pl50","pl56","pl59","pl62","pl64"],
+    ("Chapter Four, in two minutes.", [fo([35.6,32.6],3.2)]))

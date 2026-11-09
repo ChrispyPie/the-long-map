@@ -268,3 +268,11 @@ def speech(b): return b["steps"][-1]["text"]
 def clean(beats):
     """beats as written to the data: reading notes stay here"""
     return [{k: v for k, v in b.items() if k != "note"} for b in beats]
+
+# ---------------- Quick version of Chapter 3 (about two minutes; reel jews-1000-quick), see build/quick.py ----------------
+# Skeleton from the big fact boxes: Jerusalem, the copper of Edom, the temple and its parallels, the six-chambered
+# gates, and the united monarchy debate, ending on the split (the Play's border step, so the map ends the same).
+import quick as _quick
+QUICK, QUICK_FROM = _quick.build(__import__(__name__), "Chapter 3 in brief",
+    ["in01","pl00","pl05","pl13","pl24","pl27","pl28","pl36","pl37","pl51","pl54","pl56","pl57","pl58"],
+    ("Chapter Three, in two minutes.", [fo([35.2,31.8],5.0)]))

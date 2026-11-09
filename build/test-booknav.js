@@ -22,9 +22,9 @@ const D = process.env.SHOTS || 'screens';
     await p.goto(url, {waitUntil: 'networkidle'}); await p.waitForFunction(() => window.__app && __app.mode === 'stop');
     const k4 = await p.evaluate(() => __app.parts()[3].k), k3 = await p.evaluate(() => __app.parts()[2].k);
     await p.evaluate(k => __app.go(k), k4); await p.waitForTimeout(1500);
-    ok(name + ' intro button label', /^▶ Play Chapter 4 intro · \d+ min$/.test(await p.textContent('#gostory')));
+    ok(name + ' intro button label', /^▶ Play Chapter 4( intro · \d+ min)?$/.test(await p.textContent('#gostory')));
     ok(name + ' book button on the chapter page', await p.isVisible('#gobook'));
-    await tap('#gostory'); await p.waitForFunction(() => __app.play && __app.cine); await p.waitForTimeout(1500);
+    await tap('#gostory'); await p.waitForTimeout(300); if (await p.evaluate(() => !!__app.lenPick)) await p.click('#lpfull'); /* Quick or Full */ await p.waitForFunction(() => __app.play && __app.cine); await p.waitForTimeout(1500);
     await p.evaluate(() => __app.playPause(true));
     // 1) the controls stay put from line to line; the box is as tall as the tallest line
     const ys = [];
@@ -137,9 +137,9 @@ const D = process.env.SHOTS || 'screens';
     ok(name + ' skip intros is remembered', await p.evaluate(() => __app.skipIntro && localStorage.getItem('tlm.skipintro') === 'on'));
     await tap('#capbook'); await p.waitForTimeout(1300);
     ok(name + ' skip switch shows in the book, checked', await p.evaluate(() => { const c = document.querySelector('#bkpage input[data-skipintro]'); return c && c.checked; }));
-    await p.click('#bkpage button[data-act="play"]'); await p.waitForTimeout(1500);
+    await p.click('#bkpage button[data-act="play"]'); await p.waitForTimeout(300); if (await p.evaluate(() => !!__app.lenPick)) await p.click('#lpfull'); /* Quick or Full */ await p.waitForTimeout(1500);
     pl = await p.evaluate(() => __app.play); ok(name + ' Play chapter skips the intro', pl && pl.reel === 'play' && pl.i === 0);
-    await tap('#capbook'); await p.waitForTimeout(1300); await p.click('#bkpage input[data-skipintro]'); await p.click('#bkpage button[data-act="play"]'); await p.waitForTimeout(1500);
+    await tap('#capbook'); await p.waitForTimeout(1300); await p.click('#bkpage input[data-skipintro]'); await p.click('#bkpage button[data-act="play"]'); await p.waitForTimeout(300); if (await p.evaluate(() => !!__app.lenPick)) await p.click('#lpfull'); /* Quick or Full */ await p.waitForTimeout(1500);
     pl = await p.evaluate(() => __app.play); ok(name + ' skip off: Play chapter starts with the intro', pl && pl.reel === 'intro' && pl.i === 0 && await p.evaluate(() => localStorage.getItem('tlm.skipintro') !== 'on'));
     await p.evaluate(() => __app.playStop(false)); await p.waitForTimeout(900);
     // header book button, and Esc
