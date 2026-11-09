@@ -49,22 +49,28 @@ function fit(){
   zoom.extent([[0,0],[w,h]]).translateExtent([[Math.max(a[0],c[0]), Math.min(a[1],b[1])], [Math.min(b[0],d[0]), m[1]]]);
   redraw();
 }
-// ---------- shaded relief (prototype): pre-baked images in the map's own projection, under every vector layer ----------
+// ---------- shaded relief: pre-baked images in the map's own projection, under every vector layer ----------
 // data/terrain.json gives each image's box in the projection at scale 1 / translate 0, so it maps onto the live
-// projection with one scale + offset (fitExtent only changes those). ?terrain=0 turns it off for comparison.
+// projection with one scale + offset (fitExtent only changes those). Only the stops listed in "stops" (years) show it,
+// and the images load the first time such a stop opens. ?terrain=0 turns it off.
 const TERRAIN_ON = new URLSearchParams(location.search).get('terrain') !== '0';
-let RELIEF = [];
+let RELIEF = null;
 function placeRelief(){
   const k = projection.scale(), [tx, ty] = projection.translate();
   gLand.selectAll('image.relief').attr('x', d => tx + k * d.raw[0]).attr('y', d => ty + k * d.raw[1])
     .attr('width', d => k * (d.raw[2] - d.raw[0])).attr('height', d => k * (d.raw[3] - d.raw[1]));
 }
-function addRelief(cfg){
-  if (!cfg || !TERRAIN_ON) return; RELIEF = cfg.layers || [];
-  document.body.classList.add('terrain');
-  gLand.selectAll('image.relief').data(RELIEF).join('image')
-    .attr('class', d => 'relief r-' + d.name).attr('preserveAspectRatio', 'none').attr('href', d => d.src);
-  placeRelief();
+function addRelief(cfg){ if (cfg && TERRAIN_ON) RELIEF = cfg; }
+function reliefFor(s){
+  const on = !!(RELIEF && s && s.file && (RELIEF.stops || []).includes(s.year));
+  if (on && gLand.select('image.relief').empty()){
+    gLand.selectAll('image.relief').data(RELIEF.layers || []).join(en => en.insert('image', 'path'))
+      .attr('class', d => 'relief r-' + d.name).attr('preserveAspectRatio', 'none').attr('href', d => d.src);
+    placeRelief();
+  }
+  gLand.selectAll('image.relief').style('display', on ? null : 'none');
+  document.body.classList.toggle('terrain', on);
+  $('tcredit').hidden = !on;
 }
 function redraw(){
   root.selectAll('path:not(.nogeo)').attr('d', path);
@@ -1393,6 +1399,7 @@ async function go(i){
   $('soon').hidden = true; $('soont').textContent = s.label + ' · ' + s.title;
   closeObj();
   const L = liveBefore(cur), ls = STORY.stops[L];
+  reliefFor(s);
   if (s.file || (s.soon && ls.file)){
     [STOP, ERA] = await Promise.all([getJSON(ls.file), getJSON(ls.era)]);
     if (!ERA._wound){ rewindAll(ERA.zones); ERA._wound = true; }
