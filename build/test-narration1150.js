@@ -108,7 +108,7 @@ const ROOT = process.env.ROOT || path.join(__dirname, '..');
       s = await p.evaluate(() => ({mode: __app.mode, pill: document.getElementById('pill').textContent, flag: !!document.querySelector('.soonflag'), added: document.querySelectorAll('path.added').length, btn: (document.getElementById('gonextch') || {}).textContent}));
       ok(name + ' Play ends on the c. 1000 BC intro with "Continue to Chapter 3", no border drawn for David ' + JSON.stringify(s), s.mode === 'stop' && /1000/.test(s.pill) && !s.flag && s.added === 0 && /Continue to Chapter 3/.test(s.btn || ''));
       await shot('arrive1000');
-      await p.evaluate(() => document.getElementById('gonextch').click()); await p.waitForTimeout(1500);
+      await p.evaluate(() => document.getElementById('gonextch').click()); await p.waitForTimeout(300); if (await p.evaluate(() => !!__app.lenPick)) await p.click('#lpfull'); /* Quick or Full */ await p.waitForTimeout(1500);
       s = await p.evaluate(() => __app.play);
       ok(name + ' Continue to Chapter 3 starts its opening ' + JSON.stringify(s), s && s.reel === 'intro' && s.n === 7);
       await p.evaluate(() => __app.playStop(false));

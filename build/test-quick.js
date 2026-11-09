@@ -99,9 +99,12 @@ const ROOT = path.join(__dirname, '..');
       s = await p.evaluate(() => ({mode: __app.mode, cur: __app.cur, btn: (document.getElementById('gonextch') || {}).textContent, done: __app.parts()[0].done, pos: __app.pos(-1207)}));
       ok(name + ' ends on Chapter 2 with Continue, Chapter 1 watched ' + JSON.stringify(s), s.mode === 'stop' && s.cur === 1 && /Continue to Chapter 2/.test(s.btn || '') && s.done && !s.pos);
       // Chapter 2 has no quick version: it starts as before
-      await tap('#gonextch'); await p.waitForTimeout(1500);
+      await tap('#gonextch'); await p.waitForTimeout(800);
       s = await p.evaluate(() => ({lp: __app.lenPick, play: __app.play}));
-      ok(name + ' Chapter 2 starts directly, no chooser ' + JSON.stringify(s), !s.lp && s.play && s.play.reel === 'intro');
+      ok(name + ' Continue to Chapter 2 asks Quick or Full too ' + JSON.stringify(s), s.lp && !s.play);
+      await tap('#lpfull'); await p.waitForTimeout(1500);
+      s = await p.evaluate(() => ({lp: __app.lenPick, play: __app.play}));
+      ok(name + ' Chapter 2 Full starts its opening film ' + JSON.stringify(s), !s.lp && s.play && s.play.reel === 'intro');
       await p.evaluate(() => __app.playStop(false)); await p.waitForTimeout(1500);
       // back to Chapter 1: Full starts the opening film as before
       await p.evaluate(() => __app.go(0)); await p.waitForTimeout(1500);
@@ -134,6 +137,55 @@ const ROOT = path.join(__dirname, '..');
       s = await p.evaluate(() => __app.deep);
       ok(name + ' old links unchanged (?ch=1&line=12 is Play) ' + JSON.stringify(s), s && s.r === 'play' && s.i === 11);
     } catch (e) { ok(name + ' deep links ran: ' + e.message.split('\n')[0], false); }
+    await ctx.close();
+  }
+  // ---------- Chapter 2 (c. 1150 BC): quick version, chooser, deep link, and the terrain relief (Ch1 and Ch2 only) ----------
+  const d2 = J('data/stories/jews/1150bc.json'), Q2 = (d2.quick || {}).beats || [], T = J('data/terrain.json');
+  const w2 = Q2.reduce((s, b) => s + cap(b).text.split(/\s+/).length, 0), ms2 = Q2.reduce((s, b) => s + b.audioMs + b.pauseAfter, 0);
+  ok('Ch2 quick reel: ' + Q2.length + ' lines, ' + w2 + ' words, voice ' + Math.round(ms2 / 1000) + ' s', Q2.length >= 12 && w2 >= 240 && w2 <= 330 && ms2 > 100000 && ms2 < 190000);
+  ok('Ch2 every line recorded', Q2.every((b, i) => b.audio === `assets/narration/jews-1150-quick-${String(i + 1).padStart(2, '0')}.mp3` && fs.existsSync(path.join(ROOT, b.audio))));
+  ok('Ch2 every factual line sourced and labelled', Q2.every(b => { const c = cap(b); return c.cert === 'frame' ? !c.src.length : ['attested', 'disputed', 'tradition'].includes(c.cert) && c.src.length && c.src.every(k => S[k]) && c.claims.every(x => x[2].every(k => S[k])) && (!c.ref || c.src.includes('bible')); }));
+  ok('Ch2 no digits, no myth', Q2.every(b => !/[()\d]/.test(cap(b).text) && !/\bmyth|fabricat/i.test(cap(b).text)));
+  ok('Ch2 no border for David (no border steps)', Q2.every(b => b.steps.every(x => x.type !== 'border')));
+  ok('Ch2 vignettes are c2 pictures (' + Q2.filter(b => b.vignette).length + ')', Q2.filter(b => b.vignette).length >= 8 && Q2.filter(b => b.vignette).every(b => /c2-/.test(b.vignette.src) && fs.existsSync(path.join(ROOT, b.vignette.src))));
+  ok('terrain stops are Ch1 and Ch2 ' + JSON.stringify(T.stops), JSON.stringify(T.stops) === '[-1207,-1150]');
+  for (const dev of [{name: 'phone2', vp: {width: 390, height: 844}, mob: true}, {name: 'desktop2', vp: {width: 1280, height: 800}, mob: false}]){
+    const ctx = await b.newContext({viewport: dev.vp, deviceScaleFactor: 2, isMobile: dev.mob, hasTouch: dev.mob});
+    await ctx.addInitScript(() => localStorage.setItem('tlm.notice.v1', 'seen'));
+    const p = await ctx.newPage(), name = dev.name, tap = async sel => dev.mob ? p.tap(sel) : p.click(sel);
+    p.on('console', m => { if (m.type() === 'error' && !/favicon/.test(m.location().url || '')) errs.push(name + ': ' + m.text()); });
+    p.on('pageerror', e => errs.push(name + ' pageerror: ' + e.message));
+    const ter = () => p.evaluate(() => document.body.classList.contains('terrain') && [...document.querySelectorAll('image.relief')].some(i => i.style.display !== 'none'));
+    try {
+      await p.goto(url, {waitUntil: 'networkidle'}); await p.waitForTimeout(1200);
+      await p.evaluate(() => __app.go(1)); await p.waitForTimeout(1800);
+      ok(name + ' Ch2 page shows the terrain', await ter());
+      await tap('#gostory'); await p.waitForTimeout(500);
+      ok(name + ' Ch2 Play asks Quick or Full', await p.evaluate(() => __app.lenPick && /Chapter 2/.test(document.getElementById('lenpick').textContent)));
+      await tap('#lpquick'); await p.waitForTimeout(2200);
+      let s = await p.evaluate(() => ({play: __app.play, ln: (document.querySelector('#captext .lnum') || {}).textContent, src: __app.voice.src}));
+      ok(name + ' Ch2 quick plays ' + JSON.stringify([s.play, s.ln]), s.play && s.play.reel === 'quick' && s.play.n === 18 && s.ln === '#q1' && /jews-1150-quick-01/.test(s.src || ''));
+      ok(name + ' terrain under the Ch2 quick film', await ter());
+      if (shots && dev.mob){ await p.evaluate(() => __app.seek(13)); await p.waitForTimeout(7000); await p.evaluate(() => __app.wake()); await p.waitForTimeout(200); await p.screenshot({path: D + '/quick-ch2-film-phone.png'}); }
+      await p.evaluate(() => __app.seek(0)); await p.evaluate(() => { __app.speed = 8; });
+      let maxI = 0;
+      for (let i = 0; i < 400 && await p.evaluate(() => !!__app.play); i++){ maxI = Math.max(maxI, await p.evaluate(() => __app.play ? __app.play.i : -1)); await p.waitForTimeout(400); }
+      ok(name + ' Ch2 quick ran every line (' + maxI + ')', maxI === 17);
+      await p.waitForTimeout(3000);
+      s = await p.evaluate(() => ({cur: __app.cur, btn: (document.getElementById('gonextch') || {}).textContent, done: __app.parts()[1].done}));
+      ok(name + ' Ch2 quick ends on Chapter 3 ' + JSON.stringify(s), s.cur === 2 && /Continue to Chapter 3/.test(s.btn || '') && s.done);
+      for (const k of [2, 3, 4]){ await p.evaluate(k => __app.go(k), k); await p.waitForTimeout(1500); ok(name + ' no terrain on Chapter ' + (k + 1), !(await ter())); }
+      await p.evaluate(() => __app.bookPlay(1, 'intro', 1)); await p.waitForTimeout(2000);
+      ok(name + ' terrain under the Ch2 opening film', (await p.evaluate(() => __app.play && __app.play.reel === 'intro')) && await ter());
+      await p.evaluate(() => __app.bookPlay(1, 'play', 5)); await p.waitForTimeout(2000);
+      ok(name + ' terrain under the Ch2 Play', (await p.evaluate(() => __app.play && __app.play.reel === 'play')) && await ter());
+      await p.evaluate(() => __app.playStop(false)); await p.waitForTimeout(1200);
+      await p.goto(url + '?ch=2&quick=1', {waitUntil: 'networkidle'}); await p.waitForTimeout(1800);
+      s = await p.evaluate(() => ({d: __app.deep, txt: document.getElementById('deep').textContent}));
+      ok(name + ' ?ch=2&quick=1 offers the Ch2 quick version ' + JSON.stringify(s.d), s.d && s.d.k === 1 && s.d.r === 'quick' && /Quick version/.test(s.txt));
+      await tap('#deepgo'); await p.waitForTimeout(2000);
+      ok(name + ' Ch2 deep link plays the quick reel', await p.evaluate(() => __app.play && __app.play.reel === 'quick' && __app.cur === 1));
+    } catch (e) { ok(name + ' ran: ' + e.message.split('\n')[0], false); }
     await ctx.close();
   }
   await b.close();

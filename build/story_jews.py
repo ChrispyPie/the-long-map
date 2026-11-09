@@ -137,6 +137,8 @@ STOP1150 = {
   "ambient":"desert",
   "beats":NAR1150.clean(NAR1150.PLAY)}
 }
+# quick version of Chapter 2 (build/narration_jews_1150.py QUICK), offered next to the full film
+STOP1150["quick"] = {"title":"Chapter 2 in brief", "ambient":"desert", "beats":NAR1150.clean(NAR1150.QUICK)}
 
 
 # ---------- c. 1000 BC: David and Solomon (Chapter 3: opening film + Play to c. 930 BC, build/narration_jews_1000.py) ----------

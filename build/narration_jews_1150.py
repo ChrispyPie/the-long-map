@@ -195,3 +195,61 @@ def speech(b): return b["steps"][-1]["text"]
 def clean(beats):
     """beats as written to the data: reading notes stay here"""
     return [{k: v for k, v in b.items() if k != "note"} for b in beats]
+
+# ---------------- Quick version of Chapter 2 (about two minutes; reel jews-1150-quick) ----------------
+# Chapter 2 has no big fact boxes, so the skeleton is the Play's key beats: no empire in Canaan, the Philistine
+# cities, small peoples in the gap, the Judges and the land of villages, Shiloh and the Ark, Saul, David,
+# Khirbet Qeiyafa, the Tel Dan stele and the debate. Same rules and map steps as the full film; like the Play
+# it draws no border for David's kingdom.
+QUICK = [
+ B("Chapter Two, in two minutes.", F, vis=[yr(-1150), fo([35.0,31.9],4.5)], amb="desert"),
+ B("It is about eleven hundred and fifty BC. Egypt's rule in Canaan is ending, and no great power holds the land.", A, ["millek","weinstein"],
+   vis=[fo([34.9,31.6],4.2,["gaza","bethshean"])]),
+ B("On the southern coast, the Philistines build up their cities: Ashdod, Ashkelon, Ekron and Gath.", A, ["killebrew","yasur","dothan2016"],
+   vis=[yr(-1140), fo([34.68,31.65],7.5,["gaza","ashkelon","ashdod","ekron","gath"])]),
+ B("Without an empire, small peoples had room to grow: Philistines, Arameans, and in the hills, Israel.", A, ["killebrew","aram","fink2013"],
+   vis=[fo([35.4,32.6],3.6,["philistines","arameans","hills"])]),
+ B("The Book of Judges tells of leaders who rose in times of danger, like Deborah, Gideon and Samson.", T, ["bible"], ref="Judges 4–16",
+   vis=[yr(-1100), fo([35.2,32.0],5.5,["hills"])]),
+ B("Archaeology shows a land of villages, with no palaces and no central government in the hills.", A, ["fink2013","faust"]),
+ B("At Shiloh, the Bible says, the Ark of the Covenant was kept, and Samuel grew up to be a prophet.", T, ["bible"], ref="Joshua 18:1; 1 Samuel 1–3",
+   vis=[fo([35.29,32.05],9,["shiloh"])]),
+ B("Excavations there found storerooms full of jars, burned in the second half of the eleventh century BC.", A, ["finkshiloh1993","finkpiasetzky2006"],
+   vis=[yr(-1050)]),
+ B("The Bible tells how the Philistines defeated Israel near Aphek and captured the Ark, which was later sent back.", T, ["bible"], ref="1 Samuel 4–6",
+   vis=[fo([35.0,31.9],7.5,["aphek","ashdod","gath","ekron","bethshemesh","kiriathjearim"]),
+        {"type":"battle","at":P["aphek"],"label":"Battle near Aphek (tradition)","cert":"tradition","arrows":[],"sfx":"battle","sfxHold":2000},
+        {"type":"migration","label":"The Ark's journey (tradition)","cert":"tradition","path":ARK,"sfx":"migration","sfxHold":1500}]),
+ B("Then the people asked for a king, and Samuel anointed Saul, of the tribe of Benjamin.", T, ["bible"], ref="1 Samuel 8:5; 9–11",
+   vis=[yr(-1025), fo([35.23,31.85],8.5,["gibeah","jerusalem"])]),
+ B("No inscription from the time names Saul. Still, many historians think a real highland ruler stands behind the story.", D, ["fink2006","fink2013"],
+   claims=[["No inscription from the time names Saul.",A,["fink2006"]],
+           ["Still, many historians think a real highland ruler stands behind the story.",D,["fink2006","fink2013"]]]),
+ B("Saul and his son Jonathan fell fighting the Philistines on Mount Gilboa. How the mighty have fallen, David lamented.", T, ["bible"], ref="1 Samuel 31; 2 Samuel 1:19–27",
+   vis=[yr(-1010), fo([35.42,32.46],8,["gilboa","bethshean"]),
+        {"type":"battle","at":[35.414,32.434],"label":"Mount Gilboa (tradition)","cert":"tradition","arrows":[],"sfx":"battle","sfxHold":2000}]),
+ B("David, a shepherd from Bethlehem, became king at Hebron, and then made Jerusalem his capital.", T, ["bible"], ref="1 Samuel 16; 2 Samuel 2:4; 5:1–9",
+   vis=[fo([35.17,31.65],8.5,["hebron","jerusalem","bethlehem"])]),
+ B("Above the Valley of Elah, the fortified town of Khirbet Qeiyafa was destroyed around one thousand BC, give or take a few decades.", A, ["garfinkel2012","garfinkel2015"],
+   vis=[yr(-1000), fo([34.957,31.696],10,["qeiyafa"])],
+   note="Qeiyafa: kay-YAH-fah."),
+ B("Who built it is debated: Judah in David's time, or an early kingdom in the north, perhaps Saul's.", D, ["garfinkel2012","garfinkel2015","finkfantalkin2012"]),
+ B("More than a century later, a victory stone at Dan names a king of the House of David. Most scholars read this as Judah's royal line.", D, ["biran1993","biran1995","mazar2010"],
+   vis=[fo([35.4,32.6],5.0,["dan"])],
+   claims=[["More than a century later, a victory stone at Dan names a king of the House of David.",A,["biran1995"]],
+           ["Most scholars read this as Judah's royal line.",D,["biran1993","mazar2010"]]]),
+ B("How large David's kingdom was, and how much of his story is history, scholars still debate.", D, ["davies1992","kitchen2003","dever2001","mazar2010","finksilb2006"],
+   vis=[fo([35.1,31.75],6.5,["jerusalem","hebron","qeiyafa"])]),
+ B("In Jewish tradition, David's name became a lasting hope, of a future king who brings peace.", T, ["bible"], ref="2 Samuel 7:16; Isaiah 11:1–9",
+   vis=[fo([35.1,31.9],5.5,["jerusalem"])]),
+]
+QUICK[0]["chapter"] = "Chapter 2 in brief"
+QUICK_DIGITS = [("about eleven hundred and fifty BC", "about 1150 BC"), ("the second half of the eleventh century BC", "the second half of the 11th century BC"),
+  ("around one thousand BC", "around 1000 BC")]
+for b in QUICK:
+    c = b["steps"][-1]; assert c["type"] == "caption"
+    assert not re.search(r"[()\d]", c["text"]), c["text"]
+    d = c["text"]
+    for a, z in QUICK_DIGITS: d = d.replace(a, z)
+    if d != c["text"]: c["display"] = d
+for a, _ in QUICK_DIGITS: assert any(a in b["steps"][-1]["text"] for b in QUICK), a

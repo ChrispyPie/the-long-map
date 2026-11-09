@@ -81,4 +81,7 @@ if __name__ == '__main__':
     cfg = {'attribution': 'Relief: Terrain Tiles (AWS Open Data; SRTM, GMTED2010, ETOPO1) · coast: Natural Earth', 'layers': []}
     for n in SPEC:
         if n in names: cfg['layers'].append(dict(name=n, **render(n, **SPEC[n])))
+    # keep the hand-set list of stops (years) that show the relief
+    try: cfg['stops'] = json.load(open(f'{ROOT}/data/terrain.json')).get('stops', [-1207, -1150])
+    except Exception: cfg['stops'] = [-1207, -1150]
     json.dump(cfg, open(f'{ROOT}/data/terrain.json', 'w'), indent=1)
