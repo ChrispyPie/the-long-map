@@ -45,8 +45,26 @@ function fit(){
   projection.fitExtent([[6,6],[w-6,h-6]], VIEW);
   svg.attr('viewBox', `0 0 ${w} ${h}`);
   const a = projection([-12, 58]), b = projection([88, 58]), c = projection([-12, 2]), d = projection([88, 2]), m = projection([38, 2]);
+  placeRelief();
   zoom.extent([[0,0],[w,h]]).translateExtent([[Math.max(a[0],c[0]), Math.min(a[1],b[1])], [Math.min(b[0],d[0]), m[1]]]);
   redraw();
+}
+// ---------- shaded relief (prototype): pre-baked images in the map's own projection, under every vector layer ----------
+// data/terrain.json gives each image's box in the projection at scale 1 / translate 0, so it maps onto the live
+// projection with one scale + offset (fitExtent only changes those). ?terrain=0 turns it off for comparison.
+const TERRAIN_ON = new URLSearchParams(location.search).get('terrain') !== '0';
+let RELIEF = [];
+function placeRelief(){
+  const k = projection.scale(), [tx, ty] = projection.translate();
+  gLand.selectAll('image.relief').attr('x', d => tx + k * d.raw[0]).attr('y', d => ty + k * d.raw[1])
+    .attr('width', d => k * (d.raw[2] - d.raw[0])).attr('height', d => k * (d.raw[3] - d.raw[1]));
+}
+function addRelief(cfg){
+  if (!cfg || !TERRAIN_ON) return; RELIEF = cfg.layers || [];
+  document.body.classList.add('terrain');
+  gLand.selectAll('image.relief').data(RELIEF).join('image')
+    .attr('class', d => 'relief r-' + d.name).attr('preserveAspectRatio', 'none').attr('href', d => d.src);
+  placeRelief();
 }
 function redraw(){
   root.selectAll('path:not(.nogeo)').attr('d', path);
@@ -1763,6 +1781,7 @@ getJSON('data/site.json').then(c => { SITE = c || {}; [['donateUrl', 'donate'], 
   Object.entries(STORY.theme || {}).forEach(([k, v]) => { if (/^[a-z-]+$/.test(k) && /^#[0-9a-f]{3,8}$/i.test(v)) document.documentElement.style.setProperty('--' + k, v); });
   if (STORY.book) $('sbook').textContent = STORY.book;
   const o = base.objects;
+  addRelief(await getJSON('data/terrain.json').catch(() => null));
   gLand.append('path').datum(rewindAll(d3.feature(base, o.land))).attr('class','land');
   const lakes = rewindAll(d3.feature(base, o.lakes)).features;
   gLand.selectAll('path.lake').data(lakes).join('path').attr('class','lake');
