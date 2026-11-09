@@ -246,5 +246,6 @@ speech, clean = N1000.speech, N1000.clean
 # Jehu and the Tel Dan stele, Hazael's gains (the Play's border step) and the Black Obelisk.
 import quick as _quick
 QUICK, QUICK_FROM = _quick.build(__import__(__name__), "Chapter 4 in brief",
-    ["in07","in05","pl08","pl21","pl23","pl28","pl34","pl36","pl45","pl50","pl56","pl59","pl62","pl64"],
+    ["in07","in05","pl08","pl21","pl23","pl28","pl34","pl36","pl45","pl50","pl56","pl59","pl62","pl64","pl67"],
     ("Chapter Four, in two minutes.", [fo([35.6,32.6],3.2)]))
+QUICK[-1]["pauseAfter"] = 2000  # the closing line (the Play's own last line) gets a longer breath before the map moves on

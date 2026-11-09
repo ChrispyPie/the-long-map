@@ -945,11 +945,17 @@ function playEnd(){
   playStop(true).then(() => { if (PLAY) return; if (STORY.stops[k].file){ ARRIVE = k; go(k); } else arriveSoon(k, false); });
 }
 // the quick version ends like Play: the chapter counts as watched and the map lands on the next chapter
-// ("Continue to Chapter N"); the full film's saved place, if any, is kept
+// ("Continue to Chapter N"); the full film's saved place, if any, is kept. It closes gently: the last line stays
+// up while the ambient sound fades out (about two seconds, longer while paused), then the map moves on.
+const QUICK_CLOSE_MS = 1800;
 function quickEnd(){
   partSet();
-  const k = STORY.stops.findIndex(s => s.year === STOP.play.to);
-  playStop(true).then(() => { if (PLAY) return; if (k >= 0 && STORY.stops[k].file){ ARRIVE = k; go(k); } else if (k >= 0) arriveSoon(k, false); });
+  const k = STORY.stops.findIndex(s => s.year === STOP.play.to), P = PLAY;
+  sndFadeShots(2); sndAmbient(null); if (SND.ctx) ramp(SND.bus.gain, 0, 2);
+  let left = QUICK_CLOSE_MS;
+  const tick = () => { if (PLAY !== P) return; if (!P.paused) left -= 200; if (left > 0) return setTimeout(tick, 200); landNext(); };
+  setTimeout(tick, 200);
+  const landNext = () => playStop(true).then(() => { if (PLAY) return; if (k >= 0 && STORY.stops[k].file){ ARRIVE = k; go(k); } else if (k >= 0) arriveSoon(k, false); });
 }
 // ---------- vignettes: a picture card over the map while the narrator describes something ----------
 // beat.vignette = {src, alt, caption?, beats?} comes from build/vignettes.py. The card appears once the
@@ -1416,7 +1422,9 @@ function arriveSoon(k, rebuild){
     `<details class="src"><summary>Sources (${all.length})</summary>${srcList(all)}</details>`;
   $('evbody').scrollTop = 0;
   $('evn').textContent = '1 / 1'; $('evprev').disabled = true; $('evnext').disabled = true;
-  $('replay').onclick = e => { e.stopPropagation(); MODE = 'stop'; cur = liveBefore(k); timelineState(STORY.stops[cur]); playStart(chapReel()); };
+  // Play Chapter N again: Quick or Full first when the chapter has a quick version (✕ keeps this end page)
+  const again = w => { MODE = 'stop'; cur = liveBefore(k); timelineState(STORY.stops[cur]); playStart(w === 'quick' && quickBeats() ? 'quick' : chapReel()); };
+  $('replay').onclick = e => { e.stopPropagation(); if (quickBeats()) lenPick(STOP, liveBefore(k), again, e.currentTarget); else again('full'); };
   $('gobook').onclick = e => { e.stopPropagation(); bkOpen(e.currentTarget, bkPageOf(k)); };
   $('back1207').onclick = e => { e.stopPropagation(); go(liveBefore(k)); };
   drawKeys();
