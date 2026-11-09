@@ -140,6 +140,21 @@ VIGNETTES = {
             {"line": "The first mention of David outside the Bible", "caption": "The Tel Dan Stele", "images": [{"src": D + "c2-dan-stele.webp", "alt": "A basalt victory stone with carved lines standing at a city gate", "caption": "A victory stone at Dan (impression; it was found broken)"}, {"src": D + "c2-dan-stele-plate.webp", "alt": "Sepia photograph of the real Tel Dan Stele: broken basalt fragments with Aramaic letters, in a museum", "caption": "Real fragments · photo Gary Todd, CC0", "photo": True}]},
             {"line": "Imagine the gate at Qeiyafa at dawn", "src": D + "c2-qeiyafa-dawn.webp", "alt": "A stone town gate at dawn, sentries on the wall looking over the valley, smoke from houses", "caption": "The gate at dawn (artist's impression)", "fx": "smoke"},
         ],
+        "quick": [
+            _q("It is about eleven hundred and fifty BC", "c2-empty-fort.webp"),
+            _q("On the southern coast, the Philistines build up", "c2-philistine-city.webp"),
+            _q("Without an empire, small peoples", "c2-villages-spread.webp"),
+            _q("The Book of Judges tells of leaders", "c2-gideon.webp"),
+            _q("At Shiloh, the Bible says", "c2-shiloh.webp"),
+            _q("Excavations there found storerooms", "c2-shiloh-storeroom.webp"),
+            _q("The Bible tells how the Philistines defeated Israel", "c2-ark-taken.webp"),
+            _q("Then the people asked for a king", "c2-anointing.webp"),
+            _q("Saul and his son Jonathan fell", "c2-gilboa.webp"),
+            _q("David, a shepherd from Bethlehem", "c2-hebron.webp"),
+            _q("Above the Valley of Elah", "c2-qeiyafa.webp"),
+            _q("More than a century later, a victory stone", "c2-dan-stele.webp"),
+            _q("In Jewish tradition, David's name", "c2-qeiyafa-dawn.webp"),
+        ],
     },
     "jews-1000": {
         "intro": [
@@ -251,6 +266,8 @@ def _find(name):
             if where == "quick": continue
             for v in vs:
                 if v.get("src", "").endswith("/" + name): return v
+                for im in v.get("images", []):
+                    if im["src"].endswith("/" + name): return im
     raise KeyError(name)
 for _reels in VIGNETTES.values():
     for _v in _reels.get("quick", []):

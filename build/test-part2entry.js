@@ -31,7 +31,7 @@ const D = process.env.SHOTS || 'screens';
       await p.evaluate(() => document.querySelector('.parts').scrollIntoView({block: 'center'})); await p.waitForTimeout(300); await shot('list');
       await tap('#evbody .parts .chb.here'); await p.waitForTimeout(600);
       ok(name + ' "You are here" does nothing', await p.evaluate(() => !__app.play && __app.cur === 0));
-      await tap('#evbody .parts .chb[data-part="1"]');
+      await tap('#evbody .parts .chb[data-part="1"]'); await p.waitForTimeout(300); if (await p.evaluate(() => !!__app.lenPick)) await p.click('#lpfull'); /* Quick or Full */
       await p.waitForFunction(() => __app.play && __app.play.reel === 'intro', null, {timeout: 15000}); await p.waitForTimeout(2500);
       let s = await p.evaluate(() => ({cur: __app.cur, play: __app.play, cine: __app.cine, src: __app.voice.src, year: document.getElementById('cyear').textContent, chapter: document.getElementById('chapter').textContent}));
       ok(name + ' Part 2 starts the c. 1150 BC opening film ' + JSON.stringify(s), s.cur === 1 && s.play.n === 7 && !s.play.paused && s.cine && s.cine.full && /1150/.test(s.year) && /Villages/.test(s.chapter) && (!s.src || /jews-1150-in-0/.test(s.src)));

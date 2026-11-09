@@ -16,7 +16,7 @@ SETTINGS = {"stability": 0.32, "similarity_boost": 0.75, "style": 0.47, "use_spe
 OUT = "assets/narration"; IDX = f"{OUT}/index.json"
 # reel name -> (narration module, beats); the reel name is the mp3 file prefix
 REELS = {"jews-1207-in": (N, N.INTRO_BEATS), "jews-1207-play": (N, N.PLAY), "jews-1207-quick": (N, N.QUICK),
-         "jews-1150-in": (N1150, N1150.INTRO_BEATS), "jews-1150-play": (N1150, N1150.PLAY),
+         "jews-1150-in": (N1150, N1150.INTRO_BEATS), "jews-1150-play": (N1150, N1150.PLAY), "jews-1150-quick": (N1150, N1150.QUICK),
          "jews-1000-in": (N1000, N1000.INTRO_BEATS), "jews-1000-play": (N1000, N1000.PLAY),
          "jews-930-in": (N930, N930.INTRO_BEATS), "jews-930-play": (N930, N930.PLAY),
          "jews-722-in": (N722, N722.INTRO_BEATS), "jews-722-play": (N722, N722.PLAY)}
