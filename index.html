@@ -55,6 +55,12 @@ try { var t = localStorage.getItem('tlm.textsize'); if (/^(s|m|l|xl)$/.test(t)) 
   .lake { fill:#a9bec8; stroke:#7f98a6; stroke-width:.5; vector-effect:non-scaling-stroke; }
   .river { fill:none; stroke:#5d819f; stroke-width:1.1; vector-effect:non-scaling-stroke; stroke-linecap:round; }
   .river.approx { stroke-dasharray:3 2; }
+  /* shaded relief prototype: the land fill gives way to the baked relief; coast and water stay vector on top */
+  body.terrain .land { fill:none; stroke:#8f7e5f; stroke-opacity:.55; stroke-width:.5; }
+  body.terrain .lake { fill:#9fb8c4; stroke:#6f8c9c; }
+  body.terrain .river { stroke:#4f7896; stroke-width:1.3; stroke-opacity:.9; }
+  .relief { pointer-events:none; } #tcredit[hidden] { display:none; }
+  body.terrain .zone { mix-blend-mode:multiply; } body.terrain .zone.hl { fill-opacity:.38; }
   .zone { cursor:pointer; vector-effect:non-scaling-stroke; }
   .zone.sure { fill-opacity:.28; stroke-width:1.6; }
   .zone.unsure { fill-opacity:.14; stroke-width:1.3; stroke-dasharray:5 4; }
@@ -826,7 +832,7 @@ try { var t = localStorage.getItem('tlm.textsize'); if (/^(s|m|l|xl)$/.test(t)) 
 </div>
 <footer>
   <p class="fseries">The Long Map is a series of histories, each told from the perspective of a different people. Book One is the Story of the Jews. Book Two, the Story of the Arabs, and the Story of the Persians are coming later. The aim is understanding, and less room for hate.</p>
-  <p>Map data: <a href="https://www.naturalearthdata.com/">Natural Earth</a> (public domain). Modern coastlines and rivers. Orontes and routes drawn approximately (dashed).
+  <p>Map data: <a href="https://www.naturalearthdata.com/">Natural Earth</a> (public domain). Modern coastlines and rivers. Orontes and routes drawn approximately (dashed). <span id="tcredit" hidden>Relief (Chapter 1): elevation from <a href="https://registry.opendata.aws/terrain-tiles/">Terrain Tiles</a> on AWS Open Data (SRTM, GMTED2010, ETOPO1; public domain).</span>
   Areas: approximate outlines by The Long Map, sources in each fact box. Labels: Attested = found in ancient evidence; Disputed = scholars disagree; Tradition = Jewish tradition and the Hebrew Bible. Imagine = scene-setting that adds no facts.</p>
   <p><button type="button" class="linkish flink" id="about2">About this site</button>
   <a id="report" class="donate" href="#" rel="noopener" target="_blank" hidden>Report an error</a>

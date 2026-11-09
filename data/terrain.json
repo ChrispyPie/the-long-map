@@ -1,0 +1,32 @@
+{
+ "attribution": "Relief: Terrain Tiles (AWS Open Data; SRTM, GMTED2010, ETOPO1) \u00b7 coast: Natural Earth",
+ "layers": [
+  {
+   "name": "region",
+   "src": "images/terrain/region.webp",
+   "raw": [
+    -0.409968561201307,
+    -0.9146879411889162,
+    0.4433863862655003,
+    -0.3465144869749923
+   ],
+   "w": 3000,
+   "h": 1997
+  },
+  {
+   "name": "levant",
+   "src": "images/terrain/levant.webp",
+   "raw": [
+    -0.06725453600981271,
+    -0.6373101823334859,
+    -0.0028694077685256806,
+    -0.54184002619037
+   ],
+   "w": 2400,
+   "h": 3559
+  }
+ ],
+ "stops": [
+  -1207
+ ]
+}
