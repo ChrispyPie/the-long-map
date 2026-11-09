@@ -61,6 +61,8 @@ const ROOT = path.join(__dirname, '..');
       await tap('#gostory'); await p.waitForTimeout(400); await tap('#lpquick'); await p.waitForTimeout(2500);
       s = await p.evaluate(() => ({play: __app.play, voice: __app.voice, cine: __app.cine, ln: (document.querySelector('#captext .lnum') || {}).textContent, time: __app.time, card: document.getElementById('chapcard').textContent}));
       ok(name + ' Quick plays the quick reel full screen ' + JSON.stringify(s.play), s.play && s.play.reel === 'quick' && s.play.n === Q.length && s.cine && /jews-1207-quick-01/.test(s.voice.src || ''));
+      s.ter = await p.evaluate(() => ({on: document.body.classList.contains('terrain'), imgs: [...document.querySelectorAll('image.relief')].filter(i => i.style.display !== 'none').length}));
+      ok(name + ' terrain relief shows under the quick film ' + JSON.stringify(s.ter), s.ter.on && s.ter.imgs >= 1 || /terrain=0/.test(url));
       ok(name + ' line marker #q1, quick time ' + JSON.stringify([s.ln, s.time, s.card]), s.ln === '#q1' && /\/ [12]:\d\d$/.test(s.time) && /Quick version/.test(s.card));
       s = await p.evaluate(() => ({l: __app.lineRef('q3'), t: __app.timeRef()}));
       ok(name + ' links: ' + JSON.stringify(s), /\(quick\), line #q3/.test(s.l) && /\?ch=1&line=q3$/.test(s.l) && /\?ch=1&quick=1&t=\d+$/.test(s.t));
