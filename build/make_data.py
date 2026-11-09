@@ -56,6 +56,8 @@ def check_stop(stop, era, reel_prefix):
     tin = stop["transitionIn"]
     assert isinstance(tin, str) or (isinstance(tin, dict) and isinstance(tin.get("text"), str)), "transitionIn: a string, or {text, beats}"
     reels = [("play", play["beats"], False)] + ([("intro", tin["beats"], True)] if isinstance(tin, dict) and tin.get("beats") else [])
+    # optional quick version of the whole chapter (about two minutes): frame lines allowed, no choice
+    if stop.get("quick"): reels.append(("quick", stop["quick"]["beats"], True))
     def check_reel(where, beats, frame_ok):
         where_ = f"{stop['label']} {where}"
         assert beats and "chapter" in beats[0], f"{where_}: the first beat opens a chapter"
@@ -81,7 +83,7 @@ def check_stop(stop, era, reel_prefix):
                 for i in x.get("hl",[]): assert i in ids, f"unknown hl {i} in {where_} beat {n}"
                 for f in x.get("fade",[]) + x.get("add",[]): assert f["zone"] in zones_known, f["zone"]
     for where, beats, frame_ok in reels: check_reel(where, beats, frame_ok)
-    reel_file = {"intro": reel_prefix + "-in", "play": reel_prefix + "-play"}
+    reel_file = {"intro": reel_prefix + "-in", "play": reel_prefix + "-play", "quick": reel_prefix + "-quick"}
     for where, beats, _ in reels:
         words = 0
         for n,b in enumerate(beats):
@@ -98,7 +100,7 @@ def check_stop(stop, era, reel_prefix):
             else:
                 assert SILENT_OK, f"{stop['label']} {where} beat {n}: no recording for this text, run build/narrate.py (or TLM_ALLOW_SILENT=1)"
                 print("warning: no voice for", stop["label"], where, "beat", n)
-        (play if where == "play" else tin)["words"] = words
+        {"play": play, "intro": tin, "quick": stop.get("quick")}[where]["words"] = words
     # vignettes (build/vignettes.py): a picture card on the beat whose line starts with "line"
     for where, beats, _ in reels:
         for v in vignettes.VIGNETTES.get(reel_prefix, {}).get(where, []):
@@ -211,4 +213,6 @@ for st in (stop, stop1150, stop1000, stop930, stop722):
     play, tin = st["play"], st["transitionIn"]
     print(st["label"], "events", len(st["events"]), "play beats", len(play["beats"]), "words", play["words"], "voice min", round(sum(b.get("audioMs", b["duration"])+b["pauseAfter"] for b in play["beats"])/60000, 1),
           "opening beats", len(tin["beats"]) if isinstance(tin, dict) else 0, "explore keys", len(st["explore"]["key"]))
+    if st.get("quick"):
+        q = st["quick"]; print(st["label"], "QUICK beats", len(q["beats"]), "words", q["words"], "voice min", round(sum(b.get("audioMs", b["duration"])+b["pauseAfter"] for b in q["beats"])/60000, 2))
 print("objects", len(objs), "sources", len(src))

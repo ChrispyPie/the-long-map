@@ -234,3 +234,63 @@ def speech(b): return b["steps"][-1]["text"]
 def clean(beats):
     """beats as written to the data: reading notes stay here"""
     return [{k: v for k, v in b.items() if k != "note"} for b in beats]
+
+# ---------------- Quick version of Chapter 1 (about two minutes; reel jews-1207-quick) ----------------
+# The whole chapter (opening film + Play) told through its big fact boxes only: Egypt and Hatti after Kadesh,
+# Canaan under Egypt, Merneptah's stele, the Exodus memory (Tradition), the collapse and the Sea Peoples,
+# the Philistines, Egypt's withdrawal and the hill villages. Same rules as the full film: every factual line
+# sourced and labelled, the same map steps, and it ends on the same map as Play (so Chapter 2 follows on).
+# Design kept open for a later "story so far" recap: that would be another reel of the same kind on the stop.
+QUICK = [
+ B("Chapter One, in two minutes.", F, vis=[yr(-1207), fo([38.0,33.0],1.2)], amb="desert"),
+ B("About twelve hundred and seven BC, Egypt and the Hittites were the great powers. After a war at Kadesh, they had made peace.", A, ["kuhrt","bryce","bryce2006","beckman"],
+   vis=[fo([35.0,37.5],1.6,["hattusa","kadesh","egypt"])]),
+ B("Between them lay Canaan, a land of small city-states under Egyptian rule.", A, ["morris","killebrew"],
+   vis=[fo([35.0,31.9],5.5,["gaza","bethshean","jerusalem","megiddo"])]),
+ B("Pharaoh Merneptah carved a victory hymn in stone. Near its end it says: Israel is laid waste. Its seed is not.", A, ["stele","kitchen4"],
+   vis=[fo([35.0,31.95],5.5,["ashkelon","gezer","yenoam","israelp"])],
+   note="Quotation from the stele. Slower on the quotation."),
+ B("It is the oldest known mention of Israel outside the Bible, written with the sign for a people.", A, ["stele","hasel"]),
+ B("In Jewish tradition, the story begins earlier: slavery in Egypt, the Exodus under Moses, and the Torah given at Sinai.", T, ["bible"], ref="Exodus to Deuteronomy",
+   vis=[fo([32.6,30.2],2.6,["piramesses","sinai"])]),
+ B("No Egyptian text found so far names Moses or the Exodus. Scholars differ on how this memory relates to history.", D, ["killebrew","faust","finkelstein"]),
+ B("Then the old world of palaces began to fall. Drought, war and broken trade all played a part, and which mattered most is debated.", D, ["cline","kuhrt"],
+   vis=[yr(-1190), fo([35.0,36.6],2.0,["ugarit","hattusa"])],
+   claims=[["Then the old world of palaces began to fall.",A,["cline","kuhrt"]],
+           ["Drought, war and broken trade all played a part, and which mattered most is debated.",D,["cline"]]]),
+ B("The port of Ugarit was destroyed, and the Hittite empire came to an end.", A, ["kaniewski","cline","seeher","bryce"],
+   vis=[{"type":"battle","at":[35.78,35.6],"label":"Ugarit destroyed","cert":"attested",
+         "arrows":[{"path":[[34.2,35.95],[35.0,35.75],[35.66,35.62]],"side":"enemy","cert":"disputed"}],"sfx":"battle","sfxHold":2000},
+        {"type":"border","fade":[{"zone":"hatti"}],"sfx":"border"}]),
+ B("Egyptian temple walls show peoples on the move by land and sea, with carts carrying families. Historians call them the Sea Peoples.", A, ["mhabu","edgerton","yasur","cline"],
+   vis=[yr(-1180), fo([31.5,34.2],1.35,["seapeoples"]),
+        {"type":"migration","label":"By sea","cert":"disputed","path":SEA,"sfx":"migration","sfxHold":1500},
+        {"type":"migration","label":"By land","cert":"disputed","path":LAND,"sfx":None}]),
+ B("Around eleven seventy-seven BC, Ramesses the Third fought them at the mouths of the Nile, and Egypt was not overrun.", A, ["edgerton","mhabu","cline"],
+   vis=[yr(-1177), {"type":"battle","at":[31.95,31.42],"label":"Sea battle at the Nile mouths","cert":"attested",
+         "arrows":[{"path":[[31.83,30.8],[31.9,31.25]],"side":"egypt","cert":"attested"},
+                   {"path":[[33.0,31.75],[32.4,31.6],[32.05,31.48]],"side":"enemy","cert":"disputed"}],"sfx":"battle","sfxHold":2000}], amb="river"),
+ B("Among them were the Philistines. They settled on the southern coast of Canaan, in Ashdod, Ashkelon, Ekron and Gath.", A, ["edgerton","killebrew","yasur"],
+   vis=[yr(-1170), fo([34.72,31.62],7,["ashdod","ashkelon","ekron","gath"]),
+        {"type":"border","add":[{"zone":"philistia","certainty":"unsure","label":"PHILISTIA","labelAt":[34.55,31.72],"coords":PHIL}],"sfx":"border"}], amb="desert"),
+ B("During the twelfth century, Egypt's rule in Canaan came to an end.", A, ["weinstein","millek","morris"],
+   vis=[yr(-1160), fo([35.2,32.1],4.2,["bethshean","gaza"]), {"type":"border","fade":[{"zone":"egypt","certainty":"unsure"}],"sfx":"border"}]),
+ B("In the hills, small farming villages spread, from about thirty sites to about two hundred and fifty within two centuries.", A, ["fink2013","finkelstein"],
+   vis=[yr(-1150), fo([35.2,31.95],5.5,["hills","izbetsartah","shechem","jerusalem"]),
+        {"type":"border","fade":[{"zone":"israel"}],"add":[{"zone":"highlands","certainty":"people","label":"ISRAEL","labelAt":ISRAEL_LABEL,"coords":HIGH}],"sfx":"border"}]),
+ B("Many archaeologists see these villagers as early Israel. Others caution that houses and pottery alone cannot show what people called themselves.", D, ["faust","fink2013","killebrew"],
+   note="Needed because the map draws the ISRAEL label on these hills."),
+ B("In Jewish tradition, this is the age of the Judges, when there was no king in Israel.", T, ["bible"], ref="Judges 21:25"),
+ B("For now, this is a people of villages, in a land shared with others. Their story has only begun.", A, ["fink2013","killebrew"]),
+]
+QUICK[0]["chapter"] = "Chapter 1 in brief"
+QUICK_DIGITS = [("About twelve hundred and seven BC", "About 1207 BC"), ("Around eleven seventy-seven BC", "Around 1177 BC"),
+  ("Ramesses the Third", "Ramesses III"), ("the twelfth century", "the 12th century BC"),
+  ("about thirty sites to about two hundred and fifty within two centuries", "about 30 sites to about 250 within two centuries")]
+for b in QUICK:
+    c = b["steps"][-1]; assert c["type"] == "caption"
+    assert not re.search(r"[()\d]", c["text"]), c["text"]
+    d = c["text"]
+    for a, z in QUICK_DIGITS: d = d.replace(a, z)
+    if d != c["text"]: c["display"] = d
+for a, _ in QUICK_DIGITS: assert any(a in b["steps"][-1]["text"] for b in QUICK), a
