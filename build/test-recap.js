@@ -3,8 +3,9 @@
 // newly recorded (own files jews-<year>-recap-NN.mp3), every line labelled and sourced, tradition as tradition,
 // no digits or brackets spoken, only map moves (no years, no borders). Browser (390x844 touch): with recaps on,
 // Play Chapter 3 → Full plays the recap first (Skip recap button visible), then the opening film; Skip recap
-// jumps to it; Quick also gets the recap; the settings switch turns recaps off; a previous chapter finished less
-// than a day ago leaves it out, an older one brings it back; Continue to Chapter N (after finishing) skips it.
+// jumps to it; Quick also gets the recap; the Quick/Full card has a 'Play "The story so far" recap' checkbox (on,
+// remembered, in sync with the ⚙ switch; Chapter 1's card has none); unticked → no recap; the recap plays even right
+// after the previous chapter was finished (no auto-skip).
 // Usage: node build/test-recap.js [url] [noshots]; SHOTS=dir for screenshots (default /workspace).
 const { chromium } = require('playwright');
 const fs = require('fs'), path = require('path');
@@ -69,14 +70,27 @@ const ROOT = path.join(__dirname, '..');
     await p.waitForTimeout(1800); s = await st();
     ok(`${name} controls' Skip in the recap → the quick version ${JSON.stringify(s)}`, s.reel === 'quick');
     await stop();
-    // the previous chapter finished less than a day ago: no recap; more than a day ago: recap again
+    // the Quick/Full card: 'Play "The story so far" recap', ticked; Chapter 1 has no recap and no checkbox
+    await p.evaluate(() => __app.go(0)); await p.waitForTimeout(1500); await p.tap('#gostory'); await p.waitForTimeout(400);
+    ok(`${name} Ch1 card has no recap checkbox`, await p.evaluate(() => __app.lenPick && !document.getElementById('lprecap')));
+    await p.tap('#lpx'); await p.waitForTimeout(300);
+    await p.evaluate(() => __app.go(4)); await p.waitForTimeout(1500); await p.tap('#gostory'); await p.waitForTimeout(500);
+    ok(`${name} Ch5 card: recap checkbox, ticked`, await p.evaluate(() => { const c = document.getElementById('lprecap'); return c && c.checked && c.offsetParent !== null && /The story so far/.test(c.parentElement.textContent); }));
+    await p.screenshot({path: `${D}/chooser-recap-checkbox-phone.png`});
+    await p.tap('#lprecap'); await p.waitForTimeout(200);
+    ok(`${name} unticking turns recaps off (remembered, ⚙ in sync)`, await p.evaluate(() => !__app.recaps && localStorage.getItem('tlm.recaps') === 'off' && !document.querySelector('#capmenu input[data-recaps]').checked && __app.lenPick));
+    await p.tap('#lpfull'); await p.waitForTimeout(1800); s = await st();
+    ok(`${name} unticked → Ch5 starts on its opening film ${JSON.stringify(s)}`, s.reel === 'intro');
+    await stop();
+    await p.evaluate(() => __app.go(4)); await p.waitForTimeout(1500); await p.tap('#gostory'); await p.waitForTimeout(500);
+    ok(`${name} card remembers it unticked`, await p.evaluate(() => !document.getElementById('lprecap').checked));
+    await p.tap('#lprecap'); await p.waitForTimeout(200);
+    ok(`${name} ticking again turns recaps on`, await p.evaluate(() => __app.recaps && localStorage.getItem('tlm.recaps') === 'on' && document.querySelector('#capmenu input[data-recaps]').checked));
+    await p.tap('#lpx'); await p.waitForTimeout(300);
+    // no auto-skip: the previous chapter finished an hour ago, the recap still plays
     await p.evaluate(() => localStorage.setItem('tlm.doneat.jews.-930', String(Date.now() - 3600e3)));
     await startCh(4, 'full'); s = await st();
-    ok(`${name} Ch4 finished an hour ago → Ch5 without recap ${JSON.stringify(s)}`, s.reel && s.reel !== 'recap');
-    await stop();
-    await p.evaluate(() => localStorage.setItem('tlm.doneat.jews.-930', String(Date.now() - 30 * 3600e3)));
-    await startCh(4, 'full'); s = await st();
-    ok(`${name} Ch4 finished yesterday → recap again ${JSON.stringify(s)}`, s.reel === 'recap');
+    ok(`${name} Ch4 finished an hour ago → recap still plays ${JSON.stringify(s)}`, s.reel === 'recap');
     // the settings switch in the film turns recaps off (remembered)
     await p.evaluate(() => __app.wake && __app.wake()); await p.waitForTimeout(200);
     await p.evaluate(() => __app.capMenu(true)); await p.waitForTimeout(200);
@@ -87,8 +101,9 @@ const ROOT = path.join(__dirname, '..');
     await startCh(3, 'full'); s = await st();
     ok(`${name} recaps off → Ch4 starts on its opening film ${JSON.stringify(s)}`, s.reel === 'intro');
     await stop();
+    ok(`${name} the card's checkbox follows the ⚙ switch`, await (async () => { await p.evaluate(() => __app.go(3)); await p.waitForTimeout(1500); await p.tap('#gostory'); await p.waitForTimeout(500); const r = await p.evaluate(() => !document.getElementById('lprecap').checked); await p.tap('#lpx'); await p.waitForTimeout(300); return r; })());
     await p.evaluate(() => __app.setRecaps(true));
-    // finishing a chapter records the time; Continue to the next chapter then skips the recap
+    // finishing a chapter, then Continue to the next one right away: the recap plays (no auto-skip)
     await startCh(2, 'quick'); await p.tap('#recapskip'); await p.waitForTimeout(1500);
     await p.evaluate(() => { __app.speed = 8; __app.seek(__app.play.n - 1); });
     for (let i = 0; i < 80 && await p.evaluate(() => !!__app.play); i++) await p.waitForTimeout(500);
@@ -97,7 +112,7 @@ const ROOT = path.join(__dirname, '..');
     const btn = await p.$('#gonextch');
     if (btn){ await btn.tap(); await p.waitForTimeout(500); if (await p.evaluate(() => __app.lenPick)) await p.tap('#lpfull'); await p.waitForTimeout(1800); }
     s = await st();
-    ok(`${name} Continue to Chapter 4 right after → no recap ${JSON.stringify(s)}`, !!btn && s.reel === 'intro' && s.cur === 3);
+    ok(`${name} Continue to Chapter 4 right after → recap plays ${JSON.stringify(s)}`, !!btn && s.reel === 'recap' && s.cur === 3);
     await stop();
   } catch (e) { ok(name + ' ran: ' + e.message.split('\n')[0], false); }
   await b.close();

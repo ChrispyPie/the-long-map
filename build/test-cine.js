@@ -53,7 +53,7 @@ const D = process.env.SHOTS || 'screens';
     await p.evaluate(()=>__app.showStep(9)); await p.waitForTimeout(1200);
     const rect0 = await p.evaluate(()=>{ const r=document.getElementById('vp').getBoundingClientRect(); return [r.width, r.height]; });
     await p.evaluate(()=>document.getElementById('playbtn').scrollIntoView({block:'center'}));
-    await tap('#playbtn');
+    await tap('#playbtn'); await p.waitForTimeout(300); if (await p.evaluate(() => !!__app.lenPick)) await p.click('#lpfull'); /* Quick or Full */
     await p.waitForTimeout(rm ? 150 : 300);
     const mid = await p.evaluate(()=>{ const r=document.getElementById('vp').getBoundingClientRect(); return [r.width, r.height]; });
     await p.waitForTimeout(1400);
@@ -97,7 +97,7 @@ const D = process.env.SHOTS || 'screens';
     // replay with CC on, skip to the end: zoom back out to the explore UI on the new year
     await p.evaluate(()=>__app.showStep(9)); await p.waitForTimeout(1200);
     await p.evaluate(()=>document.getElementById('playbtn').scrollIntoView({block:'center'}));
-    await tap('#playbtn'); await p.waitForTimeout(1500);
+    await tap('#playbtn'); await p.waitForTimeout(300); if (await p.evaluate(() => !!__app.lenPick)) await p.click('#lpfull'); /* Quick or Full */ await p.waitForTimeout(1500);
     await tap('#capcc'); await p.waitForTimeout(100);
     ok(name+' CC back on', await p.evaluate(()=>__app.cc===true && getComputedStyle(document.getElementById('captext')).display!=='none'));
     await p.evaluate(()=>__app.seek(__app.play.n - 1)); await p.waitForTimeout(rm ? 300 : 500);
@@ -119,7 +119,7 @@ const D = process.env.SHOTS || 'screens';
     // the end lands on the live c. 1150 stop; go back to 1207 and start its Play again
     await p.evaluate(()=>__app.go(0)); await p.waitForTimeout(1400); await p.evaluate(()=>__app.showStep(9)); await p.waitForTimeout(1200);
     await p.evaluate(()=>document.getElementById('playbtn').scrollIntoView({block:'center'}));
-    await tap('#playbtn'); await p.waitForTimeout(2200);
+    await tap('#playbtn'); await p.waitForTimeout(300); if (await p.evaluate(() => !!__app.lenPick)) await p.click('#lpfull'); /* Quick or Full */ await p.waitForTimeout(2200);
     ok(name+' replay enters the film again', await p.evaluate(()=>!!(__app.cine && __app.cine.full)));
     await p.evaluate(()=>document.body.classList.remove('idle'));
     await tap('#capx'); await p.waitForTimeout(1600);
@@ -127,7 +127,7 @@ const D = process.env.SHOTS || 'screens';
     ok(name+' Exit leaves the film back to explore '+JSON.stringify(c), c.cine===null && c.play===null && c.mode==='stop' && c.hdr==='1' && c.pb);
     // Escape also exits
     if (!mobile){
-      await p.evaluate(()=>document.getElementById('playbtn').scrollIntoView({block:'center'})); await p.click('#playbtn'); await p.waitForTimeout(1500);
+      await p.evaluate(()=>document.getElementById('playbtn').scrollIntoView({block:'center'})); await p.click('#playbtn'); await p.waitForTimeout(300); if (await p.evaluate(() => !!__app.lenPick)) await p.click('#lpfull'); /* Quick or Full */ await p.waitForTimeout(1500);
       await p.keyboard.press('Escape'); await p.waitForTimeout(1600);
       ok(name+' Escape leaves the film', await p.evaluate(()=>__app.cine===null && __app.play===null));
     }

@@ -404,7 +404,9 @@ function showStep(i, fly = true){
   if (e.explore){
     renderChecklist();
     $('xpreset').onclick = ev => { ev.stopPropagation(); EXPLORED.clear(); saveExplored(); drawKeys(); renderChecklist(); };
-    if ($('playbtn')) $('playbtn').onclick = ev => { ev.stopPropagation(); playStart(); };
+    // ▶ Play: <scene title> on the Explore step: Quick or Full first when the chapter has a quick version
+    // (Quick = the quick reel from its start, Full = the Play part as before)
+    if ($('playbtn')) $('playbtn').onclick = ev => { ev.stopPropagation(); if (quickBeats()) lenPick(STOP, cur, w => w === 'quick' ? chapStart('quick') : playStart('play'), ev.currentTarget); else playStart(); };
   }
   closeObj();
   setHighlight(e.intro ? STOP.keyObjects : e.explore ? [] : e.hl);
@@ -528,7 +530,9 @@ function lenPick(d, k, cb, from){
   el.innerHTML = `<button type="button" class="x lpx" id="lpx" aria-label="Close">✕</button><div class="k">Chapter ${n} · ${esc(d.label || '')}</div><h2 id="lpt">${esc(d.title || '')}</h2>` +
     `<p class="cap">How much time do you have?</p><div class="lpbtns">` +
     `<button type="button" class="play lpq" id="lpquick"><b>⚡ Quick</b><span>${mmss(qms)} min</span><small>Only the big events. Same map, same sources.</small></button>` +
-    `<button type="button" class="lpf" id="lpfull"><b>▶ Full chapter</b><span>${mmss(fms)} min</span><small>Every scene, with all the details.</small></button></div>`;
+    `<button type="button" class="lpf" id="lpfull"><b>▶ Full chapter</b><span>${mmss(fms)} min</span><small>Every scene, with all the details.</small></button></div>` +
+    (d.recap && d.recap.beats && d.recap.beats.length ? `<label class="lprecap"><input type="checkbox" id="lprecap" data-recaps${RECAPS ? ' checked' : ''}> Play “The story so far” recap <small>${mmss(d.recap.beats.reduce((s, b) => s + beatPlan(b), 0))} min</small></label>` : '');
+  if ($('lprecap')) $('lprecap').onchange = e => { e.stopPropagation(); setRecaps(e.target.checked); };
   LP.open = true; LP.from = from || document.activeElement;
   $('lpwrap').hidden = false; document.body.classList.add('lpopen');
   const go_ = w => e => { e.stopPropagation(); lenClose(true); cb(w); };
@@ -545,8 +549,8 @@ $('lpwrap').addEventListener('pointerdown', e => e.stopPropagation());
 document.addEventListener('keydown', e => {
   if (!LP.open) return;
   if (e.key === 'Escape'){ e.preventDefault(); lenClose(); }
-  else if (e.key === 'Tab'){ const f = [...$('lenpick').querySelectorAll('button')]; const i = f.indexOf(document.activeElement); e.preventDefault(); f[(i < 0 ? 0 : i + (e.shiftKey ? f.length - 1 : 1)) % f.length].focus(); }
-  else if (e.key === ' ' && !(e.target.closest && e.target.closest('button'))) e.preventDefault();
+  else if (e.key === 'Tab'){ const f = [...$('lenpick').querySelectorAll('button, input')]; const i = f.indexOf(document.activeElement); e.preventDefault(); f[(i < 0 ? 0 : i + (e.shiftKey ? f.length - 1 : 1)) % f.length].focus(); }
+  else if (e.key === ' ' && !(e.target.closest && e.target.closest('button, input'))) e.preventDefault();
   else return;
   e.stopPropagation();
 }, true);
@@ -562,18 +566,13 @@ function setSkipIntro(on){
 }
 // "The story so far" (STOP.recap, Chapters 2-5): a short recap of the book so far, played before a chapter's
 // opening film or its quick version when the chapter is started from the beginning. It has its own Skip, a
-// switch to turn recaps off (default on, remembered), and is left out when the previous chapter was finished
-// less than a day ago (binge listening). Line links, resume and the book's scene taps never play it.
+// switch to turn recaps off (default on, remembered; the same switch is on the Quick/Full card, in the film's ⚙
+// menu and in the book). Line links, resume and the book's scene taps never play it.
 let RECAPS = true;
 try { RECAPS = localStorage.getItem('tlm.recaps') !== 'off'; } catch(e){}
-const RECAP_FRESH_MS = 24 * 3600 * 1000;
 const doneAtKey = y => `tlm.doneat.${STORY && STORY.id}.${y}`;
 function recapDue(){
-  if (!RECAPS || !recapBeats()) return false;
-  let p = -1; for (let j = cur - 1; j >= 0; j--) if (STORY.stops[j].file){ p = j; break; }
-  if (p < 0) return true;
-  let t = 0; try { t = +localStorage.getItem(doneAtKey(STORY.stops[p].year)) || 0; } catch(e){}
-  return !(t && Date.now() - t < RECAP_FRESH_MS);
+  return !!(RECAPS && recapBeats());
 }
 function setRecaps(on){
   RECAPS = !!on; try { localStorage.setItem('tlm.recaps', RECAPS ? 'on' : 'off'); } catch(e){}

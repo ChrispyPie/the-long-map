@@ -253,6 +253,27 @@ const ROOT = path.join(__dirname, '..');
     } catch (e) { ok(name + ' ran: ' + e.message.split('\n')[0], false); }
     await ctx.close();
   }
+  // the Explore step's '▶ Play: <scene title>' asks Quick or Full too (Full = the Play part, Quick = quick reel)
+  {
+    const ctx = await b.newContext({viewport: {width: 390, height: 844}, deviceScaleFactor: 2, isMobile: true, hasTouch: true});
+    await ctx.addInitScript(() => (localStorage.setItem('tlm.notice.v1', 'seen'), localStorage.setItem('tlm.recaps', 'off')));
+    const p = await ctx.newPage(), name = 'explore-play';
+    p.on('pageerror', e => errs.push(name + ' pageerror: ' + e.message));
+    try {
+      await p.goto(url, {waitUntil: 'networkidle'}); await p.waitForTimeout(1200);
+      for (const [k, w] of [[2, 'full'], [4, 'quick'], [0, 'full']]){
+        await p.evaluate(k => __app.go(k), k); await p.waitForTimeout(1500);
+        await p.evaluate(() => __app.showStep(999)); await p.waitForTimeout(600);
+        await p.click('#playbtn'); await p.waitForTimeout(500);
+        ok(`${name} Ch${k + 1} Play: scene asks Quick or Full`, await p.evaluate(n => __app.lenPick && document.getElementById('lenpick').textContent.includes('Chapter ' + n), k + 1));
+        await p.click(w === 'quick' ? '#lpquick' : '#lpfull'); await p.waitForTimeout(1800);
+        const s = await p.evaluate(() => __app.play && {reel: __app.play.reel, i: __app.play.i});
+        ok(`${name} Ch${k + 1} ${w} → ${JSON.stringify(s)}`, s && s.reel === (w === 'quick' ? 'quick' : 'play') && s.i === 0);
+        await p.evaluate(() => __app.playStop(false)); await p.waitForTimeout(1200);
+      }
+    } catch (e) { ok(name + ' ran: ' + e.message.split('\n')[0], false); }
+    await ctx.close();
+  }
   await b.close();
   console.log(notes.join('\n'));
   console.log('ERRORS', JSON.stringify(errs));
