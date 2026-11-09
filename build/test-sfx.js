@@ -37,7 +37,7 @@ const ROOT = process.env.ROOT || path.join(__dirname, '..');
     // start the film from the Play button (a real gesture)
     await p.evaluate(() => __app.showStep(9)); await p.waitForTimeout(1200);
     await p.evaluate(() => document.getElementById('playbtn').scrollIntoView({block:'center'}));
-    await tap('#playbtn'); await p.waitForTimeout(2600);
+    await tap('#playbtn'); await p.waitForTimeout(300); if (await p.evaluate(() => !!__app.lenPick)) await p.click('#lpfull'); /* Quick or Full */ await p.waitForTimeout(2600);
     let s = await S();
     if (rm){
       ok(name+' reduced: playing silently, no audio context '+JSON.stringify(s), s.ctx === null && !s.on && s.target === 0);

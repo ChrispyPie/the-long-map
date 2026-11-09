@@ -71,7 +71,7 @@ const SIZES = {s: .9, m: 1, l: 1.2, xl: 1.4};
         if (ts === 'xl'){
           await p.evaluate(() => __app.showStep(9)); await p.waitForTimeout(1200);
           await p.evaluate(() => document.getElementById('playbtn').scrollIntoView({block: 'center'}));
-          await tap('#playbtn'); await p.waitForTimeout(2200);
+          await tap('#playbtn'); await p.waitForTimeout(300); if (await p.evaluate(() => !!__app.lenPick)) await p.click('#lpfull'); /* Quick or Full */ await p.waitForTimeout(2200);
           await p.evaluate(() => __app.seek(2)); await p.waitForTimeout(2600);
           await p.evaluate(() => document.body.classList.remove('idle'));
           const c = await p.evaluate(() => { const t = document.getElementById('captext'), q = t.getBoundingClientRect(), r = document.querySelector('#cap .crow').getBoundingClientRect(), vp = document.getElementById('vp').getBoundingClientRect();

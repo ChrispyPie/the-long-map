@@ -107,7 +107,7 @@ const ROOT = process.env.ROOT || path.join(__dirname, '..');
     ok(name+' explore panel: '+JSON.stringify(exp).slice(0, 120), /in 4 scenes/.test(exp.btn) && exp.ch === 4);
     if (shots) await panelShot('#playbtn', 'narr_explore_panel');
     await p.evaluate(() => __app.speed = 1);
-    await tap('#playbtn'); await p.waitForTimeout(2500);
+    await tap('#playbtn'); await p.waitForTimeout(300); if (await p.evaluate(() => !!__app.lenPick)) await p.click('#lpfull'); /* Quick or Full */ await p.waitForTimeout(2500);
     const chP = await p.evaluate(() => __app.chapters('play'));
     ok(name+' Play chapters '+chP.map(c => c.title+' '+Math.round(c.ms/1000)+'s').join(' | '), chP.length === 4 && chP.every(c => c.ms >= 100000 && c.ms <= 200000));
     ok(name+' Play voiced: '+((await p.evaluate(() => __app.voice.src)) || '').split('/').pop(), /jews-1207-play-01\.mp3$/.test(await p.evaluate(() => __app.voice.src)));

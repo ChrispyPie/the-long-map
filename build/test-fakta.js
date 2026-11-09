@@ -107,7 +107,7 @@ const D = process.env.SHOTS || 'screens';
     if (shots) { if (mobile) await toEv(); await p.screenshot({path:D+'/faktaruta_progress'+(mobile?'':'_desktop')+'.png'}); await p.evaluate(()=>scrollTo(0,0)); }
     // ---- Play ----
     await p.evaluate(()=>document.getElementById('playbtn').scrollIntoView({block:'center'}));
-    if (mobile) await p.tap('#playbtn'); else await p.click('#playbtn');
+    if (mobile) await p.tap('#playbtn'); else await p.click('#playbtn'); await p.waitForTimeout(300); if (await p.evaluate(() => !!__app.lenPick)) await p.click('#lpfull'); /* Quick or Full */
     await p.evaluate(()=>scrollTo(0,0)); await p.waitForTimeout(1500);
     const cap = await p.evaluate(()=>({vis:!document.getElementById('cap').hidden, t:document.getElementById('captext').textContent, b:!!document.querySelector('#captext .cb'), s:document.getElementById('capsrc').textContent, pill:document.getElementById('pill').textContent, play:__app.play}));
     ok(name+' play started, caption with badge + sources: '+JSON.stringify(cap).slice(0,160), cap.vis && cap.b && cap.s.startsWith('Sources:') && cap.play && cap.play.i === 0);
