@@ -310,3 +310,8 @@ STOP722 = {
   "ambient":"desert",
   "beats":NAR722.clean(NAR722.PLAY)}
 }
+
+# quick versions of Chapters 3-5 (build/quick.py), offered next to the full film
+STOP1000["quick"] = {"title":"Chapter 3 in brief", "ambient":"desert", "beats":NAR1000.clean(NAR1000.QUICK)}
+STOP930["quick"] = {"title":"Chapter 4 in brief", "ambient":"desert", "beats":NAR930.clean(NAR930.QUICK)}
+STOP722["quick"] = {"title":"Chapter 5 in brief", "ambient":"desert", "beats":NAR722.clean(NAR722.QUICK)}

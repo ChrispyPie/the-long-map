@@ -44,7 +44,7 @@ const ROOT = path.join(__dirname, '..');
     let s = await p.evaluate(() => ({mode: __app.mode, pill: document.getElementById('pill').textContent, ammon: document.querySelectorAll('path.z-ammon').length, parts: __app.parts().length}));
     ok(name + ' timeline to c. 1000 BC: live stop, Chapter 3 ' + JSON.stringify(s), s.mode === 'stop' && /1000/.test(s.pill) && s.ammon >= 1 && s.parts === 5);
     await shot('intro');
-    await p.tap('#gostory'); await p.waitForTimeout(2000);
+    await p.tap('#gostory'); await p.waitForTimeout(300); if (await p.evaluate(() => !!__app.lenPick)) await p.click('#lpfull'); /* Quick or Full */ await p.waitForTimeout(2000);
     s = await p.evaluate(() => ({play: __app.play, voice: __app.voice}));
     ok(name + ' opener runs with voice ' + JSON.stringify(s.play), s.play && s.play.reel === 'intro' && s.play.n === 7 && /jews-1000-in-01/.test(s.voice.src || ''));
     await p.evaluate(() => { __app.speed = 8; });

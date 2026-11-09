@@ -272,3 +272,15 @@ def _find(name):
 for _reels in VIGNETTES.values():
     for _v in _reels.get("quick", []):
         _base = _find(_v.pop("_name")); _v.update({k: x for k, x in _base.items() if k != "line"})
+
+# Chapters 3-5: the quick reels are made of the chapter's own lines (build/quick.py), so each quick line simply
+# reuses the picture of the line it came from
+def _auto_quick(prefix, M):
+    reels = VIGNETTES.setdefault(prefix, {}); out = []
+    for b, orig in zip(M.QUICK, M.QUICK_FROM):
+        if not orig: continue
+        hit = [v for where in ("intro", "play") for v in reels.get(where, []) if orig.startswith(v["line"])]
+        if hit: out.append(dict(hit[0], line=M.speech(b)))
+    reels["quick"] = out
+import narration_jews_1000 as _n1000, narration_jews_930 as _n930, narration_jews_722 as _n722
+_auto_quick("jews-1000", _n1000); _auto_quick("jews-930", _n930); _auto_quick("jews-722", _n722)

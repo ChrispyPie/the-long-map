@@ -148,7 +148,7 @@ const ROOT = path.join(__dirname, '..');
   ok('Ch2 no digits, no myth', Q2.every(b => !/[()\d]/.test(cap(b).text) && !/\bmyth|fabricat/i.test(cap(b).text)));
   ok('Ch2 no border for David (no border steps)', Q2.every(b => b.steps.every(x => x.type !== 'border')));
   ok('Ch2 vignettes are c2 pictures (' + Q2.filter(b => b.vignette).length + ')', Q2.filter(b => b.vignette).length >= 8 && Q2.filter(b => b.vignette).every(b => /c2-/.test(b.vignette.src) && fs.existsSync(path.join(ROOT, b.vignette.src))));
-  ok('terrain stops are Ch1 and Ch2 ' + JSON.stringify(T.stops), JSON.stringify(T.stops) === '[-1207,-1150]');
+  
   for (const dev of [{name: 'phone2', vp: {width: 390, height: 844}, mob: true}, {name: 'desktop2', vp: {width: 1280, height: 800}, mob: false}]){
     const ctx = await b.newContext({viewport: dev.vp, deviceScaleFactor: 2, isMobile: dev.mob, hasTouch: dev.mob});
     await ctx.addInitScript(() => localStorage.setItem('tlm.notice.v1', 'seen'));
@@ -174,7 +174,7 @@ const ROOT = path.join(__dirname, '..');
       await p.waitForTimeout(3000);
       s = await p.evaluate(() => ({cur: __app.cur, btn: (document.getElementById('gonextch') || {}).textContent, done: __app.parts()[1].done}));
       ok(name + ' Ch2 quick ends on Chapter 3 ' + JSON.stringify(s), s.cur === 2 && /Continue to Chapter 3/.test(s.btn || '') && s.done);
-      for (const k of [2, 3, 4]){ await p.evaluate(k => __app.go(k), k); await p.waitForTimeout(1500); ok(name + ' no terrain on Chapter ' + (k + 1), !(await ter())); }
+      for (const k of [2, 3, 4]){ await p.evaluate(k => __app.go(k), k); await p.waitForTimeout(1500); ok(name + ' terrain on Chapter ' + (k + 1), await ter()); }
       await p.evaluate(() => __app.bookPlay(1, 'intro', 1)); await p.waitForTimeout(2000);
       ok(name + ' terrain under the Ch2 opening film', (await p.evaluate(() => __app.play && __app.play.reel === 'intro')) && await ter());
       await p.evaluate(() => __app.bookPlay(1, 'play', 5)); await p.waitForTimeout(2000);
@@ -185,6 +185,54 @@ const ROOT = path.join(__dirname, '..');
       ok(name + ' ?ch=2&quick=1 offers the Ch2 quick version ' + JSON.stringify(s.d), s.d && s.d.k === 1 && s.d.r === 'quick' && /Quick version/.test(s.txt));
       await tap('#deepgo'); await p.waitForTimeout(2000);
       ok(name + ' Ch2 deep link plays the quick reel', await p.evaluate(() => __app.play && __app.play.reel === 'quick' && __app.cur === 1));
+    } catch (e) { ok(name + ' ran: ' + e.message.split('\n')[0], false); }
+    await ctx.close();
+  }
+  // ---------- Chapters 3-5: quick reels made of each chapter's own lines (build/quick.py), terrain on every chapter ----------
+  ok('terrain stops are all five chapters ' + JSON.stringify(T.stops), JSON.stringify(T.stops) === '[-1207,-1150,-1000,-930,-722]');
+  const CH = [{n: 3, y: '1000', k: 2}, {n: 4, y: '930', k: 3}, {n: 5, y: '722', k: 4}];
+  for (const c of CH){
+    const d = J(`data/stories/jews/${c.y}bc.json`), Qc = (d.quick || {}).beats || [];
+    const w = Qc.reduce((s, b) => s + cap(b).text.split(/\s+/).length, 0), m = Qc.reduce((s, b) => s + b.audioMs + b.pauseAfter, 0);
+    c.n_ = Qc.length;
+    ok(`Ch${c.n} quick: ${Qc.length} lines, ${w} words, voice ${Math.round(m / 1000)} s`, Qc.length >= 10 && w >= 240 && w <= 330 && m > 100000 && m < 190000);
+    ok(`Ch${c.n} every line recorded`, Qc.every((b, i) => b.audio === `assets/narration/jews-${c.y}-quick-${String(i + 1).padStart(2, '0')}.mp3` && fs.existsSync(path.join(ROOT, b.audio))));
+    ok(`Ch${c.n} every factual line sourced and labelled`, Qc.every(b => { const x = cap(b); return x.cert === 'frame' ? !x.src.length : x.cert === 'scene' ? !x.src.length : ['attested', 'disputed', 'tradition'].includes(x.cert) && x.src.length && x.src.every(k => S[k]) && (x.claims || []).every(z => z[2].every(k => S[k])) && (!x.ref || x.src.includes('bible')); }));
+    ok(`Ch${c.n} ends on the same map as Play ${borders(Qc)}`, borders(Qc) === borders(d.play.beats));
+    ok(`Ch${c.n} vignettes (${Qc.filter(b => b.vignette).length})`, Qc.filter(b => b.vignette).length >= 5);
+  }
+  {
+    const ctx = await b.newContext({viewport: {width: 390, height: 844}, deviceScaleFactor: 2, isMobile: true, hasTouch: true});
+    await ctx.addInitScript(() => localStorage.setItem('tlm.notice.v1', 'seen'));
+    const p = await ctx.newPage(), name = 'phone3-5';
+    p.on('console', m => { if (m.type() === 'error' && !/favicon/.test(m.location().url || '')) errs.push(name + ': ' + m.text()); });
+    p.on('pageerror', e => errs.push(name + ' pageerror: ' + e.message));
+    const ter = () => p.evaluate(() => document.body.classList.contains('terrain') && [...document.querySelectorAll('image.relief')].some(i => i.style.display !== 'none'));
+    try {
+      await p.goto(url, {waitUntil: 'networkidle'}); await p.waitForTimeout(1200);
+      for (const c of CH){
+        await p.evaluate(k => __app.go(k), c.k); await p.waitForTimeout(1800);
+        ok(`${name} Ch${c.n} page shows the terrain`, await ter());
+        await p.tap('#gostory'); await p.waitForTimeout(500);
+        ok(`${name} Ch${c.n} asks Quick or Full`, await p.evaluate(n => __app.lenPick && document.getElementById('lenpick').textContent.includes('Chapter ' + n), c.n));
+        await p.evaluate(() => { __app.speed = 1; });
+        await p.tap('#lpquick'); await p.waitForTimeout(2200);
+        let s = await p.evaluate(() => ({play: __app.play, ln: (document.querySelector('#captext .lnum') || {}).textContent, src: __app.voice.src}));
+        ok(`${name} Ch${c.n} quick plays ${JSON.stringify([s.play && s.play.n, s.ln])}`, s.play && s.play.reel === 'quick' && s.play.n === c.n_ && /^#q[12]$/.test(s.ln) && new RegExp(`jews-${c.y}-quick-0[12]`).test(s.src || ''));
+        ok(`${name} terrain under the Ch${c.n} quick film`, await ter());
+        if (shots){ await p.evaluate(n => __app.seek(n), Math.floor(c.n_ * 0.6)); await p.waitForTimeout(7000); await p.evaluate(() => __app.wake()); await p.waitForTimeout(200); await p.screenshot({path: `${D}/quick-ch${c.n}-film-phone.png`}); }
+        await p.evaluate(() => __app.seek(0)); await p.evaluate(() => { __app.speed = 8; });
+        let maxI = 0;
+        for (let i = 0; i < 400 && await p.evaluate(() => !!__app.play); i++){ maxI = Math.max(maxI, await p.evaluate(() => __app.play ? __app.play.i : -1)); await p.waitForTimeout(400); }
+        ok(`${name} Ch${c.n} quick ran every line (${maxI})`, maxI === c.n_ - 1);
+        await p.waitForTimeout(3000);
+        s = await p.evaluate(() => ({cur: __app.cur, mode: __app.mode, btn: (document.getElementById('gonextch') || {}).textContent}));
+        ok(`${name} Ch${c.n} quick ends on the next chapter ${JSON.stringify(s)}`, c.n < 5 ? s.cur === c.k + 1 && new RegExp('Continue to Chapter ' + (c.n + 1)).test(s.btn || '') : s.mode === 'soon');
+        ok(`${name} Ch${c.n} counted as watched`, await p.evaluate(k => __app.parts()[k].done, c.k));
+      }
+      await p.goto(url + '?ch=5&quick=1', {waitUntil: 'networkidle'}); await p.waitForTimeout(1800);
+      const dd = await p.evaluate(() => __app.deep);
+      ok(`${name} ?ch=5&quick=1 offers the quick version ${JSON.stringify(dd)}`, dd && dd.k === 4 && dd.r === 'quick');
     } catch (e) { ok(name + ' ran: ' + e.message.split('\n')[0], false); }
     await ctx.close();
   }
