@@ -296,40 +296,40 @@
 "sha": "00f7d7cba82c"
 },
 "assets/narration/jews-1000-quick-07.mp3": {
-"ms": 7784,
-"sha": "b9926ee88bdf"
-},
-"assets/narration/jews-1000-quick-08.mp3": {
-"ms": 10841,
-"sha": "307b48284e0e"
-},
-"assets/narration/jews-1000-quick-09.mp3": {
 "ms": 9953,
 "sha": "18533f507030"
 },
-"assets/narration/jews-1000-quick-10.mp3": {
+"assets/narration/jews-1000-quick-08.mp3": {
 "ms": 8647,
 "sha": "512dc6047441"
 },
-"assets/narration/jews-1000-quick-11.mp3": {
+"assets/narration/jews-1000-quick-09.mp3": {
 "ms": 7497,
 "sha": "52f3f05ce91e"
 },
-"assets/narration/jews-1000-quick-12.mp3": {
+"assets/narration/jews-1000-quick-10.mp3": {
 "ms": 5904,
 "sha": "af7e5a7b9a67"
 },
-"assets/narration/jews-1000-quick-13.mp3": {
+"assets/narration/jews-1000-quick-11.mp3": {
 "ms": 11964,
 "sha": "a4be6130f453"
 },
-"assets/narration/jews-1000-quick-14.mp3": {
+"assets/narration/jews-1000-quick-12.mp3": {
 "ms": 8803,
 "sha": "edb585012b55"
 },
-"assets/narration/jews-1000-quick-15.mp3": {
+"assets/narration/jews-1000-quick-13.mp3": {
 "ms": 9535,
 "sha": "e79f64175970"
+},
+"assets/narration/jews-1000-quick-14.mp3": {
+"ms": 10553,
+"sha": "ec453413a853"
+},
+"assets/narration/jews-1000-quick-15.mp3": {
+"ms": 14184,
+"sha": "966340a022ea"
 },
 "assets/narration/jews-1150-in-01.mp3": {
 "ms": 6322,
@@ -1403,6 +1403,10 @@
 "ms": 4023,
 "sha": "7b56084b0281"
 },
+"assets/narration/jews-722-quick-16.mp3": {
+"ms": 12225,
+"sha": "4cdf61d80fcd"
+},
 "assets/narration/jews-930-in-01.mp3": {
 "ms": 7549,
 "sha": "73ff521fa98e"
@@ -1770,5 +1774,9 @@
 "assets/narration/jews-930-quick-15.mp3": {
 "ms": 10423,
 "sha": "8ea94757d4d7"
+},
+"assets/narration/jews-930-quick-16.mp3": {
+"ms": 10841,
+"sha": "034f82e91b1d"
 }
 }

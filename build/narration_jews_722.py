@@ -260,5 +260,6 @@ speech, clean = N1000.speech, N1000.clean
 # Samaria, the deportations and the Samaritans. The Play's two border steps (provinces of 732 BC, Samerina) are kept.
 import quick as _quick
 QUICK, QUICK_FROM = _quick.build(__import__(__name__), "Chapter 5 in brief",
-    ["pl03","pl04","pl08","pl17","pl25","pl26","pl34","pl35","pl42","pl44","pl49","pl52","pl60","pl61"],
+    ["pl03","pl04","pl08","pl17","pl25","pl26","pl34","pl35","pl42","pl44","pl49","pl52","pl60","pl61","pl67"],
     ("Chapter Five, in two minutes.", [fo([37.5,33.5],2.0)]))
+QUICK[-1]["pauseAfter"] = 2000  # the closing line (the Play's own last line) gets a longer breath before the map moves on

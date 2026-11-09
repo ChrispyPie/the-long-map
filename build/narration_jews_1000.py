@@ -274,5 +274,6 @@ def clean(beats):
 # gates, and the united monarchy debate, ending on the split (the Play's border step, so the map ends the same).
 import quick as _quick
 QUICK, QUICK_FROM = _quick.build(__import__(__name__), "Chapter 3 in brief",
-    ["in01","pl00","pl05","pl13","pl24","pl27","pl28","pl36","pl37","pl51","pl54","pl56","pl57","pl58"],
+    ["in01","pl00","pl05","pl13","pl24","pl36","pl37","pl51","pl54","pl56","pl57","pl58","pl59","pl60"],
     ("Chapter Three, in two minutes.", [fo([35.2,31.8],5.0)]))
+QUICK[-1]["pauseAfter"] = 2000  # the closing line (the Play's own last line) gets a longer breath before the map moves on
