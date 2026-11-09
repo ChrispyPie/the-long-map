@@ -24,7 +24,7 @@ const ROOT = process.env.ROOT || path.join(__dirname, '..');
   const b = await chromium.launch({args: ['--autoplay-policy=user-gesture-required']});
   for (const [name, vw, vh, mobile] of [['desktop',1280,800,false],['mobile',393,852,true]]) {
     const ctx = await b.newContext({viewport:{width:vw,height:vh}, deviceScaleFactor:2, isMobile:mobile, hasTouch:mobile});
-    await ctx.addInitScript(() => localStorage.setItem('tlm.notice.v1', 'seen'));
+    await ctx.addInitScript(() => (localStorage.setItem('tlm.notice.v1', 'seen'), localStorage.setItem('tlm.recaps', 'off')));
     const p = await ctx.newPage();
     try {
     p.on('console', m => { if (m.type()==='error') errs.push(name+': '+m.text()); });

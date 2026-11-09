@@ -12,7 +12,7 @@ const url = process.argv[2] || 'http://127.0.0.1:8852/';
   const b = await chromium.launch();
   for (const [name, vw, vh, mobile] of [['phone', 390, 844, true], ['phone-small', 360, 740, true], ['phone-412', 412, 915, true], ['desktop', 1280, 800, false]]){
     const ctx = await b.newContext({viewport: {width: vw, height: vh}, deviceScaleFactor: 1, isMobile: mobile, hasTouch: mobile});
-    await ctx.addInitScript(() => { localStorage.setItem('tlm.notice.v1', 'seen'); localStorage.setItem('tlm.snd', 'off'); localStorage.setItem('tlm.review', '1'); });
+    await ctx.addInitScript(() => { (localStorage.setItem('tlm.notice.v1', 'seen'), localStorage.setItem('tlm.recaps', 'off')); localStorage.setItem('tlm.snd', 'off'); localStorage.setItem('tlm.review', '1'); });
     const p = await ctx.newPage();
     p.on('pageerror', e => errs.push(name + ' pageerror: ' + e.message));
     const tap = async (x, y) => mobile ? p.touchscreen.tap(x, y) : p.mouse.click(x, y);

@@ -19,7 +19,7 @@ const ROOT = process.env.ROOT || path.join(__dirname, '..');
   for (const [name, vw, vh, mobile, rm] of [['desktop',1280,800,false,false],['mobile',393,852,true,false],['mobile-reduced',393,852,true,true]]) {
     const ctx = await b.newContext({viewport:{width:vw,height:vh}, deviceScaleFactor:2, isMobile:mobile, hasTouch:mobile, reducedMotion: rm ? 'reduce' : 'no-preference'});
     await ctx.addInitScript(() => {
-      localStorage.setItem('tlm.notice.v1', 'seen');
+      (localStorage.setItem('tlm.notice.v1', 'seen'), localStorage.setItem('tlm.recaps', 'off'));
       window.__acN = 0; const A = window.AudioContext;
       window.AudioContext = class extends A { constructor(...a){ super(...a); window.__acN++; } };
     });

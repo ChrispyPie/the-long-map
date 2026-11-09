@@ -315,3 +315,8 @@ STOP722 = {
 STOP1000["quick"] = {"title":"Chapter 3 in brief", "ambient":"desert", "beats":NAR1000.clean(NAR1000.QUICK)}
 STOP930["quick"] = {"title":"Chapter 4 in brief", "ambient":"desert", "beats":NAR930.clean(NAR930.QUICK)}
 STOP722["quick"] = {"title":"Chapter 5 in brief", "ambient":"desert", "beats":NAR722.clean(NAR722.QUICK)}
+
+# "The story so far" before Chapters 2-5 (build/recap.py), newly written and recorded (reel jews-<year>-recap)
+import recap as _RECAP
+for _st, _y in ((STOP1150, 1150), (STOP1000, 1000), (STOP930, 930), (STOP722, 722)):
+    _st["recap"] = {"title": "The story so far", "ambient": "desert", "beats": _RECAP.RECAPS[_y]}

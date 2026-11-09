@@ -12,7 +12,7 @@ const D = process.env.SHOTS || 'screens';
     if (process.env.TS) await ctx.addInitScript(t => localStorage.setItem('tlm.textsize', t), process.env.TS); // TS=xl runs the suite at a saved text size
     const p = await ctx.newPage();
     // the About notice is tested in test-cine.js; here the visitor has already seen it
-    await ctx.addInitScript(() => { try { localStorage.setItem('tlm.notice.v1', 'seen'); } catch(e){} });
+    await ctx.addInitScript(() => { try { (localStorage.setItem('tlm.notice.v1', 'seen'), localStorage.setItem('tlm.recaps', 'off')); } catch(e){} });
     p.on('console', m => { if (m.type()==='error') errs.push(name+': '+m.text()); });
     p.on('pageerror', e => errs.push(name+' pageerror: '+e.message));
     let bytes = 0; p.on('response', async r => { try { bytes += (await r.body()).length; } catch(e){} });

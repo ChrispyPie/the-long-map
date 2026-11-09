@@ -331,6 +331,26 @@
 "ms": 14184,
 "sha": "966340a022ea"
 },
+"assets/narration/jews-1000-recap-01.mp3": {
+"ms": 1411,
+"sha": "02a92f08f25e"
+},
+"assets/narration/jews-1000-recap-02.mp3": {
+"ms": 10841,
+"sha": "1d1dd58b6305"
+},
+"assets/narration/jews-1000-recap-03.mp3": {
+"ms": 4519,
+"sha": "87b5ceca7903"
+},
+"assets/narration/jews-1000-recap-04.mp3": {
+"ms": 8699,
+"sha": "c6bbaa526aba"
+},
+"assets/narration/jews-1000-recap-05.mp3": {
+"ms": 6191,
+"sha": "989b3935e4f2"
+},
 "assets/narration/jews-1150-in-01.mp3": {
 "ms": 6322,
 "sha": "94a530c0d59f"
@@ -642,6 +662,18 @@
 "assets/narration/jews-1150-quick-18.mp3": {
 "ms": 6844,
 "sha": "6d8564fd94f9"
+},
+"assets/narration/jews-1150-recap-01.mp3": {
+"ms": 1358,
+"sha": "02a92f08f25e"
+},
+"assets/narration/jews-1150-recap-02.mp3": {
+"ms": 10057,
+"sha": "1d1dd58b6305"
+},
+"assets/narration/jews-1150-recap-03.mp3": {
+"ms": 4441,
+"sha": "87b5ceca7903"
 },
 "assets/narration/jews-1207-in-01.mp3": {
 "ms": 3736,
@@ -1407,6 +1439,42 @@
 "ms": 12225,
 "sha": "4cdf61d80fcd"
 },
+"assets/narration/jews-722-recap-01.mp3": {
+"ms": 1646,
+"sha": "02a92f08f25e"
+},
+"assets/narration/jews-722-recap-02.mp3": {
+"ms": 10841,
+"sha": "1d1dd58b6305"
+},
+"assets/narration/jews-722-recap-03.mp3": {
+"ms": 5277,
+"sha": "87b5ceca7903"
+},
+"assets/narration/jews-722-recap-04.mp3": {
+"ms": 9352,
+"sha": "c6bbaa526aba"
+},
+"assets/narration/jews-722-recap-05.mp3": {
+"ms": 5956,
+"sha": "989b3935e4f2"
+},
+"assets/narration/jews-722-recap-06.mp3": {
+"ms": 6296,
+"sha": "f427245024be"
+},
+"assets/narration/jews-722-recap-07.mp3": {
+"ms": 10188,
+"sha": "a3dbf5a357eb"
+},
+"assets/narration/jews-722-recap-08.mp3": {
+"ms": 8751,
+"sha": "ec6d8ebff78e"
+},
+"assets/narration/jews-722-recap-09.mp3": {
+"ms": 8647,
+"sha": "811af96e2451"
+},
 "assets/narration/jews-930-in-01.mp3": {
 "ms": 7549,
 "sha": "73ff521fa98e"
@@ -1778,5 +1846,33 @@
 "assets/narration/jews-930-quick-16.mp3": {
 "ms": 10841,
 "sha": "034f82e91b1d"
+},
+"assets/narration/jews-930-recap-01.mp3": {
+"ms": 1515,
+"sha": "02a92f08f25e"
+},
+"assets/narration/jews-930-recap-02.mp3": {
+"ms": 9639,
+"sha": "1d1dd58b6305"
+},
+"assets/narration/jews-930-recap-03.mp3": {
+"ms": 4989,
+"sha": "87b5ceca7903"
+},
+"assets/narration/jews-930-recap-04.mp3": {
+"ms": 9221,
+"sha": "c6bbaa526aba"
+},
+"assets/narration/jews-930-recap-05.mp3": {
+"ms": 5407,
+"sha": "989b3935e4f2"
+},
+"assets/narration/jews-930-recap-06.mp3": {
+"ms": 6426,
+"sha": "f427245024be"
+},
+"assets/narration/jews-930-recap-07.mp3": {
+"ms": 11128,
+"sha": "a3dbf5a357eb"
 }
 }
