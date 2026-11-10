@@ -1122,6 +1122,7 @@ function vigShow(v, i, ims){
   const cp = el.querySelector('figcaption'); cp.textContent = v.caption || ''; cp.hidden = !v.caption;
   el.classList.remove('in', 'out', 'zoom', 'zooming'); $('vp').classList.remove('vigzoom'); el.hidden = false; vigPlace(); void el.offsetWidth; el.classList.add('in');
   el.classList.toggle('paused', !!PLAY.paused);
+  if (VIG_BIG) vigZoom(true);   // the reader had enlarged the pictures: this one comes enlarged too
 }
 // fx: a subtle code-drawn touch on an illustration (rising smoke, flickering fire, moving waves, birds, drifting
 // dust or clouds). CSS only (transform/opacity), never on photos, frozen while paused, off with reduced motion.
@@ -1210,6 +1211,11 @@ function vigPlaceZoom(el){
 // tap the picture: enlarge it or shrink it back. The narration keeps going; when the picture's time is up it
 // fades out as usual (enlarged or not). A tap beside the enlarged picture or Esc also shrinks it.
 // In a pair, the tapped picture (k = 0 or 1) is enlarged on its own, with its own caption and credit.
+// The reader's choice sticks: a picture they enlarged keeps the next pictures enlarged until they shrink one
+// (tap, tap beside it or Esc); remembered on this device (tlm.vigbig). The map behind stays bright (no dimming).
+let VIG_BIG = false;
+try { VIG_BIG = localStorage.getItem('tlm.vigbig') === 'on'; } catch(e){}
+function vigBigSet(on){ VIG_BIG = !!on; try { localStorage.setItem('tlm.vigbig', on ? 'on' : 'off'); } catch(e){} }
 function vigZoom(on, k){
   const el = $('vig'); if (!el || el.hidden || !VIG.cur) return;
   if (on === el.classList.contains('zoom')) return;
@@ -1418,16 +1424,16 @@ $('vp').addEventListener('touchstart', e => { if (e.touches.length > 1) GEST.mul
 const shortTap = e => GEST.t0 && !GEST.moved && !GEST.multi && (GEST.t1 || performance.now()) - GEST.t0 <= TAP_MS && Math.hypot(e.clientX - GEST.x, e.clientY - GEST.y) < TAP_PX;
 $('vp').addEventListener('click', e => {
   // the vignette picture: a tap enlarges or shrinks it and leaves the controls alone
-  if (e.target.closest('#vig')){ e.stopPropagation(); e.preventDefault(); const t = e.target.closest('#vig img'); vigZoom(!$('vig').classList.contains('zoom'), t ? t.dataset.i : null); return; }
+  if (e.target.closest('#vig')){ e.stopPropagation(); e.preventDefault(); const t = e.target.closest('#vig img'), on = !$('vig').classList.contains('zoom'); vigBigSet(on); vigZoom(on, t ? t.dataset.i : null); return; }
   if (!CINE || e.target.closest('.cap2, .choice, button, a')) return;
   e.stopPropagation(); e.preventDefault();
   if (e.detail !== 0 && !shortTap(e)) return;   // a long press, drag or pinch: leave the controls as they are (detail 0: keyboard or script)
-  if ($('vig').classList.contains('zoom')){ vigZoom(false); return; }   // a tap beside the enlarged picture shrinks it
+  if ($('vig').classList.contains('zoom')){ vigBigSet(false); vigZoom(false); return; }   // a tap beside the enlarged picture shrinks it
   if (document.body.classList.contains('idle') || performance.now() - movedUp < 800) wake(); else ctlHide();
 }, true);
 addEventListener('keydown', e => {
   if (!CINE || !PLAY) return;
-  if (e.key === 'Escape' && $('vig').classList.contains('zoom')){ e.preventDefault(); vigZoom(false); }
+  if (e.key === 'Escape' && $('vig').classList.contains('zoom')){ e.preventDefault(); vigBigSet(false); vigZoom(false); }
   else if (e.key === 'Escape'){ e.preventDefault(); playStop(false); }
   else if (e.key === ' ' && !(e.target.closest && e.target.closest('button'))){ e.preventDefault(); playPause(); }
   else if (e.key === 'ArrowRight') $('capnext').click();
@@ -1900,7 +1906,7 @@ const bkHere = () => MODE === 'soon' ? bkPageOf(cur) : MODE === 'stop' ? bkPageO
 $('capbook').onclick = e => { e.stopPropagation(); bkOpen(e.currentTarget, bkHere()); };
 $('bookbtn').onclick = e => { e.stopPropagation(); bkOpen(e.currentTarget, bkHere()); };
 
-window.__app = { srcOpen, srcClose, get srcIsOpen(){ return SP.open; }, camTarget, vigSlot: () => VIGSLOT, openObj, closeObj, showStep, go, playStart, playPause, playStop, seek: i => PLAY && seek(i), vigZoom,
+window.__app = { srcOpen, srcClose, get srcIsOpen(){ return SP.open; }, camTarget, vigSlot: () => VIGSLOT, get vigBig(){ return VIG_BIG; }, openObj, closeObj, showStep, go, playStart, playPause, playStop, seek: i => PLAY && seek(i), vigZoom,
   get step(){ return step; }, get K(){ return K; }, get open(){ return openId; }, get mode(){ return MODE; }, get cur(){ return cur; },
   get explored(){ return [...EXPLORED]; }, get keys(){ return [...KEYSET]; },
   get play(){ return PLAY ? {i: PLAY.i, n: PLAY.beats.length, paused: PLAY.paused, reel: PLAY.reel, hold: !!(PLAY.hold || PLAY.wait), chapter: chapterAt(PLAY.reel, PLAY.i).n, choice: !$('choice').hidden} : null; },

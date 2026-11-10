@@ -1,6 +1,8 @@
 // Vignette pictures enlarge on a tap and shrink on the next one (or a tap beside them, or Esc) without
 // touching the player: the controls stay as they were and the narration keeps going. An enlarged picture
 // fits the free picture (below the year, above the subtitles); when its time is up it fades out like a card.
+// The map behind an enlarged picture is not dimmed. The choice sticks: after an enlarge, the next pictures come
+// enlarged too (remembered in tlm.vigbig) until the reader shrinks one; then they come as small cards again.
 // Review mode: a tap on the review tag copies it ('Kopierat ✓'), with a fallback when navigator.clipboard
 // is missing, and it neither brings up the controls nor pauses.
 // Usage: node build/test-vigzoom.js [url]
@@ -45,7 +47,9 @@ const url = process.argv[2] || 'http://127.0.0.1:8852/';
       ok(name + ' tap on the picture leaves the controls hidden and keeps playing ' + JSON.stringify(s), (s.idle || !mobile) && !s.paused);
       const kb = await p.evaluate(() => getComputedStyle(document.querySelector('#vig img')).animationName);
       ok(name + ' no slow pan while enlarged (whole picture visible): ' + kb, kb === 'none');
-      const subs = await R('#captext'); ok(name + ' subtitles still visible above the dimmed map', !!subs && await p.evaluate(() => { const t = document.getElementById('captext').getBoundingClientRect(), e = document.elementFromPoint(t.left + t.width / 2, t.top + t.height / 2); return !!(e && e.closest('#cap')); }));
+      const bs = await p.evaluate(() => getComputedStyle(document.getElementById('vig')).boxShadow);
+      ok(name + ' the map is not dimmed behind the enlarged picture: ' + bs, !/\b\d{3,}(\.\d+)?px\b/.test(bs) && await p.evaluate(() => { const v = document.getElementById('vp').getBoundingClientRect(), e = document.elementFromPoint(v.left + 8, v.bottom - 260); return !!e && !e.closest('#vig'); }));
+      const subs = await R('#captext'); ok(name + ' subtitles still visible above the map', !!subs && await p.evaluate(() => { const t = document.getElementById('captext').getBoundingClientRect(), e = document.elementFromPoint(t.left + t.width / 2, t.top + t.height / 2); return !!(e && e.closest('#cap')); }));
       await p.screenshot({path: `/tmp/vz-${name}-zoom.png`});
       // tap again: back to the card
       await tap(...mid(big)); await p.waitForTimeout(500);
@@ -61,19 +65,27 @@ const url = process.argv[2] || 'http://127.0.0.1:8852/';
       if (!mobile){ await tap(...mid(await R('#vig'))); await p.waitForTimeout(300); await p.keyboard.press('Escape'); await p.waitForTimeout(300); s = await st(); ok(name + ' Esc shrinks the picture and does not end the film', !s.zoom && (await p.evaluate(() => !!__app.play))); }
       // review mode adds no extra position tag above the subtitles any more (the time is in the player, the #line in the subtitle)
       ok(name + ' no review tag above the subtitles', !(await p.evaluate(() => document.getElementById('revtag'))));
-      // the picture's time runs out while it is enlarged: it closes, and the next one (most lines have one now) is a normal card
+      // the picture's time runs out while it is enlarged: it fades out, and the next picture comes enlarged too
       await p.evaluate(() => __app.seek(34)); await waitVig(); await p.waitForTimeout(700);
+      ok(name + ' after a shrink the next picture comes as a normal card', !(await st()).zoom && !(await p.evaluate(() => __app.vigBig)));
       await tap(...mid(await R('#vig'))); await p.waitForTimeout(400);
       const zi = (await st()).i;
+      ok(name + ' enlarging is remembered', await p.evaluate(() => __app.vigBig && localStorage.getItem('tlm.vigbig') === 'on'));
       await p.evaluate(() => { __app.speed = 4; });
-      await p.waitForFunction(zi => !document.getElementById('vig').classList.contains('zoom') && __app.play && __app.play.i !== zi, zi, {timeout: 60000});
-      s = await st(); ok(`${name} enlarged picture closes by itself when its time is up (beat ${zi} -> ${s.i})`, !s.zoom && !(await p.evaluate(() => document.getElementById('vp').classList.contains('vigzoom'))) && !s.paused);
-      await p.evaluate(() => { __app.speed = 1; __app.seek(34); }); await waitVig(); await p.waitForTimeout(700);
-      ok(name + ' next picture comes as a normal card', !(await st()).zoom);
-      // a jump (Scenes / next line) while enlarged closes it at once
-      await tap(...mid(await R('#vig'))); await p.waitForTimeout(300);
+      await p.waitForFunction(zi => __app.play && __app.play.i !== zi && !document.getElementById('vig').hidden && document.getElementById('vig').classList.contains('in'), zi, {timeout: 60000});
+      await p.waitForTimeout(500); await p.evaluate(() => { __app.speed = 1; });
+      s = await st(); ok(`${name} the next picture comes enlarged too (beat ${zi} -> ${s.i})`, s.zoom && !s.paused);
+      if (mobile) await p.screenshot({path: '/workspace/thelongmap/screens-ch6/vig-enlarged-undimmed-phone.png'});
+      // a jump while enlarged: the old picture goes at once; the new line's picture (if any) comes enlarged
       await p.evaluate(() => __app.seek(36)); await p.waitForTimeout(200);
-      s = await st(); ok(name + ' a jump while enlarged closes it at once', !s.zoom && s.i === 36 && !(await p.evaluate(() => document.getElementById('vp').classList.contains('vigzoom'))));
+      s = await st(); ok(name + ' a jump while enlarged closes the old picture at once', s.i === 36 && await p.evaluate(() => { const v = document.getElementById('vig'); return v.hidden || !v.classList.contains('in') || (__app.vigBig && v.classList.contains('zoom')); }));
+      // the reader shrinks it: from now on small cards again
+      await p.evaluate(() => __app.seek(34)); await waitVig(); await p.waitForTimeout(800);
+      ok(name + ' after the jump the picture still comes enlarged', (await st()).zoom);
+      await tap(...mid(await R('#vig'))); await p.waitForTimeout(500);
+      ok(name + ' tap shrinks it and the choice is forgotten', !(await st()).zoom && await p.evaluate(() => !__app.vigBig && localStorage.getItem('tlm.vigbig') === 'off'));
+      await p.evaluate(() => __app.seek(36)); await p.waitForTimeout(200); await p.evaluate(() => __app.seek(34)); await waitVig(); await p.waitForTimeout(700);
+      ok(name + ' next picture comes as a normal card again', !(await st()).zoom);
     } catch(e){ errs.push(name + ': ' + e.message); }
     await ctx.close();
   }
