@@ -12,7 +12,7 @@ const ROOT = process.env.ROOT || path.join(__dirname, '..');
   const ok = (n, c) => notes.push((c ? 'PASS ' : 'FAIL ') + n);
   const J = f => JSON.parse(fs.readFileSync(path.join(ROOT, f), 'utf8'));
   const cases = [];
-  for (const [y, f] of [[-1207, '1207bc'], [-1150, '1150bc'], [-1000, '1000bc'], [-930, '930bc'], [-722, '722bc']]){
+  for (const [y, f] of [[-1207, '1207bc'], [-1150, '1150bc'], [-1000, '1000bc'], [-930, '930bc'], [-722, '722bc'], [-701, '701bc']]){
     const d = J('data/stories/jews/' + f + '.json');
     for (const [reel, bs] of [['intro', d.transitionIn.beats], ['play', d.play.beats]])
       bs.forEach((b, i) => b.vignette && (!process.env.ONLY || String(y) === process.env.ONLY) && cases.push({y, reel, i, v: b.vignette}));   // ONLY=-1150 runs one chapter

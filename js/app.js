@@ -270,8 +270,14 @@ function redrawZones(){
 
 // ---------- small fact box ----------
 const srcList = keys => '<ol>' + keys.map(k => { const s = SRC[k]; if (!s) return ''; const t = esc(s.t); return '<li>' + (s.url ? `<a href="${esc(s.url)}" target="_blank" rel="noopener">${t}</a>` : t) + (s.kind === 'tradition' ? ' ' + badge('tradition') : '') + '</li>'; }).join('') + '</ol>';
+// a fact box can carry a newer text for later stops (build/objects.py later): the latest one whose year has come
+function objAt(o){
+  const l = (o.later || []).filter(x => STOP && STOP.year >= x.frm).sort((a, b) => b.frm - a.frm)[0];
+  return l ? Object.assign({}, o, {desc: l.desc, people: l.people || o.people, src: [...new Set([...(l.src || []), ...(o.src || [])])],
+    facts: [...(l.facts || []), ...(o.facts || [])]}) : o;
+}
 function openObj(id, fly){
-  const o = OBJ[id]; if (!o) return;
+  const o = OBJ[id] && objAt(OBJ[id]); if (!o) return;
   openId = id; markExplored(id); if (PLAY && !PLAY.paused) playPause();
   let zoneParts = '';
   if (o.zone && ERA){

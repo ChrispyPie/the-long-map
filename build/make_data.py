@@ -13,6 +13,8 @@ Outputs:
   data/stories/jews/930bc.json   the c. 930 BC stop ("Chapter 4"): opening film, fact boxes, explore keys and Play to 841 BC
   data/eras/722bc.json           the map as Chapter 4 ended (841 BC): the c. 930 BC layer + dashed Aram-Damascus
   data/stories/jews/722bc.json   the 722 BC stop ("Chapter 5"): opening film, fact boxes, explore keys and Play 841 to 720 BC
+  data/eras/701bc.json           the map as Chapter 5 ended (720 BC): Israel and Aram gone, Assyrian provinces, Damascus and Samerina
+  data/stories/jews/701bc.json   the 701 BC stop ("Chapter 6"): opening film, fact boxes, explore keys and Play c. 715 to 701 BC
 """
 import json, os, sys
 sys.path.insert(0, os.path.dirname(__file__))
@@ -29,6 +31,10 @@ for o in objs:
     chk(o["src"], o["id"]); assert o["cert"] in CERT
     for f in o["facts"]: chk(f[2], o["id"]); assert f[1] in CERT
     if o["pop"]: chk(o["pop"]["src"], o["id"]); assert o["pop"]["cert"] in CERT
+    for l in o["later"] or []:   # a newer text from a later stop on (objects.later)
+        chk(l["src"], o["id"]); assert l["desc"] and isinstance(l["frm"], int)
+        for f in l["facts"]: chk(f[2], o["id"]); assert f[1] in CERT
+        for k in [k for k, v in l.items() if v is None or v == []]: del l[k]
     for k in [k for k,v in o.items() if v is None]: del o[k]
     if not o["facts"]: del o["facts"]
 era1207 = json.load(open("data/eras/1207bc.json"))   # hand-drawn geometry (read, then rewritten with zoneObjects/labelAt)
@@ -188,12 +194,25 @@ z722 = dict(z930, aram="aramdamascus")
 l722 = dict(l930, aram=[36.65,33.55])
 zl722 = dict(zl930, aram="ARAM-DAMASCUS")
 era722 = {"year":-722,"label":"722 BC","zones":{"type":"FeatureCollection","features":f722},"zoneObjects":z722,"labelAt":l722,"zoneLabels":zl722,"note":NOTE}
-stop = story_jews.STOP; stop1150 = story_jews.STOP1150; stop1000 = story_jews.STOP1000; stop930 = story_jews.STOP930; stop722 = story_jews.STOP722
+# 701 BC stop: the map as the Chapter 5 Play left it in 720 BC: Israel and Aram are gone, and the same three Assyrian
+# shapes the Play drew (the provinces of 732 BC, Damascus, Samerina) are in their place, with the same labels.
+import narration_jews_722 as N722
+ASSY_PARTS = {"prov":(N722.NORTHPROV,"Assyrian provinces in Galilee and Gilead (from 732 BC; borders uncertain)",[35.55,32.85],"ASSYRIAN PROVINCES"),
+              "damascus":(N930.ARAM_RING,"Damascus, an Assyrian province from 732 BC (extent uncertain)",[36.65,33.55],"DAMASCUS"),
+              "samerina":(N1000.NORTH,"Samerina, the Assyrian province around Samaria (from c. 720 BC; borders uncertain)",[35.24,32.22],"SAMERINA")}
+f701 = [dict(f) for f in f722 if f["properties"]["zone"] not in ("israel","aram")] + [
+ {"type":"Feature","properties":{"zone":z,"certainty":"unsure","part":p},"geometry":{"type":"Polygon","coordinates":[c]}} for z,(c,p,_,_) in ASSY_PARTS.items()]
+z701 = {k: v for k, v in z722.items() if k not in ("israel","aram")}; z701.update({z: "assyria" for z in ASSY_PARTS})
+l701 = {k: v for k, v in l722.items() if k not in ("israel","aram")}; l701.update({z: v[2] for z, v in ASSY_PARTS.items()})
+zl701 = {k: v for k, v in zl722.items() if k not in ("israel","aram")}; zl701.update({z: v[3] for z, v in ASSY_PARTS.items()})
+era701 = {"year":-701,"label":"701 BC","zones":{"type":"FeatureCollection","features":f701},"zoneObjects":z701,"labelAt":l701,"zoneLabels":zl701,"note":NOTE}
+stop = story_jews.STOP; stop1150 = story_jews.STOP1150; stop1000 = story_jews.STOP1000; stop930 = story_jews.STOP930; stop722 = story_jews.STOP722; stop701 = story_jews.STOP701
 check_stop(stop, era, "jews-1207")
 check_stop(stop1150, era1150, "jews-1150")
 check_stop(stop1000, era1000, "jews-1000")
 check_stop(stop930, era930, "jews-930")
 check_stop(stop722, era722, "jews-722")
+check_stop(stop701, era701, "jews-701")
 def w(p, d):
     os.makedirs(os.path.dirname(p), exist_ok=True)
     json.dump(d, open(p,"w"), ensure_ascii=False, separators=(",",":"))
@@ -205,13 +224,15 @@ w("data/eras/1150bc.json", era1150)
 w("data/eras/1000bc.json", era1000)
 w("data/eras/930bc.json", era930)
 w("data/eras/722bc.json", era722)
+w("data/eras/701bc.json", era701)
 w("data/stories/jews/story.json", story_jews.STORY)
 w("data/stories/jews/1207bc.json", stop)
 w("data/stories/jews/1150bc.json", stop1150)
 w("data/stories/jews/1000bc.json", stop1000)
 w("data/stories/jews/930bc.json", stop930)
 w("data/stories/jews/722bc.json", stop722)
-for st in (stop, stop1150, stop1000, stop930, stop722):
+w("data/stories/jews/701bc.json", stop701)
+for st in (stop, stop1150, stop1000, stop930, stop722, stop701):
     play, tin = st["play"], st["transitionIn"]
     print(st["label"], "events", len(st["events"]), "play beats", len(play["beats"]), "words", play["words"], "voice min", round(sum(b.get("audioMs", b["duration"])+b["pauseAfter"] for b in play["beats"])/60000, 1),
           "opening beats", len(tin["beats"]) if isinstance(tin, dict) else 0, "explore keys", len(st["explore"]["key"]))

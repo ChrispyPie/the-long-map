@@ -3,6 +3,7 @@ import narration_jews_1150 as NAR1150
 import narration_jews_1000 as NAR1000
 import narration_jews_930 as NAR930
 import narration_jews_722 as NAR722
+import narration_jews_701 as NAR701
 A,D,T = "attested","disputed","tradition"
 STORY = {
  "id":"jews","title":"Story of the Jews","site":"The Long Map",
@@ -23,11 +24,12 @@ STORY = {
    "years":"c. 930–841 BC","summary":"Israel and Judah live side by side among Aram, Moab and a rising Assyria. Omri makes Samaria a capital, and stones from Qarqar, Moab, Dan and Nimrud name Israel's kings, down to Jehu's tribute in 841 BC."},
   {"year":-722,"label":"722 BC","title":"Fall of Samaria","era":"data/eras/722bc.json","file":"data/stories/jews/722bc.json",
    "years":"c. 841–722 BC","summary":"Aram presses on Israel, then Assyria returns to stay. Jeroboam II's Israel prospers and Amos and Hosea speak out, until Tiglath-pileser III takes Galilee and Samaria falls. Its people are carried off, and Judah stands alone."},
-  {"year":-701,"label":"701 BC","title":"Sennacherib at Jerusalem","years":"701 BC","summary":"Coming soon. Sennacherib of Assyria marches on Judah, takes Lachish and shuts Hezekiah up in Jerusalem.",
-   # reached at the end of the 722 BC Play (Chapter 5 ends c. 720 BC with Judah alone, a vassal of Assyria)
-   "soon":{"title":"Sennacherib at Jerusalem","text":"Next chapter coming soon. Samaria has fallen and Israel is an Assyrian province. In 701 BC a new king of Assyria, Sennacherib, marches on Judah. He takes Lachish and shuts Hezekiah up in Jerusalem, 'like a bird in a cage'. That is where the next chapter begins.",
-     "hl":["jerusalem","lachish","nineveh","judah","assyria"],"focus":{"c":[39.0,33.6],"k":1.9}}},
-  {"year":-586,"label":"586 BC","title":"The First Temple destroyed"},
+  {"year":-701,"label":"701 BC","title":"Sennacherib at Jerusalem","era":"data/eras/701bc.json","file":"data/stories/jews/701bc.json",
+   "years":"c. 715–701 BC","summary":"Hezekiah rules Judah, Ashdod's revolt fails, and when Sargon dies the west rises. Sennacherib marches, takes Lachish and shuts Hezekiah up in Jerusalem 'like a bird in a cage'. The Bible and Assyria tell two different endings, and Judah survives, smaller."},
+  {"year":-586,"label":"586 BC","title":"The First Temple destroyed","summary":"Coming soon. Babylon replaces Assyria, and Nebuchadnezzar comes to Jerusalem.",
+   # reached at the end of the 701 BC Play (Chapter 6 ends with Sennacherib's death in 681 BC and a teaser for Babylon)
+   "soon":{"title":"The First Temple destroyed","text":"Next chapter coming soon. Jerusalem has been spared, and Judah lives on as a vassal of Assyria. But Assyria will fall, and a new power, Babylon, will rise in its place. Its king Nebuchadnezzar will come to Jerusalem, and in 586 BC the Temple of Solomon will burn. That is where the next chapter begins.",
+     "hl":["jerusalem","babylon","nineveh","judah"],"focus":{"c":[39.5,33.0],"k":1.9}}},
   {"year":-538,"label":"538 BC","title":"Return under Persia"},
   {"year":-516,"label":"516 BC","title":"The Second Temple"},
   {"year":-167,"label":"167 BC","title":"The Maccabees"},
@@ -320,3 +322,70 @@ STOP722["quick"] = {"title":"Chapter 5 in brief", "ambient":"desert", "beats":NA
 import recap as _RECAP
 for _st, _y in ((STOP1150, 1150), (STOP1000, 1000), (STOP930, 930), (STOP722, 722)):
     _st["recap"] = {"title": "The story so far", "ambient": "desert", "beats": _RECAP.RECAPS[_y]}
+
+
+# ---------- 701 BC: Sennacherib at Jerusalem (Chapter 6: opening film + Play c. 715 to 701 BC, epilogue 681 BC; build/narration_jews_701.py) ----------
+# The map is the end state of the Chapter 5 Play (data/eras/701bc.json, make_data.py): Israel and Aram gone, the Assyrian
+# provinces and Samerina in their place. The opener redraws Judah with its lowlands and the Negev; the Play takes the
+# lowlands away again (given to Ashdod, Ekron and Gaza) and ends on a teaser for Babylon (586 BC).
+STOP701 = {
+ "story":"jews","year":-701,"label":"701 BC","title":"Sennacherib at Jerusalem",
+ "keyObjects":["judah","jerusalem","lachish","azekah","siloamtunnel","beersheba","ekron","ashdod","sidon","nineveh","assyria","egypt"],
+ "transitionIn":{"text":"701 BC. Sennacherib of Assyria is camped at Lachish, and Hezekiah is shut up in Jerusalem. To see how it came to this, the chapter goes back to the first years of Hezekiah's reign.",
+   "title":"701 BC: Sennacherib at Jerusalem","ambient":"desert","beats":NAR701.clean(NAR701.INTRO_BEATS)},
+ "transitionOut":{"to":-586,"text":"Next: Hezekiah's Judah, Ashdod's revolt, the great revolt after Sargon's death, the wall and the tunnel in Jerusalem, Sennacherib's march, the siege of Lachish, Hezekiah 'like a bird in a cage', and the two endings, the Bible's and Assyria's."},
+ "events":[
+  {"id":"ashdod712","kicker":"Assyria's side","title":"Ashdod's revolt and a king sent back in chains","date":"c. 712–706 BC","cert":A,
+   "text":"Ashdod rose against Sargon II and looked to Egypt for help. Sargon took the city, and its king Yamani fled to the land of Kush. A rock inscription of Sargon at Tang-i Var in Iran, published in 1999, tells the end: Shebitku, king of Kush, put Yamani in fetters and sent him to Assyria.",
+   "why":"It showed every small king in the region what trusting Egypt was worth. The Bible gives the same years a prophet's sign: Isaiah walking barefoot for three years, so that whoever relied on Egypt and Kush would be put to shame.",
+   "claims":[["Ashdod's revolt and Sargon's capture of the city.",A,["frame2021"]],["Shebitku of Kush extradites Yamani to Sargon.",A,["frame1999"]],["Isaiah's sign against Egypt and Kush, the only place in the Bible that names Sargon: Isaiah 20.",T,["bible"]]],
+   "src":["frame2021","frame1999","bible"],"objects":["ashdod","egypt","napata"],"focus":{"c":[33.5,30.6],"k":2.4},"hl":["ashdod","egypt"]},
+  {"id":"hezreform","kicker":"Jewish tradition","title":"Hezekiah's reform","date":"Tradition: late 8th century BC","cert":T,
+   "text":"The Book of Kings praises Hezekiah above all the kings of Judah. He removed the high places, smashed the sacred pillars, and broke the bronze serpent called Nehushtan, to which the people burned incense. Chronicles adds a great Passover in Jerusalem, to which he invited the north as well.",
+   "why":"At Beersheba the stones of a large horned altar were found taken apart and reused in a storehouse wall, and at Arad a small shrine went out of use around the same time. Ze'ev Herzog links both with Hezekiah. Nadav Na'aman doubts that a reform as broad as the one in Kings took place.",
+   "claims":[["The reform, the high places and Nehushtan: 2 Kings 18:3–6.",T,["bible"]],["Hezekiah's Passover: 2 Chronicles 30.",T,["bible"]],["The dismantled horned altar of Beersheba.",A,["aharoni1974"]],["Arad and Beersheba as evidence of a reform.",D,["herzog2010"]],["The historicity of the reform doubted.",D,["naaman1995"]]],
+   "src":["bible","aharoni1974","herzog2010","naaman1995"],"objects":["beersheba","jerusalem","judah"],"focus":{"c":[35.0,31.5],"k":6},"hl":["beersheba","jerusalem"]},
+  {"id":"hezseal","kicker":"Archaeology","title":"A king's seal: Hezekiah son of Ahaz","date":"Found 2009, published 2015","cert":A,
+   "text":"In a refuse heap on the Ophel, below the Temple Mount, Eilat Mazar's team found a clay seal impression about one centimetre across. It reads 'Belonging to Hezekiah [son of] Ahaz, king of Judah', beside a two-winged sun flanked by signs of life. On its back are the marks of the papyrus it once sealed.",
+   "why":"It is the first impression of a seal of a king of Israel or Judah found in a scientific excavation. The Egyptian-style winged sun shows a royal emblem shared across the region.",
+   "claims":[["Text, emblem and find-spot of the bulla.",A,["mazar2015"]],["Royal seals and their inscriptions.",A,["ahituv2008"]]],
+   "src":["mazar2015","ahituv2008"],"objects":["jerusalem"],"focus":{"c":[35.235,31.776],"k":14},"hl":["jerusalem"]},
+  {"id":"tunnel","kicker":"Archaeology","title":"The Siloam tunnel","date":"c. 700 BC (debated)","cert":D,
+   "text":"A tunnel about 533 metres long winds through the rock under the City of David, from the Gihon spring to the Pool of Siloam. In 1880 an inscription was found cut into its wall near the exit: the diggers 'struck each man towards his fellow, axe against axe, and the water flowed from the spring to the pool'.",
+   "why":"The Bible says Hezekiah 'made the pool and the conduit and brought water into the city', and stopped the springs outside so that Assyria would find no water. Radiometric dates from the plaster point to about 700 BC; Ronny Reich and Eli Shukron argue the work began earlier.",
+   "claims":[["The tunnel and its inscription; now in the Istanbul Archaeology Museums.",A,["siloam","ahituv2008"]],["Radiocarbon and uranium-thorium dates of about 700 BC.",A,["frumkin2003"]],["An earlier start, late 9th or early 8th century BC.",D,["reich2011"]],["Hezekiah's conduit and the stopped springs: 2 Kings 20:20; 2 Chronicles 32:3–4, 30.",T,["bible"]]],
+   "src":["siloam","frumkin2003","reich2011","ahituv2008","bible"],"objects":["siloamtunnel","jerusalem"],"focus":{"c":[35.2357,31.774],"k":18},"hl":["siloamtunnel","jerusalem"]},
+  {"id":"broadwall","kicker":"Archaeology","title":"The Broad Wall and the royal jars","date":"Late 8th century BC","cert":D,
+   "text":"In the Jewish Quarter, Nahman Avigad found a city wall about seven metres thick, built straight over houses that had been knocked down. All over Judah, handles of large storage jars carry a royal stamp, 'lmlk', 'belonging to the king', with one of four names: Hebron, Ziph, Socoh or MMST.",
+   "why":"Both are often read as Hezekiah's preparations for war. Avigad compared the wall with Isaiah's words, 'you broke down the houses to fortify the wall'. Oded Lipschits and colleagues think the royal jar system began earlier, when Judah first became Assyria's vassal.",
+   "claims":[["The Broad Wall, about 7 m thick, over demolished houses.",A,["avigad1983"]],["Its link with Isaiah 22:10.",D,["avigad1983"]],["'You broke down the houses to fortify the wall' (Isaiah 22:10).",T,["bible"]],["The lmlk stamps and their four place names.",A,["lipschits2010","ahituv2008"]],["The lmlk system began after 732 BC, not only for 704–701 BC.",D,["lipschits2010"]]],
+   "src":["avigad1983","lipschits2010","ahituv2008","bible"],"objects":["jerusalem","hebron","judah"],"focus":{"c":[35.1,31.6],"k":7},"hl":["jerusalem","hebron"]},
+  {"id":"lachish701","kicker":"Two sides of a siege","title":"The siege of Lachish","date":"701 BC","cert":A,
+   "text":"Lachish, Judah's second city, was taken by Sennacherib in 701 BC. On the mound archaeologists found the Assyrian siege ramp, the defenders' counter-ramp, hundreds of arrowheads and a city burnt to the ground. At Nineveh, Sennacherib lined a room of his palace with carved panels of the siege, with the caption: 'Sennacherib, king of the world, king of Assyria, sat on his throne and the booty of Lachish passed before him.'",
+   "why":"It is one of the few battles of the ancient world seen from both sides: in the ground at Lachish and on the walls of the conqueror's palace. The panels show the families of Lachish going into exile.",
+   "claims":[["Level III destroyed in 701 BC; the siege ramp and counter-ramp.",A,["ussishkin2004"]],["The oldest siege ramp known.",A,["garfinkel2021"]],["The Lachish room and its epigraph.",A,["barnett1998","bmlachish"]],["Sennacherib at Lachish: 2 Kings 18:14, 17.",T,["bible"]]],
+   "src":["ussishkin2004","garfinkel2021","barnett1998","bmlachish","bible"],"pic":{"src":"images/lachish-relief.webp","cap":"Assyrian archers attack Lachish: relief from Sennacherib's palace at Nineveh, British Museum. Photograph by Mike Peel (www.mikepeel.net), CC BY-SA 4.0."},
+   "objects":["lachish","azekah","nineveh"],"focus":{"c":[34.85,31.6],"k":12},"hl":["lachish","azekah"]},
+  {"id":"birdcage","kicker":"Two accounts","title":"Like a bird in a cage","date":"701 BC","cert":D,
+   "text":"Sennacherib says he took 46 walled cities of Judah and shut Hezekiah up in Jerusalem 'like a bird in a cage', and that Hezekiah later sent 30 talents of gold, 800 of silver, his daughters and his singers after him to Nineveh. The Bible says Hezekiah paid 300 talents of silver and 30 of gold, but that the angel of the Lord struck the Assyrian camp, and Sennacherib went home.",
+   "why":"Both agree that Jerusalem was not taken and that Hezekiah stayed on his throne. Why Sennacherib left is still debated: disease, news from elsewhere, or simply a deal that suited him. Herodotus heard an Egyptian version, in which mice ate the Assyrians' bowstrings.",
+   "claims":[["46 cities, the bird in a cage, and the tribute sent to Nineveh: Sennacherib's annals.",A,["grayson2012"]],["The payment, the Rabshakeh, Isaiah and the angel: 2 Kings 18–19; Isaiah 36–37.",T,["bible"]],["Why Jerusalem was not taken.",D,["grabbe2003","matty2016"]],["The mice at Pelusium: Herodotus 2.141.",T,["herodotus"]]],
+   "src":["grayson2012","grabbe2003","matty2016","herodotus","bible"],"objects":["jerusalem","nineveh"],"focus":{"c":[39.0,33.9],"k":2.0},"hl":["jerusalem","nineveh"]},
+  {"id":"after701","kicker":"Aftermath","title":"A smaller Judah","date":"701–681 BC","cert":A,
+   "text":"Sennacherib cut off the towns he had taken and gave them to Mitinti of Ashdod, Padi of Ekron and Silli-Bel of Gaza. In the lowlands many towns lay in ruins and were only partly rebuilt in the following decades. In 681 BC Sennacherib was murdered by his own son, as a Babylonian chronicle and the Bible both record.",
+   "why":"Jerusalem had survived, and Jewish tradition remembered its rescue as a sign of God's care. The Talmud says God wished to make Hezekiah the Messiah. But Judah now lived as a small vassal of Assyria, in the hills around its capital.",
+   "claims":[["Judah's towns given to Ashdod, Ekron and Gaza.",A,["grayson2012"]],["Lowland towns destroyed in 701 BC and partly reoccupied under Manasseh.",A,["finknaaman2004"]],["Sennacherib killed by his son in 681 BC.",A,["grayson1975"]],["Killed by his sons in the house of his god: 2 Kings 19:37.",T,["bible"]],["Hezekiah and the Messiah: Sanhedrin 94a.",T,["sanh94a"]]],
+   "src":["grayson2012","finknaaman2004","grayson1975","sanh94a","bible"],"objects":["judah","ashdod","ekron","gaza"],"focus":{"c":[34.9,31.6],"k":6},"hl":["ashdod","ekron","gaza","judah"]}
+ ],
+ "explore":{
+  "key":["judah","jerusalem","siloamtunnel","lachish","azekah","beersheba","ekron","ashdod","sidon","nineveh","assyria","egypt"],
+  "text":"Open each key place or people on the map to read its fact box. Unexplored ones glow; explored ones get a check. Your progress is saved on this device."},
+ "play":{
+  "to":-586, "title":"From c. 715 BC to 701 BC",
+  "intro":"Plays full screen like a short narrated film, with subtitles (CC). Pause, step back or forward, or change speed at any time. Stop whenever you like: it remembers your chapter.",
+  "zoneObjects":{"philistia":"philistines","ammon":"ammon","moab":"moab","edom":"edom","judah":"judah","assyria":"assyria","prov":"assyria","samerina":"assyria"},
+  "ambient":"desert",
+  "beats":NAR701.clean(NAR701.PLAY)}
+}
+STOP701["quick"] = {"title":"Chapter 6 in brief", "ambient":"desert", "beats":NAR701.clean(NAR701.QUICK)}
+STOP701["recap"] = {"title": "The story so far", "ambient": "desert", "beats": _RECAP.RECAPS[701]}
