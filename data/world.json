@@ -1,0 +1,12 @@
+{
+ "about": "The Long Map's world: one map for the whole story, from the Near East to Europe, North Africa and Central Asia (and, with its own projection later, the Americas). The projection must match the relief grid (data/terrain.json 'grid'). 'home' is the view the map opens on (lon/lat points to fit). 'bounds' [west, south, east, north] is how far one can pan and zoom out. Regions: 'start' loads with the page; the others load only when the view leaves the start region or a stop names them (stop field \"regions\": [\"world\"]). See README 'World map'.",
+ "projection": {"type": "conicConformal", "parallels": [30, 40], "rotate": [-38, 0]},
+ "home": [[20, 24], [57, 24], [20, 43], [57, 43], [38, 44.5]],
+ "bounds": [-20, -2, 95, 66],
+ "maxZoom": 160,
+ "regions": [
+  {"id": "near-east", "name": "Near East", "bbox": [-12, 2, 88, 58], "vector": "data/base.topo.json", "load": "start"},
+  {"id": "world", "name": "Europe, North Africa, Central Asia", "bbox": [-20, -2, 95, 66], "vector": "data/world/outer.topo.json", "load": "view",
+   "source": "Natural Earth 50m land, lakes, rivers (public domain), outside the Near East box; build/world/build.sh"}
+ ]
+}

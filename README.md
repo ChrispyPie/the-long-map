@@ -30,3 +30,22 @@ Small pictures that come in beside the map while the film plays, one for most na
   - Lachish reliefs, British Museum (Assyrian archers): photo by Mike Peel (www.mikepeel.net), CC BY-SA 4.0, Wikimedia Commons (File:Lachish_Relief,_British_Museum_14.jpg). Also used, uncropped, in the Chapter 6 fact box "The siege of Lachish" (images/lachish-relief.webp).
 
 Tests: `node build/test-vignettes.js URL` and `node build/test-vignettes-all.js URL` (every vignette, phone and desktop).
+
+## World map
+
+The map is built to grow with the story (Europe, North Africa, the Middle East, Central Asia, later the Americas)
+without making the first visit heavier.
+
+- `data/world.json`: the projection (conic conformal, parallels 30/40, rotated to 38°E), the home view, how far one
+  can pan and zoom out (`bounds`, lon -20..95, lat -2..66), and the regions.
+- Regions: `near-east` (`data/base.topo.json`, the coast/lakes/rivers the stories use) loads with the page; `world`
+  (`data/world/outer.topo.json`, 83 KB, Natural Earth 50m outside the Near East box, made by `build/world/build.sh`)
+  loads only when the view leaves the Near East, or when a stop names it (`"regions": ["world"]` in story.json).
+  Each region draws its own coast line without the straight cuts where its data was clipped.
+- Shaded relief: a tile pyramid in the same projection (`build/terrain/README.md`). Coarse levels cover the whole
+  world map, deep levels only where the story is told (down to ~40 m per pixel over Judah), loaded tile by tile for
+  what is on screen. A new region gets detail by adding its box to `build/terrain/pyramid.py` and re-rendering.
+- The Americas need their own projection (and relief grid); the plan is a second map "world" in `world.json` that a
+  stop switches to, not stretching this one.
+
+Tests: `node build/test-terrain.js URL`, `node build/test-world.js URL`.

@@ -28,6 +28,55 @@ const gLand = root.append('g'), gZones = root.append('g'), gFx = root.append('g'
 const projection = d3.geoConicConformal().parallels([30, 40]).rotate([-38, 0]);
 const path = d3.geoPath(projection);
 const VIEW = {type:'MultiPoint', coordinates:[[20,24],[57,24],[20,43],[57,43],[38,44.5]]};
+// ---------- the world map (data/world.json): projection, home view, how far one can pan/zoom out, and regions ----------
+// The map is one world: the Near East (data/base.topo.json) loads at start; every other region (its coast, lakes,
+// rivers) loads only when the view reaches it or a stop names it ("regions": ["world"]). Relief tiles are lazy anyway.
+let WORLD = {bounds: [-20, -2, 95, 66], home: VIEW.coordinates, maxZoom: 160, regions: [{id: 'near-east', bbox: [-12, 2, 88, 58], load: 'start'}]};
+const REGION = {};   // id -> 'loading' | 'ok'
+function applyWorld(w){
+  if (!w || !Array.isArray(w.bounds)) return;
+  WORLD = Object.assign({}, WORLD, w);
+  const pr = w.projection || {};
+  if (pr.parallels) projection.parallels(pr.parallels);
+  if (pr.rotate) projection.rotate(pr.rotate);
+  if (Array.isArray(w.home)) VIEW.coordinates = w.home;
+}
+const inBox = (b, B) => b[0] >= B[0] && b[1] >= B[1] && b[2] <= B[2] && b[3] <= B[3];
+// the lon/lat box of what is on screen (corners and edge midpoints of the viewport, inverted)
+function viewBox(){
+  const [w, h] = size(), lon = [], lat = [];
+  for (const fx of [0, .5, 1]) for (const fy of [0, .5, 1]){
+    const q = projection.invert([(fx * w - TR.x) / TR.k, (fy * h - TR.y) / TR.k]); if (q && isFinite(q[0])){ lon.push(q[0]); lat.push(q[1]); }
+  }
+  return lon.length ? [Math.min(...lon), Math.min(...lat), Math.max(...lon), Math.max(...lat)] : null;
+}
+function regionsCheck(){
+  const v = viewBox(); if (!v) return;
+  (WORLD.regions || []).forEach(r => { if (r.load !== 'start' && !REGION[r.id] && !inBox(v, near().bbox)) loadRegion(r.id); });
+}
+const near = () => (WORLD.regions || []).find(r => r.load === 'start') || {bbox: [-12, 2, 88, 58]};
+// a region's coast without the straight cuts where its data was clipped (its own bbox, the Near East box)
+function coastOf(fc, boxes){
+  const E = 2e-3, lines = [];   // deg: the clip edges after topojson quantization
+  const onEdge = (p, q) => boxes.some(B => [0, 2].some(i => Math.abs(p[0] - B[i]) < E && Math.abs(q[0] - B[i]) < E) || [1, 3].some(i => Math.abs(p[1] - B[i]) < E && Math.abs(q[1] - B[i]) < E));
+  const ring = r => { let cur = []; for (let i = 1; i < r.length; i++){ if (onEdge(r[i - 1], r[i])){ if (cur.length > 1) lines.push(cur); cur = []; } else { if (!cur.length) cur.push(r[i - 1]); cur.push(r[i]); } } if (cur.length > 1) lines.push(cur); };
+  (fc.features || [fc]).forEach(f => { const g = f.geometry; if (!g) return; (g.type === 'Polygon' ? [g.coordinates] : g.type === 'MultiPolygon' ? g.coordinates : []).forEach(P => P.forEach(ring)); });
+  return {type: 'MultiLineString', coordinates: lines};
+}
+async function loadRegion(id){
+  const r = (WORLD.regions || []).find(x => x.id === id); if (!r || REGION[id] || !r.vector) return;
+  REGION[id] = 'loading';
+  try {
+    const t = await getJSON(r.vector), o = t.objects, g = gLand.insert('g', 'path').attr('class', 'region r-' + id);
+    const land = rewindAll(d3.feature(t, o.land));
+    g.append('path').datum(land).attr('class', 'land');
+    if (o.lakes) g.selectAll('path.lake').data(rewindAll(d3.feature(t, o.lakes)).features).join('path').attr('class', 'lake');
+    if (o.rivers) g.selectAll('path.river').data(d3.feature(t, o.rivers).features).join('path').attr('class', 'river');
+    g.append('path').datum(coastOf(land, [r.bbox, near().bbox])).attr('class', 'coast');
+    g.selectAll('path').attr('d', path);
+    REGION[id] = 'ok'; document.body.dataset.regions = Object.keys(REGION).filter(k => REGION[k] === 'ok').join(' ');
+  } catch (e){ REGION[id] = null; console.warn('region', id, e); }
+}
 const RIVERS = {}, LAKES = {};
 
 function rewind(f){
@@ -44,9 +93,11 @@ function fit(){
   const [w,h] = size();
   projection.fitExtent([[6,6],[w-6,h-6]], VIEW);
   svg.attr('viewBox', `0 0 ${w} ${h}`);
-  const a = projection([-12, 58]), b = projection([88, 58]), c = projection([-12, 2]), d = projection([88, 2]), m = projection([38, 2]);
+  // pan as far as the world map goes (data/world.json "bounds"); zoom out until it fits the screen
+  const [W, S, E, N] = WORLD.bounds, a = projection([W, N]), b = projection([E, N]), c = projection([W, S]), d = projection([E, S]), m = projection([(W + E) / 2, S]);
+  const x0 = Math.max(a[0], c[0]), y0 = Math.min(a[1], b[1]), x1 = Math.min(b[0], d[0]), y1 = m[1];
   if (RELIEF){ RELIEF_KEY = ''; updateRelief(); }
-  zoom.extent([[0,0],[w,h]]).translateExtent([[Math.max(a[0],c[0]), Math.min(a[1],b[1])], [Math.min(b[0],d[0]), m[1]]]);
+  zoom.extent([[0,0],[w,h]]).translateExtent([[x0, y0], [x1, y1]]).scaleExtent([Math.max(.2, Math.min(1, Math.max(w / (x1 - x0), h / (y1 - y0)))), WORLD.maxZoom || 160]);
   redraw();
 }
 // ---------- shaded relief: a tile pyramid in the map's own projection, under every vector layer ----------
@@ -118,8 +169,8 @@ function reliefSweep(force){
   const g = gRelief.node();
   if (force || !g.querySelector('image.relief:not(.old):not(.ok)')) g.querySelectorAll('image.relief.old').forEach(e => e.remove());
 }
-const reliefSoon = () => { if (RELIEF && !reliefRaf) reliefRaf = requestAnimationFrame(updateRelief); };
-function reliefFor(){ if (RELIEF) reliefSoon(); }
+const reliefSoon = () => { if (!reliefRaf) reliefRaf = requestAnimationFrame(() => { regionsCheck(); updateRelief(); }); };
+function reliefFor(s){ if (RELIEF) reliefSoon(); ((s && s.regions) || []).forEach(loadRegion); }
 function redraw(){
   root.selectAll('path:not(.nogeo)').attr('d', path);
   gPts.selectAll('g.obj').attr('transform', d => { const p = projection(d.pt); return `translate(${p[0]},${p[1]})`; });
@@ -1954,7 +2005,7 @@ const bkHere = () => MODE === 'soon' ? bkPageOf(cur) : MODE === 'stop' ? bkPageO
 $('capbook').onclick = e => { e.stopPropagation(); bkOpen(e.currentTarget, bkHere()); };
 $('bookbtn').onclick = e => { e.stopPropagation(); bkOpen(e.currentTarget, bkHere()); };
 
-window.__app = { fly: (c, k) => { svg.interrupt(); const p = projection(c), [w, h] = size(); svg.call(zoom.transform, d3.zoomIdentity.translate(w / 2, h / 2).scale(k).translate(-p[0], -p[1])); },
+window.__app = { get regions(){ return {...REGION}; }, viewBox, get scaleExtent(){ return zoom.scaleExtent(); }, fly: (c, k) => { svg.interrupt(); const p = projection(c), [w, h] = size(); svg.call(zoom.transform, d3.zoomIdentity.translate(w / 2, h / 2).scale(k).translate(-p[0], -p[1])); },
   get relief(){ return RELIEF ? [...gRelief.node().querySelectorAll('image.relief:not(.old)')].map(e => e.dataset.k) : null; }, srcOpen, srcClose, get srcIsOpen(){ return SP.open; }, camTarget, vigSlot: () => VIGSLOT, get vigBig(){ return VIG_BIG; }, openObj, closeObj, showStep, go, playStart, playPause, playStop, seek: i => PLAY && seek(i), vigZoom,
   get step(){ return step; }, get K(){ return K; }, get open(){ return openId; }, get mode(){ return MODE; }, get cur(){ return cur; },
   get explored(){ return [...EXPLORED]; }, get keys(){ return [...KEYSET]; },
@@ -1985,14 +2036,21 @@ getJSON('data/site.json').then(c => { SITE = c || {}; [['donateUrl', 'donate'], 
   Object.entries(STORY.theme || {}).forEach(([k, v]) => { if (/^[a-z-]+$/.test(k) && /^#[0-9a-f]{3,8}$/i.test(v)) document.documentElement.style.setProperty('--' + k, v); });
   if (STORY.book) $('sbook').textContent = STORY.book;
   const o = base.objects;
-  addRelief(await getJSON('data/terrain.json').catch(() => null));
-  gLand.append('path').datum(rewindAll(d3.feature(base, o.land))).attr('class','land');
+  applyWorld(await getJSON('data/world.json').catch(() => null));
+  const tcfg = await getJSON('data/terrain.json').catch(() => null);
+  // the relief tiles are baked in one projection: only use them when the map is in the same one
+  const near1 = (a, b) => a.every((x, i) => Math.abs(x - b[i]) < 1e-6);
+  if (tcfg && tcfg.grid && near1(tcfg.grid.parallels, projection.parallels()) && near1(tcfg.grid.rotate, projection.rotate())) addRelief(tcfg);
+  const baseLand = rewindAll(d3.feature(base, o.land));
+  gLand.append('path').datum(baseLand).attr('class','land');
   const lakes = rewindAll(d3.feature(base, o.lakes)).features;
   gLand.selectAll('path.lake').data(lakes).join('path').attr('class','lake');
   lakes.forEach(f => (LAKES[f.properties.name] = LAKES[f.properties.name] || []).push(f));
   const rivers = d3.feature(base, o.rivers).features;
   gLand.selectAll('path.river').data(rivers).join('path').attr('class', d => 'river' + (d.properties.src === 'approx' ? ' approx' : ''));
   rivers.forEach(f => (RIVERS[f.properties.name] = RIVERS[f.properties.name] || []).push(f));
+  gLand.append('path').datum(coastOf(baseLand, [near().bbox])).attr('class','coast');
+  REGION[near().id || 'near-east'] = 'ok';
   placeObjects();
   fit();
   buildTrack();
