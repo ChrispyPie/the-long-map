@@ -12,7 +12,7 @@ rendered with a 1-px bleed (514 px) so neighbours overlap and no seam shows.
 | level | DEM zoom | covers | ~px/deg |
 |---|---|---|---|
 | 0–2 | 4–6 | the whole world map, lon -20..95, lat -2..66 | 9–36 |
-| 3 | 7 | Near East, lon 2..76, lat 8..56 | 71 |
+| 3 | 7 | the whole world map again, sharper | 71 |
 | 4 | 8 | Nile delta, Levant, Mesopotamia | 143 |
 | 5 | 9 | Egypt to the Euphrates | 286 |
 | 6 | 10 | the Levant | 572 |

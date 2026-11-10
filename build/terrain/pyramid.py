@@ -19,7 +19,7 @@ LEVELS = {
     0: (4, [[-20, -2, 95, 66]]),
     1: (5, [[-20, -2, 95, 66]]),
     2: (6, [[-20, -2, 95, 66]]),                     # the whole world map (Europe, North Africa, Middle East, Central Asia)
-    3: (7, [[2, 8, 76, 56]]),                         # Near East: Egypt to Persia, Anatolia to Arabia
+    3: (7, [[-20, -2, 95, 66]]),                      # the whole world map again, sharper (Europe, Africa, Central Asia)
     4: (8, [[24, 26, 52, 40]]),                       # the core: Nile delta, Levant, Mesopotamia
     5: (9, [[30, 28, 46, 38]]),
     6: (10, [[32.6, 28.2, 38.8, 35.2]]),              # Levant (the old 'levant' image)
