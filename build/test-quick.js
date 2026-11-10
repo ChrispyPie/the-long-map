@@ -191,7 +191,7 @@ const ROOT = path.join(__dirname, '..');
     await ctx.close();
   }
   // ---------- Chapters 3-6: quick reels made of each chapter's own lines (build/quick.py), terrain on every chapter ----------
-  ok('terrain stops are all six chapters ' + JSON.stringify(T.stops), JSON.stringify(T.stops) === '[-1207,-1150,-1000,-930,-722,-701]');
+  ok('terrain is a tile pyramid for the whole map (no per-chapter list) ' + (T.levels || []).length, !T.stops && T.grid && (T.levels || []).length >= 6 && T.levels.every(L => L.tiles.length));
   const CH = [{n: 3, y: '1000', k: 2}, {n: 4, y: '930', k: 3}, {n: 5, y: '722', k: 4}, {n: 6, y: '701', k: 5}];
   for (const c of CH){
     const d = J(`data/stories/jews/${c.y}bc.json`), Qc = (d.quick || {}).beats || [];
