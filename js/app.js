@@ -45,33 +45,81 @@ function fit(){
   projection.fitExtent([[6,6],[w-6,h-6]], VIEW);
   svg.attr('viewBox', `0 0 ${w} ${h}`);
   const a = projection([-12, 58]), b = projection([88, 58]), c = projection([-12, 2]), d = projection([88, 2]), m = projection([38, 2]);
-  placeRelief();
+  if (RELIEF){ RELIEF_KEY = ''; updateRelief(); }
   zoom.extent([[0,0],[w,h]]).translateExtent([[Math.max(a[0],c[0]), Math.min(a[1],b[1])], [Math.min(b[0],d[0]), m[1]]]);
   redraw();
 }
-// ---------- shaded relief: pre-baked images in the map's own projection, under every vector layer ----------
-// data/terrain.json gives each image's box in the projection at scale 1 / translate 0, so it maps onto the live
-// projection with one scale + offset (fitExtent only changes those). Only the stops listed in "stops" (years) show it,
-// and the images load the first time such a stop opens. ?terrain=0 turns it off.
+// ---------- shaded relief: a tile pyramid in the map's own projection, under every vector layer ----------
+// data/terrain.json (build/terrain/render_tiles.py) describes a grid at projection scale 1 / translate 0: level n has
+// tiles of S0/2^n raw units, each a P-px WebP with a 1-px bleed. The coarse levels cover the whole world map, the
+// deeper ones only the places the story is told (Levant, Judah ...). On every zoom/pan only the tiles on screen at the
+// sharpness the screen needs are loaded (plus the coarsest level that already covers the view, so nothing is ever
+// blank), so the first load costs a handful of small tiles. ?terrain=0 turns it off.
 const TERRAIN_ON = new URLSearchParams(location.search).get('terrain') !== '0';
-let RELIEF = null;
-function placeRelief(){
-  const k = projection.scale(), [tx, ty] = projection.translate();
-  gLand.selectAll('image.relief').attr('x', d => tx + k * d.raw[0]).attr('y', d => ty + k * d.raw[1])
-    .attr('width', d => k * (d.raw[2] - d.raw[0])).attr('height', d => k * (d.raw[3] - d.raw[1]));
+let RELIEF = null, RELIEF_KEY = '', reliefRaf = 0;
+const gRelief = gLand.append('g').attr('class', 'reliefs');
+function addRelief(cfg){
+  if (!cfg || !TERRAIN_ON || !cfg.grid || !cfg.levels) return;
+  cfg.levels.forEach(L => { L.has = new Set(L.tiles.map(t => t[0] + '_' + t[1])); });
+  RELIEF = cfg; document.body.classList.add('terrain'); $('tcredit').hidden = false;   // tiles come with fit()
 }
-function addRelief(cfg){ if (cfg && TERRAIN_ON) RELIEF = cfg; }
-function reliefFor(s){
-  const on = !!(RELIEF && s && s.file && (RELIEF.stops || []).includes(s.year));
-  if (on && gLand.select('image.relief').empty()){
-    gLand.selectAll('image.relief').data(RELIEF.layers || []).join(en => en.insert('image', 'path'))
-      .attr('class', d => 'relief r-' + d.name).attr('preserveAspectRatio', 'none').attr('href', d => d.src);
-    placeRelief();
+// which tiles the view needs now: [{n, i, j, key}], coarse first
+function reliefTiles(){
+  const G = RELIEF.grid, [w, h] = size(), k = projection.scale(), [tx, ty] = projection.translate();
+  if (!w || !h) return [];
+  const rx = sx => ((sx - TR.x) / TR.k - tx) / k, ry = sy => ((sy - TR.y) / TR.k - ty) / k;
+  const x0 = rx(0), x1 = rx(w), y0 = ry(0), y1 = ry(h);
+  const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+  const max = RELIEF.levels.length - 1;
+  const want = Math.max(0, Math.min(max, Math.ceil(Math.log2(k * TR.k * dpr * .8 * G.S0 / G.P))));
+  const span = n => { const S = G.S0 / 2 ** n; return [Math.floor((x0 - G.X0) / S), Math.floor((x1 - G.X0) / S), Math.floor((y0 - G.Y0) / S), Math.floor((y1 - G.Y0) / S)]; };
+  // the deepest level <= want whose tiles cover the whole view is the floor; draw from it up to want
+  let floor = 0;
+  for (let n = want; n >= 0; n--){
+    const [a, b, c, d] = span(n), L = RELIEF.levels[n]; let all = true;
+    for (let i = a; i <= b && all; i++) for (let j = c; j <= d; j++) if (!L.has.has(i + '_' + j)){ all = false; break; }
+    if (all){ floor = n; break; }
   }
-  gLand.selectAll('image.relief').style('display', on ? null : 'none');
-  document.body.classList.toggle('terrain', on);
-  $('tcredit').hidden = !on;
+  const out = [];
+  for (let n = floor; n <= want; n++){
+    const [a, b, c, d] = span(n), L = RELIEF.levels[n];
+    for (let i = a; i <= b; i++) for (let j = c; j <= d; j++) if (L.has.has(i + '_' + j)) out.push({n, i, j, key: n + '/' + i + '_' + j});
+  }
+  return out;
 }
+function placeRelief(){
+  if (!RELIEF) return;
+  const G = RELIEF.grid, k = projection.scale(), [tx, ty] = projection.translate(), b = G.bleed || 0;
+  gRelief.selectAll('image.relief').each(function(d){
+    const S = G.S0 / 2 ** d.n, px = S / G.P;
+    this.setAttribute('x', tx + k * (G.X0 + d.i * S - b * px)); this.setAttribute('y', ty + k * (G.Y0 + d.j * S - b * px));
+    this.setAttribute('width', k * (S + 2 * b * px)); this.setAttribute('height', k * (S + 2 * b * px));
+  });
+}
+function updateRelief(){
+  reliefRaf = 0;
+  if (!RELIEF) return;
+  const T = reliefTiles(), key = T.map(t => t.key).join(' ');
+  if (key === RELIEF_KEY) return;
+  RELIEF_KEY = key;
+  // tiles that leave stay underneath until the new ones have loaded, so zooming never flashes blank
+  gRelief.selectAll('image.relief').data(T, d => d.key).join(
+    en => en.append('image').attr('class', 'relief').attr('preserveAspectRatio', 'none').attr('data-k', d => d.key)
+      .on('load', function(){ this.classList.add('ok'); reliefSweep(); })
+      .attr('href', d => RELIEF.src.replace('{n}', d.n).replace('{i}', d.i).replace('{j}', d.j)),
+    up => up.each(function(){ this.classList.remove('old'); }),
+    ex => ex.each(function(){ this.classList.add('old'); this.parentNode.insertBefore(this, this.parentNode.firstChild); }))
+    .order();
+  placeRelief();
+  clearTimeout(updateRelief.t); updateRelief.t = setTimeout(() => reliefSweep(true), 2500);
+  reliefSweep();
+}
+function reliefSweep(force){
+  const g = gRelief.node();
+  if (force || !g.querySelector('image.relief:not(.old):not(.ok)')) g.querySelectorAll('image.relief.old').forEach(e => e.remove());
+}
+const reliefSoon = () => { if (RELIEF && !reliefRaf) reliefRaf = requestAnimationFrame(updateRelief); };
+function reliefFor(){ if (RELIEF) reliefSoon(); }
 function redraw(){
   root.selectAll('path:not(.nogeo)').attr('d', path);
   gPts.selectAll('g.obj').attr('transform', d => { const p = projection(d.pt); return `translate(${p[0]},${p[1]})`; });
@@ -129,7 +177,7 @@ function cullNow(){
   }
 }
 let TR = {k:1, x:0, y:0};
-const zoom = d3.zoom().scaleExtent([1, 160]).on('zoom', e => { TR = e.transform; K = e.transform.k; root.attr('transform', e.transform); scaleMarks(); });
+const zoom = d3.zoom().scaleExtent([1, 160]).on('zoom', e => { TR = e.transform; K = e.transform.k; root.attr('transform', e.transform); scaleMarks(); reliefSoon(); });
 svg.call(zoom).on('dblclick.zoom', null);
 svg.append('defs').html('<filter id="soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="0.6"/></filter>');
 
@@ -1906,7 +1954,8 @@ const bkHere = () => MODE === 'soon' ? bkPageOf(cur) : MODE === 'stop' ? bkPageO
 $('capbook').onclick = e => { e.stopPropagation(); bkOpen(e.currentTarget, bkHere()); };
 $('bookbtn').onclick = e => { e.stopPropagation(); bkOpen(e.currentTarget, bkHere()); };
 
-window.__app = { srcOpen, srcClose, get srcIsOpen(){ return SP.open; }, camTarget, vigSlot: () => VIGSLOT, get vigBig(){ return VIG_BIG; }, openObj, closeObj, showStep, go, playStart, playPause, playStop, seek: i => PLAY && seek(i), vigZoom,
+window.__app = { fly: (c, k) => { svg.interrupt(); const p = projection(c), [w, h] = size(); svg.call(zoom.transform, d3.zoomIdentity.translate(w / 2, h / 2).scale(k).translate(-p[0], -p[1])); },
+  get relief(){ return RELIEF ? [...gRelief.node().querySelectorAll('image.relief:not(.old)')].map(e => e.dataset.k) : null; }, srcOpen, srcClose, get srcIsOpen(){ return SP.open; }, camTarget, vigSlot: () => VIGSLOT, get vigBig(){ return VIG_BIG; }, openObj, closeObj, showStep, go, playStart, playPause, playStop, seek: i => PLAY && seek(i), vigZoom,
   get step(){ return step; }, get K(){ return K; }, get open(){ return openId; }, get mode(){ return MODE; }, get cur(){ return cur; },
   get explored(){ return [...EXPLORED]; }, get keys(){ return [...KEYSET]; },
   get play(){ return PLAY ? {i: PLAY.i, n: PLAY.beats.length, paused: PLAY.paused, reel: PLAY.reel, hold: !!(PLAY.hold || PLAY.wait), chapter: chapterAt(PLAY.reel, PLAY.i).n, choice: !$('choice').hidden} : null; },
