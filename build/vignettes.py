@@ -256,6 +256,35 @@ VIGNETTES = {
             {"line": "Jerusalem grows fast in these years", "src": D + "c5-jerusalem.webp", "alt": "Workers building a thick new stone wall around a crowded hillside town while people with bundles arrive on the road", "caption": "Jerusalem grows (impression)", "fx": "dust"},
         ],
     },
+    "jews-701": {
+        "intro": [
+            {"line": "Now it is seven oh one BC", "src": D + "c6-lachish-camp.webp", "alt": "A large army camp of tents and campfires on a plain below a walled city on a high mound, at sunset", "caption": "The camp before Lachish (impression)", "fx": "smoke"},
+            {"line": "On the map, Judah, from the hills", "src": D + "c6-judah-hills.webp", "alt": "Terraced hills with olive trees sloping down to wide lowlands, a small stone village in the foreground", "caption": "The hills of Judah (impression)", "fx": "clouds"},
+        ],
+        "play": [
+            {"line": "At Beersheba, in the south", "src": D + "c6-storehouse.webp", "alt": "An excavated storehouse with stone pillars and large storage jars, a trowel and a basket in the foreground", "caption": "A storehouse at Beersheba (impression)"},
+            {"line": "In two thousand and nine, in a rubbish heap", "src": D + "c6-bulla.webp", "alt": "A small round clay seal impression with a winged sun, lying on an open hand above a sieve of earth", "caption": "A king's seal (impression)"},
+            {"line": "The Bible says that in that year the prophet Isaiah", "src": D + "c6-barefoot.webp", "alt": "A barefoot man in a simple wrap, seen from behind, walking down a stone street as townspeople watch from doorways", "caption": "Isaiah's sign (story)", "fx": "dust"},
+            {"line": "Imagine the news reaching Jerusalem", "src": D + "c6-news.webp", "alt": "A tired, dusty horse outside a stone city gate, a group of robed elders coming out to meet it", "caption": "News from the coast (impression)", "fx": "dust"},
+            {"line": "His son Sennacherib becomes king", "src": D + "c6-nineveh.webp", "alt": "Huge city walls and gates beside a wide river with boats, palaces on a high mound behind", "caption": "Nineveh on the Tigris (impression)", "fx": "waves"},
+            {"line": "Hezekiah prepares for war", "src": D + "c6-broadwall.webp", "alt": "Workers on scaffolding build a very thick stone wall over ruined houses, smiths making shields in the foreground", "caption": "Walls and weapons (impression)", "fx": ["dust", "fire"]},
+            {"line": "Under the City of David, a tunnel", "src": D + "c6-tunnel.webp", "alt": "A narrow tunnel cut through rock, water running along the floor, lit by a small clay oil lamp", "caption": "Inside the tunnel (impression)"},
+            {"line": "Writing cut into its wall", "src": D + "c6-siloam-plate.webp", "photo": True, "alt": "Sepia photograph of the Siloam inscription: a pale slab of rock with faint carved lines of writing, in a museum case", "caption": "The real Siloam inscription · photo Oncenawhile, CC0"},
+            {"line": "All over Judah, the handles", "src": D + "c6-lmlk.webp", "alt": "A row of large two-handled storage jars stamped with a round winged emblem, in a lamp-lit storeroom", "caption": "Jars for the king (impression)"},
+            {"line": "Imagine the sound of picks", "src": D + "c6-picks.webp", "alt": "Two diggers with picks crouching in a narrow rock tunnel by a small oil lamp, listening", "caption": "Axe against axe (impression)"},
+            {"line": "An army from Egypt and Kush", "src": D + "c6-eltekeh.webp", "alt": "Two armies clash on a dusty plain, chariots and shield-bearers on one side, archers with feathered headdresses on the other", "caption": "The battle of Eltekeh (impression)", "fx": "dust"},
+            {"line": "Imagine the watchmen on Judah's hills", "src": D + "c6-watchmen.webp", "alt": "Two watchmen on a round stone tower on a hilltop look out over a plain where an army raises dust and smoke", "caption": "Dust on the plain (impression)", "fx": "smoke"},
+            {"line": "At the south-west corner of the mound", "src": D + "c6-ramp.webp", "alt": "Shielded battering rams climbing a great stone ramp against a city wall, archers below, smoke rising", "caption": "The siege ramp (impression)", "fx": ["smoke", "fire"]},
+            {"line": "In his palace at Nineveh", "src": D + "c6-lachish-relief-plate.webp", "photo": True, "alt": "Sepia photograph of a carved stone panel showing Assyrian archers shooting arrows, in the British Museum", "caption": "The Lachish reliefs, British Museum · photo Mike Peel, CC BY-SA 4.0"},
+            {"line": "Imagine a family walking out of the gate", "src": D + "c6-lachish-exile.webp", "alt": "A family with an ox cart piled with bundles, a child on top, walk out of a burnt city gate past soldiers with shields", "caption": "Leaving Lachish (impression)", "fx": "smoke"},
+            {"line": "Now Jerusalem. Sennacherib writes", "src": D + "c6-birdcage.webp", "alt": "A walled city on a ridge at dusk, small army camps with fires on the hills around it, one bird flying above", "caption": "Like a bird in a cage (impression)", "fx": "birds"},
+            {"line": "Then Assyrian officers come to the wall", "src": D + "c6-rabshakeh.webp", "alt": "Officials in long robes and tall hats with soldiers below a city wall, one calling up to people crowding the top of the wall", "caption": "The Rabshakeh speaks (story)"},
+            {"line": "The Bible tells what came next", "src": D + "c6-night-camp.webp", "alt": "A silent army camp of tents among dark hills at night, fires burned down, a beam of light falling from the clouds", "caption": "That night (story)", "fx": "clouds"},
+            {"line": "Herodotus, writing about two and a half", "src": D + "c6-mice.webp", "alt": "Mice gnawing at a bowstring and quiver straps beside shields leaning on a tent, at night", "caption": "Herodotus' mice (story)"},
+            {"line": "Imagine the first morning after", "src": D + "c6-morning.webp", "alt": "Early morning, townspeople walking out of a city gate onto an empty road through quiet hills, old campfire rings by the road", "caption": "The gates open (impression)", "fx": "dust"},
+            {"line": "Jerusalem had been spared", "src": D + "c6-spared.webp", "alt": "A walled hill city of stone houses at sunset, dark storm clouds gathering on the far horizon", "caption": "Jerusalem spared (impression)", "fx": "clouds"},
+        ],
+    },
 }
 
 
@@ -282,5 +311,5 @@ def _auto_quick(prefix, M):
         hit = [v for where in ("intro", "play") for v in reels.get(where, []) if orig.startswith(v["line"])]
         if hit: out.append(dict(hit[0], line=M.speech(b)))
     reels["quick"] = out
-import narration_jews_1000 as _n1000, narration_jews_930 as _n930, narration_jews_722 as _n722
-_auto_quick("jews-1000", _n1000); _auto_quick("jews-930", _n930); _auto_quick("jews-722", _n722)
+import narration_jews_1000 as _n1000, narration_jews_930 as _n930, narration_jews_722 as _n722, narration_jews_701 as _n701
+_auto_quick("jews-1000", _n1000); _auto_quick("jews-930", _n930); _auto_quick("jews-722", _n722); _auto_quick("jews-701", _n701)

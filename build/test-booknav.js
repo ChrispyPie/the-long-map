@@ -103,7 +103,7 @@ const D = process.env.SHOTS || 'screens';
       if (w === 412) await p.screenshot({path: '/workspace/tlm-shots/bookindex-412-2026-10-30.png'});
     }
     if (mobile){ await p.setViewportSize({width: vw, height: vh}); await p.waitForTimeout(350); }
-    ok(name + ' index: Book One intro and every chapter', await p.evaluate(() => { const li = [...document.querySelectorAll('#bkpage ul.ix > li')]; return li[0].classList.contains('bkintro') && /Book One intro/.test(li[0].textContent) && li.length === 7 && li[6].classList.contains('soon'); }));
+    ok(name + ' index: Book One intro and every chapter', await p.evaluate(() => { const li = [...document.querySelectorAll('#bkpage ul.ix > li')]; return li[0].classList.contains('bkintro') && /Book One intro/.test(li[0].textContent) && li.length === 8 && li[7].classList.contains('soon'); }));
     await p.click('#bkpage button[data-x="' + k3 + '"]'); await p.waitForTimeout(200);
     ok(name + ' accordion opens a chapter\'s scenes', await p.evaluate(k => { const b = document.getElementById('bkacc' + k); return !b.hidden && b.querySelectorAll('li').length === 7 && document.querySelector('button[data-x="' + k + '"]').getAttribute('aria-expanded') === 'true'; }, k3));
     await shot('booknav_index');

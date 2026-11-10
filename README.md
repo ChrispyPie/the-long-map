@@ -26,5 +26,7 @@ Small pictures that come in beside the map while the film plays, one for most na
 - Real photos are used sparingly, toned sepia and framed like a museum plate (`photo: True`, no movement):
   - Merneptah Stele: photo by Onceinawhile, CC BY-SA 4.0, Wikimedia Commons.
   - Tel Dan Stele: "Aramaic Inscription on Basalt Monument, Dan, 9th Century BC" by Gary Todd, CC0, Wikimedia Commons.
+  - Siloam inscription: photo by Oncenawhile, CC0, Wikimedia Commons (File:Siloam_inscription.jpg).
+  - Lachish reliefs, British Museum (Assyrian archers): photo by Mike Peel (www.mikepeel.net), CC BY-SA 4.0, Wikimedia Commons (File:Lachish_Relief,_British_Museum_14.jpg). Also used, uncropped, in the Chapter 6 fact box "The siege of Lachish" (images/lachish-relief.webp).
 
 Tests: `node build/test-vignettes.js URL` and `node build/test-vignettes-all.js URL` (every vignette, phone and desktop).

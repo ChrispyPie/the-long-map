@@ -4,7 +4,12 @@ A,D,T = "attested","disputed","tradition"
 O = []
 def o(id,type,name,where,rank,desc,src,cert=A,people=None,pop=None,facts=(),alt=None,since=None):
     # since: first stop year on whose map the object is drawn (None = every stop)
-    O.append(dict(id=id,type=type,name=name,alt=alt,where=where,rank=rank,desc=desc,people=people,pop=pop,facts=[list(f) for f in facts],src=src,cert=cert,since=since))
+    O.append(dict(id=id,type=type,name=name,alt=alt,where=where,rank=rank,desc=desc,people=people,pop=pop,facts=[list(f) for f in facts],src=src,cert=cert,since=since,later=None))
+def later(id, frm, desc, src, people=None, facts=()):
+    """a newer text for an existing fact box, used from stop year frm on (js/app.js objAt): desc and people replace
+    the old ones, facts come first; the earlier maps keep the old text"""
+    ob = next(x for x in O if x["id"] == id)
+    ob["later"] = (ob["later"] or []) + [dict(frm=frm, desc=desc, src=src, people=people, facts=[list(f) for f in facts])]
 
 # ---------- Egypt ----------
 o("thebes","city","Thebes",{"at":[32.64,25.70]},1,"Religious capital of New Kingdom Egypt, centre of the god Amun (Karnak, Luxor). The Merneptah Stele was found in Merneptah's mortuary temple on the west bank.",["petrie1897","kuhrt"],people="Egyptians",alt="Waset",
@@ -220,3 +225,27 @@ o('cuthah','city','Cuthah',{'at': [44.613, 32.76]},3,"Babylonian city of the god
   facts=[("Rabbinic writings call the Samaritans 'Kutim' after it.",A,['pummer2016'])])  # Wikipedia "Kutha": 32.7600 N 44.6133 E (checked 31 Oct 2026)
 o('gerizim','region','Mount Gerizim',{'at': [35.273, 32.201]},3,"Mountain above Shechem (Nablus). The holy mountain of the Samaritans, whose small community still lives on and near it.",['pummer2016'],cert=A,since=-722,
   facts=[("Samaritans see themselves as descendants of Israelites who were never exiled.",A,['pummer2016']),("Later Jewish tradition saw them as foreign settlers (2 Kings 17:24–41).",T,['bible'])])  # Wikipedia "Mount Gerizim": 32.2011 N 35.2731 E (checked 31 Oct 2026)
+
+# ---------- c. 720 to 701 BC (Chapter 6: Hezekiah and Sennacherib). since=-701: the earlier maps stay as they were ----------
+o('azekah','site','Azekah',{'at': [34.936, 31.700]},3,"Fortress of Judah on a high hill above the Elah valley. A broken Assyrian tablet tells how Sennacherib's army took it with ramps and battering rams.",['naaman1974'],cert=A,alt='Tel Azekah',since=-701,
+  facts=[("The 'Azekah inscription' joins two fragments into one report of the campaign of 701 BC.",A,['naaman1974'])])  # Wikipedia "Tel Azekah": 31.700 N 34.936 E (approximate)
+o('beersheba','city','Beersheba',{'at': [34.840, 31.245]},3,"Small walled town of Judah in the Negev, today Tel Sheva. Stones of a large horned altar were found reused in the wall of a storehouse.",['aharoni1974','herzog2010'],cert=A,alt="Tel Be'er Sheva",since=-701,
+  facts=[("The altar was taken apart in the late 8th century BC.",A,['aharoni1974','herzog2010']),("Whether this was part of Hezekiah's reform is debated.",D,['herzog2010','naaman1995']),("'From Dan to Beersheba': the Bible's phrase for the whole land (e.g. 1 Samuel 3:20).",T,['bible'])])  # Wikipedia "Tel Be'er Sheva": 31.2448 N 34.8403 E (checked 10 Nov 2026)
+o('siloamtunnel','site','Siloam tunnel',{'at': [35.2357, 31.7718]},3,"Tunnel about 533 metres long, cut through the rock under the City of David, carrying the water of the Gihon spring to the Pool of Siloam inside the walls. An inscription found in it in 1880 tells how two teams met in the middle.",['frumkin2003','siloam'],cert=A,alt="Hezekiah's tunnel",since=-701,
+  facts=[("Radiometric dates point to about 700 BC.",A,['frumkin2003']),("An earlier start, in the late 9th or early 8th century BC, has been argued.",D,['reich2011']),("'He made the pool and the conduit, and brought water into the city' (2 Kings 20:20).",T,['bible'])])  # Wikipedia "Siloam tunnel": 31.7724 N 35.2357 E (checked 10 Nov 2026), dot set a little south, between spring and pool
+
+later('jerusalem', -701, "Capital of the kingdom of Judah under Hezekiah. In the late 8th century BC it spread from the old City of David onto the western hill and was surrounded by a new wall. In 701 BC Sennacherib shut Hezekiah up here 'like a bird in a cage', but did not take the city.",
+  ['broshi1992','avigad1983','grayson2012'], people="Judahites",
+  facts=[("A wall about 7 m thick, the 'Broad Wall', was built over demolished houses on the western hill.",A,['avigad1983']),("Sennacherib: 'like a bird in a cage'; he does not claim to have taken it.",A,['grayson2012']),("A seal impression of 'Hezekiah [son of] Ahaz, king of Judah' was found on the Ophel.",A,['mazar2015'])])
+later('lachish', -701, "Judah's second city in the late 8th century BC, a great walled town guarding the road from the coast into the hills. Sennacherib besieged and took it in 701 BC, and had the siege carved on the walls of his palace at Nineveh.",
+  ['ussishkin2004','barnett1998'], people="Judahites",
+  facts=[("The Assyrian siege ramp at the south-west corner is the oldest known.",A,['ussishkin2004','garfinkel2021']),("Level III ended in fire in 701 BC.",A,['ussishkin2004']),("Sennacherib was at Lachish when he sent his officers to Jerusalem (2 Kings 18:14, 17).",T,['bible'])])
+later('nineveh', -701, "Sennacherib made Nineveh the capital of Assyria and built his 'Palace without Rival' there. One of its rooms was lined with carved panels showing the siege of Lachish.",
+  ['grayson2012','barnett1998'], people="Assyrians",
+  facts=[("Hezekiah's tribute was sent after Sennacherib to Nineveh.",A,['grayson2012']),("The Lachish reliefs, dug up by Layard, are now in the British Museum.",A,['bmlachish'])])
+later('ekron', -701, "Large Philistine city on the edge of the coastal plain. In 704–701 BC its nobles handed their pro-Assyrian king, Padi, to Hezekiah; Sennacherib took the city and put Padi back on the throne.",
+  ['grayson2012'], people="Philistines",
+  facts=[("Sennacherib gave Padi part of Judah's land.",A,['grayson2012'])])
+later('ashdod', -701, "Philistine city on the coast. In 712–711 BC its king Yamani rebelled against Sargon II and fled to Kush; in 701 BC its king Mitinti brought tribute to Sennacherib and was given part of Judah's land.",
+  ['frame2021','frame1999','grayson2012'], people="Philistines",
+  facts=[("Shebitku of Kush sent Yamani back to Assyria in chains.",A,['frame1999']),("Isaiah walks barefoot as a sign against trusting Egypt and Kush (Isaiah 20).",T,['bible'])])

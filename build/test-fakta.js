@@ -175,7 +175,9 @@ const D = process.env.SHOTS || 'screens';
     await p.evaluate(()=>__app.go(4)); await p.waitForTimeout(600);
     ok(name+' timeline to 722 BC: a live stop (Chapter 5) with its own map', await p.evaluate(()=>__app.mode==='stop' && /722/.test(document.getElementById('pill').textContent) && !document.querySelector('.soonflag') && document.querySelectorAll('path.z-aram').length>=1));
     await p.evaluate(()=>__app.go(5)); await p.waitForTimeout(600);
-    ok(name+' timeline to 701 BC: the end of the 722 Play, coming soon', await p.evaluate(()=>__app.mode==='soon' && /701/.test(document.getElementById('pill').textContent) && !!document.querySelector('.soonflag')));
+    ok(name+' timeline to 701 BC: a live stop (Chapter 6) with its own map, Assyrian provinces drawn', await p.evaluate(()=>__app.mode==='stop' && /701/.test(document.getElementById('pill').textContent) && !document.querySelector('.soonflag') && document.querySelectorAll('path.z-samerina').length>=1 && document.querySelectorAll('path.z-israel').length===0));
+    await p.evaluate(()=>__app.go(6)); await p.waitForTimeout(600);
+    ok(name+' timeline to 586 BC: the end of the 701 Play, coming soon', await p.evaluate(()=>__app.mode==='soon' && /586/.test(document.getElementById('pill').textContent) && !!document.querySelector('.soonflag')));
     await p.evaluate(()=>__app.go(0)); await p.waitForTimeout(1200);
     await ctx.close();
   }
