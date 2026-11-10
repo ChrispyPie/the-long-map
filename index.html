@@ -408,9 +408,10 @@ try { var t = localStorage.getItem('tlm.textsize'); if (/^(s|m|l|xl)$/.test(t)) 
   .fx-clouds i:nth-child(2) { top:14%; width:35%; animation-delay:-14s; animation-duration:34s; }
   @keyframes fxcloud { from { transform:translateX(0); } to { transform:translateX(330%); } }
   @media (prefers-reduced-motion: reduce){ .vigfx { display:none !important; } }
-  /* a tap on the picture enlarges it to fit the free picture (js/app.js vigZoom), a second tap or a tap beside it shrinks it back */
+  /* a tap on the picture enlarges it to fit the free picture (js/app.js vigZoom), a second tap or a tap beside it shrinks it back;
+     the choice carries over to the next pictures (VIG_BIG) */
   .vig.in { pointer-events:auto; cursor:zoom-in; -webkit-tap-highlight-color:transparent; }
-  .vig.zoom { transform-origin:top center; cursor:zoom-out; padding:4px 4px 0; box-shadow:0 0 0 100vmax rgba(14,8,4,.6), 0 14px 40px rgba(0,0,0,.6); }
+  .vig.zoom { transform-origin:top center; cursor:zoom-out; padding:4px 4px 0; box-shadow:0 14px 40px rgba(0,0,0,.6); }   /* no dimming: the map stays bright behind it */
   .vig.zoom:not(:has(figcaption:not([hidden]))) { padding-bottom:4px; }
   .vig.zoom img, .vig.zoom.in img, .vig.zoom.in[data-kb] img { animation:none; transform:none; }
   .vig.zoom figcaption { -webkit-line-clamp:4; line-clamp:4; font-size:calc(13px * var(--ts)); }
