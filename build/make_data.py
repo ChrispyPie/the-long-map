@@ -236,7 +236,18 @@ for f in f586:
     f538.append(f)
 z538 = dict(z586); l538 = dict(l586, judah=[35.20,31.88]); zl538 = dict(zl586, judah="THOSE WHO REMAINED")
 era538 = {"year":-538,"label":"538 BC","zones":{"type":"FeatureCollection","features":f538},"zoneObjects":z538,"labelAt":l538,"zoneLabels":zl538,"note":NOTE}
-stop = story_jews.STOP; stop1150 = story_jews.STOP1150; stop1000 = story_jews.STOP1000; stop930 = story_jews.STOP930; stop722 = story_jews.STOP722; stop701 = story_jews.STOP701; stop586 = story_jews.STOP586; stop538 = story_jews.STOP538
+YEHUD = story_jews.NAR538.YEHUD
+f167 = []
+for f in f538:
+    f = dict(f); f["properties"] = dict(f["properties"]); f["geometry"] = dict(f["geometry"])
+    if f["properties"]["zone"] == "judah":
+        f["geometry"] = {"type":"Polygon","coordinates":[YEHUD]}
+        f["properties"]["part"] = "Yehud, a small Persian province around Jerusalem (end of Chapter 8)"
+        f["properties"]["certainty"] = "people"
+    f167.append(f)
+z167 = dict(z538); l167 = dict(l538, judah=[35.22,31.72]); zl167 = dict(zl538, judah="YEHUD")
+era167 = {"year":-167,"label":"167 BC","zones":{"type":"FeatureCollection","features":f167},"zoneObjects":z167,"labelAt":l167,"zoneLabels":zl167,"note":NOTE}
+stop = story_jews.STOP; stop1150 = story_jews.STOP1150; stop1000 = story_jews.STOP1000; stop930 = story_jews.STOP930; stop722 = story_jews.STOP722; stop701 = story_jews.STOP701; stop586 = story_jews.STOP586; stop538 = story_jews.STOP538; stop167 = story_jews.STOP167
 check_stop(stop, era, "jews-1207")
 check_stop(stop1150, era1150, "jews-1150")
 check_stop(stop1000, era1000, "jews-1000")
@@ -245,6 +256,7 @@ check_stop(stop722, era722, "jews-722")
 check_stop(stop701, era701, "jews-701")
 check_stop(stop586, era586, "jews-586")
 check_stop(stop538, era538, "jews-538")
+check_stop(stop167, era167, "jews-167")
 def w(p, d):
     os.makedirs(os.path.dirname(p), exist_ok=True)
     json.dump(d, open(p,"w"), ensure_ascii=False, separators=(",",":"))
@@ -259,6 +271,7 @@ w("data/eras/722bc.json", era722)
 w("data/eras/701bc.json", era701)
 w("data/eras/586bc.json", era586)
 w("data/eras/538bc.json", era538)
+w("data/eras/167bc.json", era167)
 w("data/stories/jews/story.json", story_jews.STORY)
 w("data/stories/jews/1207bc.json", stop)
 w("data/stories/jews/1150bc.json", stop1150)
@@ -268,7 +281,8 @@ w("data/stories/jews/722bc.json", stop722)
 w("data/stories/jews/701bc.json", stop701)
 w("data/stories/jews/586bc.json", stop586)
 w("data/stories/jews/538bc.json", stop538)
-for st in (stop, stop1150, stop1000, stop930, stop722, stop701, stop586, stop538):
+w("data/stories/jews/167bc.json", stop167)
+for st in (stop, stop1150, stop1000, stop930, stop722, stop701, stop586, stop538, stop167):
     play, tin = st["play"], st["transitionIn"]
     print(st["label"], "events", len(st["events"]), "play beats", len(play["beats"]), "words", play["words"], "voice min", round(sum(b.get("audioMs", b["duration"])+b["pauseAfter"] for b in play["beats"])/60000, 1),
           "opening beats", len(tin["beats"]) if isinstance(tin, dict) else 0, "explore keys", len(st["explore"]["key"]))

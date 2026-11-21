@@ -192,7 +192,7 @@ const ROOT = path.join(__dirname, '..');
   }
   // ---------- Chapters 3-8: quick reels made of each chapter's own lines (build/quick.py), terrain on every chapter ----------
   ok('terrain is a tile pyramid for the whole map (no per-chapter list) ' + (T.levels || []).length, !T.stops && T.grid && (T.levels || []).length >= 6 && T.levels.every(L => L.tiles.length));
-  const CH = [{n: 3, y: '1000', k: 2}, {n: 4, y: '930', k: 3}, {n: 5, y: '722', k: 4}, {n: 6, y: '701', k: 5}, {n: 7, y: '586', k: 6}, {n: 8, y: '538', k: 7}];
+  const CH = [{n: 3, y: '1000', k: 2}, {n: 4, y: '930', k: 3}, {n: 5, y: '722', k: 4}, {n: 6, y: '701', k: 5}, {n: 7, y: '586', k: 6}, {n: 8, y: '538', k: 7}, {n: 9, y: '167', k: 9}];
   for (const c of CH){
     const d = J(`data/stories/jews/${c.y}bc.json`), Qc = (d.quick || {}).beats || [];
     const w = Qc.reduce((s, b) => s + cap(b).text.split(/\s+/).length, 0), m = Qc.reduce((s, b) => s + b.audioMs + b.pauseAfter, 0);
@@ -230,28 +230,28 @@ const ROOT = path.join(__dirname, '..');
         ok(`${name} Ch${c.n} quick ran every line (${maxI})`, maxI === c.n_ - 1);
         await p.waitForTimeout(1000);
         ok(`${name} Ch${c.n} quick ends on the choice`, await p.evaluate(() => __app.ended && !document.getElementById('choice').hidden));
-        await p.tap('#choicego'); await p.waitForTimeout(c.n < 8 ? 800 : 2500);
+        await p.tap('#choicego'); await p.waitForTimeout(c.n < 9 ? 800 : 2500);
         s = await p.evaluate(() => ({lp: __app.lenPick, txt: document.getElementById('lenpick').textContent, mode: __app.mode, play: !!__app.play}));
-        ok(`${name} Ch${c.n} Stay with the story → ${c.n < 8 ? 'next chapter card' : '167 coming soon'} ${JSON.stringify([s.lp, s.mode])}`, c.n < 8 ? s.lp && s.txt.includes('Chapter ' + (c.n + 1)) : s.mode === 'soon' && !s.play);
-        if (c.n < 8){ await p.tap('#lpx'); await p.waitForTimeout(300); }
-        ok(`${name} Ch${c.n} counted as watched`, await p.evaluate(k => __app.parts()[k].done, c.k));
+        ok(`${name} Ch${c.n} Stay with the story → ${c.n < 9 ? 'next chapter card' : '63 coming soon'} ${JSON.stringify([s.lp, s.mode])}`, c.n < 9 ? s.lp && s.txt.includes('Chapter ' + (c.n + 1)) : s.mode === 'soon' && !s.play);
+        if (c.n < 9){ await p.tap('#lpx'); await p.waitForTimeout(300); }
+        ok(`${name} Ch${c.n} counted as watched`, await p.evaluate(n => __app.parts()[n - 1].done, c.n));
       }
-      // 'Play Chapter 8 again' on the coming-soon page: Quick or Full first
-      ok(`${name} replay button on the end page`, await p.evaluate(() => /Play Chapter 8 again/.test((document.getElementById('replay') || {}).textContent || '')));
+      // 'Play Chapter 9 again' on the coming-soon page: Quick or Full first
+      ok(`${name} replay button on the end page`, await p.evaluate(() => /Play Chapter 9 again/.test((document.getElementById('replay') || {}).textContent || '')));
       await p.tap('#replay'); await p.waitForTimeout(500);
-      ok(`${name} Play Chapter 8 again asks Quick or Full`, await p.evaluate(() => __app.lenPick && !__app.play && document.getElementById('lenpick').textContent.includes('Chapter 8')));
+      ok(`${name} Play Chapter 9 again asks Quick or Full`, await p.evaluate(() => __app.lenPick && !__app.play && document.getElementById('lenpick').textContent.includes('Chapter 9')));
       await p.screenshot({path: `${D}/quick-replay-chooser-phone.png`});
       await p.tap('#lpx'); await p.waitForTimeout(400);
       ok(`${name} ✕ keeps the end page`, await p.evaluate(() => !__app.lenPick && !__app.play && __app.mode === 'soon' && !!document.getElementById('replay')));
       await p.tap('#replay'); await p.waitForTimeout(500); await p.tap('#lpquick'); await p.waitForTimeout(2000);
       let r = await p.evaluate(() => __app.play && {reel: __app.play.reel, n: __app.play.n, cur: __app.cur});
-      ok(`${name} replay → Quick plays Chapter 8 quick ${JSON.stringify(r)}`, r && r.reel === 'quick' && r.cur === 7);
+      ok(`${name} replay → Quick plays Chapter 9 quick ${JSON.stringify(r)}`, r && r.reel === 'quick' && r.cur === 9);
       await p.evaluate(() => __app.seek(__app.play.n - 1)); await p.waitForTimeout(300);
       for (let i = 0; i < 100 && await p.evaluate(() => !!__app.play && !__app.ended); i++) await p.waitForTimeout(400);
       await p.waitForTimeout(800); await p.tap('#choicego'); await p.waitForTimeout(2500);
       await p.tap('#replay'); await p.waitForTimeout(500); await p.tap('#lpfull'); await p.waitForTimeout(2000);
       r = await p.evaluate(() => __app.play && {reel: __app.play.reel, cur: __app.cur});
-      ok(`${name} replay → Full plays the full Chapter 8 ${JSON.stringify(r)}`, r && r.reel !== 'quick' && r.cur === 7);
+      ok(`${name} replay → Full plays the full Chapter 9 ${JSON.stringify(r)}`, r && r.reel !== 'quick' && r.cur === 9);
       await p.goto(url + '?ch=6&quick=1', {waitUntil: 'networkidle'}); await p.waitForTimeout(1800);
       const dd = await p.evaluate(() => __app.deep);
       ok(`${name} ?ch=6&quick=1 offers the quick version ${JSON.stringify(dd)}`, dd && dd.k === 5 && dd.r === 'quick');
@@ -261,6 +261,9 @@ const ROOT = path.join(__dirname, '..');
       await p.goto(url + '?ch=8&quick=1', {waitUntil: 'networkidle'}); await p.waitForTimeout(1800);
       const dd8 = await p.evaluate(() => __app.deep);
       ok(`${name} ?ch=8&quick=1 offers the quick version ${JSON.stringify(dd8)}`, dd8 && dd8.k === 7 && dd8.r === 'quick');
+      await p.goto(url + '?ch=9&quick=1', {waitUntil: 'networkidle'}); await p.waitForTimeout(1800);
+      const dd9 = await p.evaluate(() => __app.deep);
+      ok(`${name} ?ch=9&quick=1 offers the quick version ${JSON.stringify(dd9)}`, dd9 && dd9.k === 9 && dd9.r === 'quick');
     } catch (e) { ok(name + ' ran: ' + e.message.split('\n')[0], false); }
     await ctx.close();
   }

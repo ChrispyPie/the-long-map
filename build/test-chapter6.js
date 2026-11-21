@@ -47,7 +47,7 @@ const ROOT = path.join(__dirname, '..');
     await p.goto(url, {waitUntil: 'networkidle'}); await p.waitForTimeout(1500);
     await p.evaluate(() => __app.go(5)); await p.waitForTimeout(1600);
     let s = await p.evaluate(() => ({mode: __app.mode, pill: document.getElementById('pill').textContent, sam: document.querySelectorAll('path.z-samerina').length, aram: document.querySelectorAll('path.z-aram').length, parts: __app.parts().length}));
-    ok(name + ' timeline to 701 BC: live stop, Chapter 6 ' + JSON.stringify(s), s.mode === 'stop' && /701/.test(s.pill) && s.sam >= 1 && !s.aram && s.parts === 8);
+    ok(name + ' timeline to 701 BC: live stop, Chapter 6 ' + JSON.stringify(s), s.mode === 'stop' && /701/.test(s.pill) && s.sam >= 1 && !s.aram && s.parts === 9);
     await shot('intro');
     await p.tap('#gostory'); await p.waitForTimeout(300); if (await p.evaluate(() => !!__app.lenPick)) await p.click('#lpfull'); /* Quick or Full */ await p.waitForTimeout(2000);
     s = await p.evaluate(() => ({play: __app.play, voice: __app.voice}));
