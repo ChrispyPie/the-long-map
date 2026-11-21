@@ -13,9 +13,9 @@ rendered with a 1-px bleed (514 px) so neighbours overlap and no seam shows.
 |---|---|---|---|
 | 0–2 | 4–6 | the whole world map, lon -20..95, lat -2..66 | 9–36 |
 | 3 | 7 | the whole world map again, sharper | 71 |
-| 4 | 8 | Nile delta, Levant, Mesopotamia | 143 |
-| 5 | 9 | Egypt to the Euphrates | 286 |
-| 6 | 10 | the Levant | 572 |
+| 4 | 8 | Egypt (to Thebes/Aswan), Levant, Mesopotamia, Anatolia | 143 |
+| 5 | 9 | Egypt to the Euphrates, Nile valley and Delta, Anatolia | 286 |
+| 6 | 10 | the Levant, Nile Delta, central Anatolia / Hattusa | 572 |
 | 7 | 11 | Israel / Judah, Philistia, Transjordan | 1144 |
 | 8 | 12 | the hill country: Samaria to Hebron, Lachish, the Dead Sea | 2288 |
 
