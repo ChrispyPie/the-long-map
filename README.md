@@ -39,8 +39,10 @@ without making the first visit heavier.
 - `data/world.json`: the projection (conic conformal, parallels 30/40, rotated to 38°E), the home view, how far one
   can pan and zoom out (`bounds`, lon -20..95, lat -2..66), and the regions.
 - Regions: `near-east` (`data/base.topo.json`, the coast/lakes/rivers the stories use) loads with the page; `world`
-  (`data/world/outer.topo.json`, 83 KB, Natural Earth 50m outside the Near East box, made by `build/world/build.sh`)
+  (`data/world/outer.topo.json`, ~163 KB, Natural Earth 50m, made by `build/world/build.sh`)
   loads only when the view leaves the Near East, or when a stop names it (`"regions": ["world"]` in story.json).
+  Land is clipped outside the Near East box so the two layers meet; rivers and lakes fill the whole world
+  bounds minus the courses already in the base layer, so they stay continuous instead of stopping at the box edge.
   Each region draws its own coast line without the straight cuts where its data was clipped.
 - Shaded relief: a tile pyramid in the same projection (`build/terrain/README.md`). Coarse levels cover the whole
   world map, deep levels only where the story is told (down to ~40 m per pixel over Judah), loaded tile by tile for

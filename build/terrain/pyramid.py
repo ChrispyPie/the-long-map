@@ -20,9 +20,13 @@ LEVELS = {
     1: (5, [[-20, -2, 95, 66]]),
     2: (6, [[-20, -2, 95, 66]]),                     # the whole world map (Europe, North Africa, Middle East, Central Asia)
     3: (7, [[-20, -2, 95, 66]]),                      # the whole world map again, sharper (Europe, Africa, Central Asia)
-    4: (8, [[24, 26, 52, 40]]),                       # the core: Nile delta, Levant, Mesopotamia
-    5: (9, [[30, 28, 46, 38]]),
-    6: (10, [[32.6, 28.2, 38.8, 35.2]]),              # Levant (the old 'levant' image)
+    4: (8, [[24, 24, 52, 42.5]]),                     # Egypt (to Thebes/Aswan), Levant, Mesopotamia, Anatolia
+    5: (9, [[30, 28, 46, 38],                         # Egypt to the Euphrates
+           [29.5, 24.5, 33.8, 32.0],                 # Nile valley and the full Delta
+           [26.0, 36.0, 44.0, 42.2]]),               # Anatolia, including Hattusa
+    6: (10, [[32.6, 28.2, 38.8, 35.2],                # Levant (the old 'levant' image)
+            [29.8, 29.8, 32.8, 31.8],                 # Nile Delta close-up
+            [32.5, 38.5, 36.5, 41.2]]),               # central Anatolia / Hattusa
     7: (11, [[34.0, 29.6, 36.6, 33.6]]),              # Israel / Judah, Philistia, Transjordan
     8: (12, [[34.6, 31.0, 35.75, 32.7]]),             # the hill country, Jerusalem to Samaria, Lachish, the Dead Sea
 }

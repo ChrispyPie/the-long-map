@@ -27,7 +27,15 @@ const ROOT = process.env.ROOT || path.join(__dirname, '..');
     p.on('console', m => { if (m.type()==='error') errs.push(name+': '+m.text()); });
     p.on('pageerror', e => errs.push(name+' pageerror: '+e.message));
     const req = []; p.on('request', r => { if (/assets\/sfx\//.test(r.url())) req.push(r.url()); });
-    const tap = async sel => { if (/^#cap/.test(sel)){ await p.evaluate(()=>dispatchEvent(new PointerEvent('pointermove'))); await p.waitForTimeout(80); } return mobile ? p.tap(sel) : p.click(sel); };
+    // Wake the film controls before tapping them. A bare pointermove does not: on a phone only a short
+    // tap (or __app.wake) brings the bar back, and body.cine.idle hides #capsnd so Playwright cannot click it.
+    const tap = async sel => {
+      if (/^#cap/.test(sel)){
+        await p.evaluate(() => { if (window.__app && __app.wake) __app.wake(); document.body.classList.remove('idle'); });
+        await p.waitForSelector(sel, {state: 'visible', timeout: 5000});
+      }
+      return mobile ? p.tap(sel) : p.click(sel);
+    };
     const S = () => p.evaluate(() => __app.snd);
     await p.goto(url, {waitUntil:'networkidle'}); await p.waitForTimeout(900);
     ok(name+' no audio and no sfx downloads before a gesture', await p.evaluate(() => window.__acN === 0 && __app.snd.ctx === null) && req.length === 0);
@@ -47,7 +55,9 @@ const ROOT = process.env.ROOT || path.join(__dirname, '..');
       await ctx.close(); continue;
     }
     ok(name+' audio starts with Play: one context, running '+JSON.stringify(s), await p.evaluate(() => window.__acN) === 1 && s.ctx === 'running');
-    const row = await p.evaluate(() => { const bs = [...document.querySelectorAll('.cap2 .crow button')].map(e => e.getBoundingClientRect()); return {rows: new Set(bs.map(x => Math.round(x.top))).size, l: Math.min(...bs.map(x => x.left)), r: Math.max(...bs.map(x => x.right)), W: innerWidth}; });
+    await p.evaluate(() => { if (window.__app && __app.wake) __app.wake(); document.body.classList.remove('idle'); });
+    await p.waitForSelector('.cap2 .crow button', {state: 'visible', timeout: 5000});
+    const row = await p.evaluate(() => { const bs = [...document.querySelectorAll('.cap2 .crow button')].filter(e => e.offsetParent !== null).map(e => e.getBoundingClientRect()); return {rows: new Set(bs.map(x => Math.round(x.top))).size, l: Math.min(...bs.map(x => x.left)), r: Math.max(...bs.map(x => x.right)), W: innerWidth}; });
     ok(name+' film controls fit on one row (two on a phone) '+JSON.stringify(row), row.rows === (row.W <= 640 ? 2 : 1) && row.l >= 0 && row.r <= row.W);
     ok(name+' all clips loaded '+s.loaded, s.loaded.join() === 'battle,border,desert,migration,river,year');
     ok(name+' ambient loop under the scene: '+s.amb, s.amb === 'desert');
@@ -97,7 +107,8 @@ const ROOT = process.env.ROOT || path.join(__dirname, '..');
     await p.mouse.move(vw/2, vh/2 + 3); await p.waitForTimeout(150);
     await p.evaluate(() => document.getElementById('capskip').click()); await p.waitForTimeout(300);
     s = await S();
-    ok(name+' Skip cuts the hold and fades sound out '+JSON.stringify(s), (await p.evaluate(() => __app.play)) === null && s.target === 0 && s.amb === null && s.shots.length === 0);
+    const skipped = await p.evaluate(() => ({ended: !!__app.ended, chapend: document.body.classList.contains('chapend')}));
+    ok(name+' Skip cuts the hold and fades sound out '+JSON.stringify({...s, ...skipped}), skipped.ended && skipped.chapend && s.target === 0 && s.amb === null && s.shots.length === 0);
     await p.evaluate(() => __app.setSnd(false)); await p.reload({waitUntil:'networkidle'}); await p.waitForTimeout(800);
     ok(name+' sound choice remembered after reload', await p.evaluate(() => !__app.snd.on && document.getElementById('capsnd').getAttribute('aria-pressed') === 'false' && window.__acN === 0));
     await ctx.close();
