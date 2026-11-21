@@ -1106,8 +1106,9 @@ function storyNext(from){
 }
 function chapterEnd(){
   const P = PLAY; if (!P) return;
-  P.wait = true; P.ended = true; P.clockOn = false; if (P.audio) P.audio.pause();
-  vigHide(); $('chapcard').hidden = true; sndAmbient(null);
+  P.wait = true; P.ended = true; P.clockOn = false; P.events = [];
+  if (P.audio){ P.audio.onended = P.audio.onerror = null; P.audio.pause(); P.audio = null; }
+  vigHide(); $('chapcard').hidden = true; sndStop(0.8);
   // the map steps back to show the whole region as the chapter leaves it; arrows and battle markers belong to the film
   gFx.selectAll('*').interrupt().transition().duration(700).style('opacity', 0).remove();
   gFxTop.selectAll('*').transition().duration(700).style('opacity', 0).remove();
@@ -1376,6 +1377,9 @@ function sndEnsure(){
 }
 function ramp(param, to, sec){ const t = SND.ctx.currentTime; param.cancelScheduledValues(t); param.setValueAtTime(param.value, t); param.linearRampToValueAtTime(to, t + sec); }
 function sndLevel(phase){
+  // once the chapter has ended (Skip or the last line), keep the sound faded; a late audio
+  // onended or a beat timer must not swell it back under the 'What next?' card
+  if (PLAY && PLAY.ended && phase !== 'off') return;
   SND.phase = phase; SND.target = SND.on ? SFX_LEVEL[phase] : 0;
   if (SND.ctx) ramp(SND.bus.gain, SND.target, phase === 'fill' ? 1.4 : phase === 'voice' ? 0.6 : 0.5);
 }
