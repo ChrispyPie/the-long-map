@@ -318,6 +318,38 @@ VIGNETTES = {
             {"line": "A generation later, Babylon itself will fall", "src": D + "c7-horizon.webp", "alt": "Dawn over a great river city, a distant column of riders under a pale sky, the walls still standing", "caption": "A new power in the east (impression)", "fx": "clouds"},
         ],
     },
+    "jews-538": {
+        "intro": [
+            {"line": "Now it is five thirty nine BC", "src": D + "c8-babylon-gates.webp", "alt": "The great walls and gated river front of Babylon on a flat plain, date palms, late afternoon light", "caption": "Babylon still stands (impression)", "fx": "clouds"},
+            {"line": "On the map, a remnant still lives", "src": D + "c8-benjamin.webp", "alt": "People harvesting grain and drawing water at a well in rolling hills, a small village among terraces", "caption": "Those who remained (impression)"},
+        ],
+        "play": [
+            {"line": "When Jerusalem fell, the king in Babylon", "src": D + "c8-nabonidus.webp", "alt": "A king in a long robe standing on a palace terrace above a great river city, evening light", "caption": "Nabonidus in Babylon (impression)"},
+            {"line": "A Babylonian chronicle says that for years he left", "src": D + "c8-teima.webp", "alt": "An oasis town of mud-brick houses among palms, a desert road approaching, dry hills beyond", "caption": "Teima in Arabia (impression)", "fx": "dust"},
+            {"line": "In the east, a Persian king was already taking land", "src": D + "c8-pasargadae.webp", "alt": "A stone palatial terrace and garden pavilions on a high Iranian plain, mountains far off", "caption": "The land of Cyrus (impression)", "fx": "clouds"},
+            {"line": "The Babylonian chronicle says that Cyrus first made war on the Medes", "src": D + "c8-ecbatana.webp", "alt": "A walled royal city climbing a forested mountain slope, a caravan on the road below", "caption": "Ecbatana in Media (impression)"},
+            {"line": "Greek writers later tell how he took Lydia", "src": D + "c8-sardis.webp", "alt": "A wealthy city on a steep acropolis above a river valley, walls and a camp of tents in the foreground", "caption": "Sardis (Greek tradition)", "fx": "clouds"},
+            {"line": "In five thirty nine BC, Cyrus moves west", "src": D + "c8-opis.webp", "alt": "Two armies meeting on a river plain, dust and banners, a city in the distance", "caption": "The battle at Opis (impression)", "fx": "dust"},
+            {"line": "Then Sippar was taken without a battle", "src": D + "c8-gates-open.webp", "alt": "The great gates of a river city standing open, a column of soldiers walking in, the walls unbreached", "caption": "Babylon entered without a battle (impression)"},
+            {"line": "In the ruins of Babylon, more than two thousand years later, a clay cylinder", "src": D + "c8-cylinder-plate.webp", "photo": True, "alt": "Sepia photograph of the Cyrus Cylinder: a barrel-shaped baked clay object covered in cuneiform, in the British Museum", "caption": "The Cyrus Cylinder, British Museum · photo Daderot, CC0"},
+            {"line": "He says he returned the gods to their cities", "src": D + "c8-gods-return.webp", "alt": "A procession of carts carrying small cult statues toward a walled Mesopotamian city among palms", "caption": "Gods and people sent home (impression)", "fx": "dust"},
+            {"line": "The cylinder does not name Judah", "src": D + "c8-cylinder.webp", "alt": "A clay cylinder covered in wedge-shaped marks lying in lamplight, a stylus beside it", "caption": "A policy in the language of Babylon (impression)"},
+            {"line": "The Hebrew Bible tells a more specific story", "src": D + "c8-ezra-scroll.webp", "alt": "An open parchment scroll with faint unreadable marks on a wooden table, lamp light, two figures in cloaks", "caption": "The decree in Ezra (tradition)"},
+            {"line": "The Bible says that in the first year of Cyrus", "src": D + "c8-return-road.webp", "alt": "Families with donkeys and carts walking a long road toward distant hills, not a great army", "caption": "A column on the road (story)", "fx": "dust"},
+            {"line": "Many families also stayed in Babylon", "src": D + "c8-alyahudu.webp", "alt": "A modest canal-side village of mud-brick houses among date palms, people and donkeys at work", "caption": "Judeans still in Babylonia (impression)", "fx": "waves"},
+            {"line": "Jerusalem, when they reached it", "src": D + "c8-bare-mount.webp", "alt": "A reduced hill city with broken walls, a bare stone platform on the ridge, a few houses, morning light", "caption": "A bare mount (impression)", "fx": "clouds"},
+            {"line": "The Bible says they settled in their towns", "src": D + "c8-altar.webp", "alt": "People gathered around a simple stone altar on a bare rocky platform, a modest offering fire, ruined walls behind", "caption": "An altar before the house (story)", "fx": "smoke"},
+            {"line": "Persian rule in this land is real", "src": D + "c8-yehud.webp", "alt": "A modest hill town among terraced fields and olive trees, much smaller than an old royal city", "caption": "Yehud, a small province (impression)"},
+            {"line": "For years, the Bible says, the work on the house of the Lord ceased", "src": D + "c8-halt.webp", "alt": "Unfinished foundation stones and a low incomplete platform on a rocky hill, weeds among idle blocks, empty of workers", "caption": "The work ceases (story)"},
+            {"line": "After Cambyses, the empire shakes", "src": D + "c8-behistun.webp", "alt": "A huge cliff above a mountain road, a carved panel high on the rock, a caravan passing below", "caption": "Darius at Behistun (impression)", "fx": "clouds"},
+            {"line": "The books of Haggai and Zechariah present themselves", "src": D + "c8-prophets.webp", "alt": "Figures speaking to a small crowd in a hill-town square, unfinished stone work behind them", "caption": "Finish the house (tradition)"},
+            {"line": "In the sixth year of Darius", "src": D + "c8-temple-done.webp", "alt": "A modest rectangular stone house with a small courtyard on a hill, people bringing offerings, morning light", "caption": "The Second Temple (tradition)"},
+            {"line": "Coins and seal impressions from a little later", "src": D + "c8-seals.webp", "alt": "Small clay seal impressions lying on a wooden table in lamplight, no readable letters", "caption": "Seals of the province (impression)"},
+            {"line": "In Babylon, Judean families still live by the canals", "src": D + "c8-alyahudu.webp", "alt": "A modest canal-side village of mud-brick houses among date palms, people and donkeys at work", "caption": "A life in two places (impression)", "fx": "waves"},
+            {"line": "Darius builds a new ceremonial city at Persepolis", "src": D + "c8-persepolis.webp", "alt": "A ceremonial stone terrace of tall columns and monumental stairways on a high dry plateau, mountains behind", "caption": "Persepolis (impression)", "fx": "clouds"},
+            {"line": "In time, new empires will come to this land", "src": D + "c8-horizon.webp", "alt": "A wide quiet horizon over the Judean hills at dusk, a small distant town on a ridge, a long empty road", "caption": "The story is not finished (impression)", "fx": "clouds"},
+        ],
+    },
 }
 
 
@@ -344,5 +376,5 @@ def _auto_quick(prefix, M):
         hit = [v for where in ("intro", "play") for v in reels.get(where, []) if orig.startswith(v["line"])]
         if hit: out.append(dict(hit[0], line=M.speech(b)))
     reels["quick"] = out
-import narration_jews_1000 as _n1000, narration_jews_930 as _n930, narration_jews_722 as _n722, narration_jews_701 as _n701, narration_jews_586 as _n586
-_auto_quick("jews-1000", _n1000); _auto_quick("jews-930", _n930); _auto_quick("jews-722", _n722); _auto_quick("jews-701", _n701); _auto_quick("jews-586", _n586)
+import narration_jews_1000 as _n1000, narration_jews_930 as _n930, narration_jews_722 as _n722, narration_jews_701 as _n701, narration_jews_586 as _n586, narration_jews_538 as _n538
+_auto_quick("jews-1000", _n1000); _auto_quick("jews-930", _n930); _auto_quick("jews-722", _n722); _auto_quick("jews-701", _n701); _auto_quick("jews-586", _n586); _auto_quick("jews-538", _n538)
