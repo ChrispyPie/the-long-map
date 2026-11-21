@@ -1,6 +1,5 @@
 // Shaded relief tile pyramid (data/terrain.json, images/terrain/<n>/<i>_<j>.webp; build/terrain/render_tiles.py).
-// Data: every listed tile exists (514 px incl. the 1-px bleed), levels go from the whole world map down to the hill
-// country. Browser (390x844 phone, DPR 2): relief on every chapter, only a handful of small tiles on first load,
+// Data: every listed tile exists (514 px incl. the 1-px bleed), levels go from the whole world map down to close-ups of the story lands. Browser (390x844 phone, DPR 2): relief on every chapter, only a handful of small tiles on first load,
 // deeper levels load only when zoomed in (and only where they exist), the tiles on screen follow the view, the
 // deepest level shows at Jerusalem at full zoom, the old tiles go once the new have loaded, ?terrain=0 is off.
 // Usage: node build/test-terrain.js [url]
@@ -17,7 +16,7 @@ const ROOT = path.join(__dirname, '..');
   T.levels.forEach(L => L.tiles.forEach(([i, j]) => { const f = file(L.n, i, j); if (!fs.existsSync(f)) missing++; else { bytes += fs.statSync(f).size; count++; } }));
   ok(`manifest: ${T.levels.length} levels, ${count} tiles, ${Math.round(bytes / 1024)} KB in all, none missing`, T.levels.length >= 9 && !missing && count > 300);
   ok('grid matches the map projection', T.grid.P === 512 && T.grid.bleed === 1 && JSON.stringify(T.grid.parallels) === '[30,40]' && T.grid.rotate[0] === -38);
-  ok('coarse levels cover the whole world map, deep levels only the story lands', T.levels[0].boxes[0][0] <= -20 && T.levels[0].boxes[0][2] >= 95 && T.levels[8].tiles.length < 100);
+  ok('coarse levels cover the whole world map, deep levels only the story lands', T.levels[0].boxes[0][0] <= -20 && T.levels[0].boxes[0][2] >= 95 && T.levels[8].tiles.length < 200 && T.levels[8].boxes.every(b => b[2] < 42));
   const extra = fs.readdirSync(path.join(ROOT, 'images/terrain')).filter(f => !/^\d+$/.test(f));
   ok('no stray images left in images/terrain ' + JSON.stringify(extra), !extra.length);
 
