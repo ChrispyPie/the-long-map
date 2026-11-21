@@ -5,7 +5,13 @@
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const STORY_URL = 'data/stories/jews/story.json';
-let STORY = null, STOP = null, ERA = null, SRC = {}, OBJ = {}, OBJS = [];
+let STORY = null, STOP = null, ERA = null, SRC = {}, SRC_OK = false, OBJ = {}, OBJS = [];
+// sources.json is fetched on first pointer or when idle, so it stays off the first load; popups wait for it
+let SRC_READY = null;
+function sourcesReady(){
+  if (!SRC_READY) SRC_READY = getJSON('data/sources.json').then(s => { SRC = s || {}; SRC_OK = true; return SRC; });
+  return SRC_READY;
+}
 let cur = 0, step = 0, K = 1, openId = null, MODE = 'stop', SPEED = 1;
 let ARRIVE = -1;   // the stop just reached by the end of the previous chapter's Play (shows "Continue to Chapter N")
 const cache = {};
@@ -375,6 +381,10 @@ function objAt(o){
   return l ? Object.assign({}, o, {desc: l.desc, people: l.people || o.people, src: [...new Set([...(l.src || []), ...(o.src || [])])],
     facts: [...(l.facts || []), ...(o.facts || [])]}) : o;
 }
+function fillSrcDetails(root, keys, extra){
+  const d = root && root.querySelector('details.src'); if (!d) return;
+  d.innerHTML = `<summary>Sources (${keys.length})</summary>${srcList(keys)}${extra || ''}`;
+}
 function openObj(id, fly){
   const o = OBJ[id] && objAt(OBJ[id]); if (!o) return;
   openId = id; markExplored(id); if (PLAY && !PLAY.paused) playPause();
@@ -394,6 +404,7 @@ function openObj(id, fly){
     ((o.facts||[]).length ? '<ul class="claims">' + o.facts.map(f => `<li>${badge(f[1])} ${esc(f[0])}</li>`).join('') + '</ul>' : '') +
     zoneParts +
     `<details class="src"><summary>Sources (${allSrc.length})</summary>${srcList(allSrc)}${o.zone && ERA ? '<p class="cap">'+esc(ERA.note)+'</p>' : ''}</details>`;
+  if (!SRC_OK) sourcesReady().then(() => { if (openId === id) fillSrcDetails($('popbody'), allSrc, o.zone && ERA ? '<p class="cap">'+esc(ERA.note)+'</p>' : ''); });
   $('pop').hidden = false; $('pop').scrollTop = 0;
   document.body.classList.add('popopen');
   gPts.selectAll('g.obj').classed('sel', d => d.o.id === id);
@@ -496,10 +507,11 @@ function showStep(i, fly = true){
     h = `<div class="kicker">${esc(e.kicker)} · ${esc(e.date)}</div><h2>${esc(e.title)} ${badge(e.cert)}</h2>` +
         `<p class="lead">${esc(e.text)}</p>` +
         `<div class="why"><div class="sub">What it meant for Israel</div><p>${esc(e.why)}</p></div>` +
-        (e.pic ? `<img class="shot" alt="${esc(e.pic.cap || e.pic.alt || '')}" src="${esc(e.pic.src)}"><p class="cap">${esc(e.pic.cap)}</p>` : '') +
+        (e.pic ? `<img class="shot" alt="${esc(e.pic.cap || e.pic.alt || '')}" src="${esc(e.pic.src)}" loading="lazy" decoding="async"><p class="cap">${esc(e.pic.cap)}</p>` : '') +
         `<div class="sub">The evidence</div><ul class="claims">` + e.claims.map(c => `<li>${badge(c[1])} ${esc(c[0])}</li>`).join('') + '</ul>' +
         `<div class="sub">On the map</div>${chips(e.objects)}` +
         `<details class="src"><summary>Sources (${e.src.length})</summary>${srcList(e.src)}</details>`;
+    if (!SRC_OK){ const keys = e.src, tok = step; sourcesReady().then(() => { if (MODE === 'stop' && step === tok) fillSrcDetails($('evbody'), keys); }); }
   }
   $('evbody').innerHTML = h; $('evbody').scrollTop = 0;
   $('evn').textContent = `${step + 1} / ${S.length}`;
@@ -604,8 +616,8 @@ const parts = () => STORY.stops.map((s, k) => ({s, k})).filter(x => x.s.file);
 function partList(){
   const ps = parts(); if (ps.length < 2) return '';
   const here = ps.findIndex(x => x.k === cur), nx = ps[here + 1];
-  // the next part is preloaded, so a tap starts its film at once
-  if (nx){ getJSON(nx.s.file).catch(() => {}); getJSON(nx.s.era).catch(() => {}); }
+  // the next part is preloaded after first paint, so a later tap can start its film at once
+  if (nx) setTimeout(() => { getJSON(nx.s.file).catch(() => {}); getJSON(nx.s.era).catch(() => {}); }, 2500);
   return `<div class="sub">Chapters</div><ol class="plist parts">` + ps.map((x, n) => {
     const me = x.k === cur, pos = posGet(x.s.year), next = !pos && nx && x.k === nx.k && partDone(STOP.year);
     // a chapter that was started but not finished: Resume (with the time), and a small Start over under it
@@ -1998,6 +2010,7 @@ function srcEntry(k){
     imgs.map(m => `<figure><img src="${esc(m.url)}" alt="${esc(m.alt || '')}" loading="lazy" decoding="async"><figcaption>${esc([m.caption, m.credit, m.license].filter(Boolean).join(' · '))}</figcaption></figure>`).join('') + '</div>';
 }
 function srcOpen(keys, from){
+  if (!SRC_OK) return sourcesReady().then(() => srcOpen(keys, from));
   keys = (keys || []).filter(k => SRC[k]); if (!keys.length) return;
   if (!SP.open){ SP.resume = !!(PLAY && !PLAY.paused && !PLAY.wait); if (SP.resume) playPause(true); }
   SP.open = true; SP.from = from || document.activeElement;
@@ -2053,8 +2066,8 @@ window.__app = { get regions(){ return {...REGION}; }, viewBox, get scaleExtent(
 // "Report an error" works the same way with reportUrl
 getJSON('data/site.json').then(c => { SITE = c || {}; [['donateUrl', 'donate'], ['reportUrl', 'report']].forEach(([k, id]) => { const u = c && c[k]; if (typeof u === 'string' && /^https:\/\//.test(u)){ const a = $(id); a.href = id === 'report' && typeof c.reportPost === 'string' && /^https:\/\//.test(c.reportPost) ? c.reportPost : u; a.hidden = false; } }); if (!(c && c.reportUrl) && c && typeof c.reportPost === 'string' && /^https:\/\//.test(c.reportPost)){ $('report').href = c.reportPost; $('report').hidden = false; } }).catch(() => {});
 (async function init(){
-  const [base, story, srcs, lib] = await Promise.all([getJSON('data/base.topo.json'), getJSON(STORY_URL), getJSON('data/sources.json'), getJSON('data/objects/near-east.json')]);
-  STORY = story; SRC = srcs; OBJS = lib.objects; OBJS.forEach(o => OBJ[o.id] = o);
+  const [base, story, lib] = await Promise.all([getJSON('data/base.topo.json'), getJSON(STORY_URL), getJSON('data/objects/near-east.json')]);
+  STORY = story; OBJS = lib.objects; OBJS.forEach(o => OBJ[o.id] = o);
   document.title = `${STORY.site} · ${STORY.title}`; $('stitle').textContent = STORY.title;
   // each book in the series brings its own accent colours (story.json "theme"), on the shared leather-and-paper look
   Object.entries(STORY.theme || {}).forEach(([k, v]) => { if (/^[a-z-]+$/.test(k) && /^#[0-9a-f]{3,8}$/i.test(v)) document.documentElement.style.setProperty('--' + k, v); });
@@ -2081,5 +2094,7 @@ getJSON('data/site.json').then(c => { SITE = c || {}; [['donateUrl', 'donate'], 
   const dk = DEEP && parts()[DEEP.ch - 1];
   await go(dk ? dk.k : STORY.stops.findIndex(s => s.file));
   if (DEEP) deepOpen();
+  setTimeout(() => sourcesReady(), 2500);
+  addEventListener('pointerdown', () => sourcesReady(), {once: true, capture: true});
 })();
 addEventListener('resize', () => { if (CINE){ if (CINE.full) refitKeep(); } else { fit(); redrawZones(); } });
