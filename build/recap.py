@@ -1,7 +1,7 @@
-"""'The story so far': a short recap before Chapters 2-7 (reel jews-<year>-recap, recorded with build/narrate.py).
+"""'The story so far': a short recap before Chapters 2-8 (reel jews-<year>-recap, recorded with build/narrate.py).
 
 Very high level, no details: one or two lines per earlier chapter, so the recap grows with the book
-(about 20 s before Chapter 2, about a minute and a half before Chapter 6, a little longer before Chapter 7). Newly written lines (not the chapters' own),
+(about 20 s before Chapter 2, about a minute and a half before Chapter 6, a little longer before Chapter 7, and longer still before Chapter 8). Newly written lines (not the chapters' own),
 labelled and sourced like every other line; tradition stays tradition. Map moves only (no years, no borders),
 so the map underneath stays the one the chapter starts on. It plays before the chapter's opening film or its
 quick version, has its own Skip, and can be switched off (the ⚙ setting, or the checkbox on the Quick/Full card).
@@ -58,14 +58,25 @@ CH6 = [B("Then Hezekiah of Judah prepares for war, and Sennacherib of Assyria ta
        B("Sennacherib is later killed by his own son. The city has been spared.",
          A, ["grayson1975"], vis=[fo([35.235, 31.777], 8)])]
 
+CH7 = [B("Then Babylon takes Jerusalem and burns the city. Many are taken east; a remnant remains in the land of Benjamin.",
+         A, ["shiloh1984", "lipschits2005", "barstad1996"], vis=[fo([35.2, 31.7], 6.0)],
+         claims=[["Babylon takes Jerusalem and burns the city.", A, ["shiloh1984", "lipschits2005"]],
+                 ["Many are taken east; a remnant remains in Benjamin.", A, ["barstad1996", "lipschits2005", "weidner1939"]]]),
+       B("Clay tablets in Babylon name Yaukin, king of Judah, still fed at the emperor's table. The Bible says the Temple was destroyed.",
+         A, ["weidner1939", "bible"], vis=[fo([44.42, 32.54], 6)],
+         claims=[["Tablets in Babylon name Yaukin, king of Judah.", A, ["weidner1939"]],
+                 ["The Bible says the Temple was destroyed.", T, ["bible"]]]),
+       B("The land is not empty, and a generation later a Persian king will take Babylon itself.",
+         A, ["barstad1996", "abc7"], vis=[fo([40.0, 33.0], 1.8)])]
+
 def recap(n_done):
     """the recap before chapter n_done + 1"""
-    beats = [OPEN()] + [b for blk in [CH1, CH2, CH3, CH4, CH5, CH6][:n_done] for b in blk]
+    beats = [OPEN()] + [b for blk in [CH1, CH2, CH3, CH4, CH5, CH6, CH7][:n_done] for b in blk]
     import copy; beats = copy.deepcopy(beats)
     beats[0]["chapter"] = "The story so far"; beats[0]["ambient"] = "desert"
     beats[-1]["pauseAfter"] = 1200
     return beats
-RECAPS = {1150: recap(1), 1000: recap(2), 930: recap(3), 722: recap(4), 701: recap(5), 586: recap(6)}
+RECAPS = {1150: recap(1), 1000: recap(2), 930: recap(3), 722: recap(4), 701: recap(5), 586: recap(6), 538: recap(7)}
 speech = lambda b: b["steps"][-1]["text"]
 for bs in RECAPS.values():
     for b in bs:

@@ -21,7 +21,7 @@ const ROOT = path.join(__dirname, '..');
   ok('Chapter 1 has no recap', !J('data/stories/jews/1207bc.json').recap);
   let prev = 0;
   const lens = {};
-  for (const [n, y] of [[2, '1150'], [3, '1000'], [4, '930'], [5, '722'], [6, '701'], [7, '586']]){
+  for (const [n, y] of [[2, '1150'], [3, '1000'], [4, '930'], [5, '722'], [6, '701'], [7, '586'], [8, '538']]){
     const R = (J(`data/stories/jews/${y}bc.json`).recap || {}).beats || [];
     const ms = R.reduce((s, b) => s + b.audioMs + b.pauseAfter, 0); lens[n] = ms;
     ok(`Ch${n} recap: ${R.length} lines, ${Math.round(ms / 1000)} s of voice`, R.length >= 2 && ms > prev && ms > 14000 && ms < 200000); prev = ms;
@@ -30,7 +30,7 @@ const ROOT = path.join(__dirname, '..');
     ok(`Ch${n} recap: no digits spoken, no "myth"`, R.every(b => !/[()\d]/.test(cap(b).text) && !/\bmyth/i.test(cap(b).text)));
     ok(`Ch${n} recap: map moves only`, R.every(b => b.steps.every(x => ['focus', 'caption'].includes(x.type))));
   }
-  ok('recaps grow: about 20 s before Ch2, about a minute before Ch5, longer before Ch6, still longer before Ch7', lens[2] < 26000 && lens[5] > 45000 && lens[6] > 73000 && lens[7] > lens[6]);
+  ok('recaps grow: about 20 s before Ch2, about a minute before Ch5, longer before Ch6, still longer before Ch7, still longer before Ch8', lens[2] < 26000 && lens[5] > 45000 && lens[6] > 73000 && lens[7] > lens[6] && lens[8] > lens[7]);
 
   const b = await chromium.launch({args: ['--autoplay-policy=no-user-gesture-required']});
   const ctx = await b.newContext({viewport: {width: 390, height: 844}, deviceScaleFactor: 2, isMobile: true, hasTouch: true});
