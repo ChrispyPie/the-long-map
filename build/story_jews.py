@@ -6,6 +6,7 @@ import narration_jews_722 as NAR722
 import narration_jews_701 as NAR701
 import narration_jews_586 as NAR586
 import narration_jews_538 as NAR538
+import narration_jews_167 as NAR167
 A,D,T = "attested","disputed","tradition"
 STORY = {
  "id":"jews","title":"Story of the Jews","site":"The Long Map",
@@ -33,11 +34,12 @@ STORY = {
   {"year":-538,"label":"538 BC","title":"Return under Persia","era":"data/eras/538bc.json","file":"data/stories/jews/538bc.json",
    "years":"c. 556–516 BC","summary":"Cyrus takes Babylon in 539 BC. The Cyrus Cylinder records a policy of return; the Bible tells a specific decree for Jerusalem. Some Judean families come home to a small Persian province called Yehud, and in 516 BC, the Bible says, a Second Temple is dedicated."},
   {"year":-516,"label":"516 BC","title":"The Second Temple"},
-  {"year":-167,"label":"167 BC","title":"The Maccabees",
-   "summary":"Coming soon. Under new empires the Second Temple will stand at the centre of a later struggle.",
-   "soon":{"title":"The Maccabees","text":"Next chapter coming soon. A Second Temple stands again in Jerusalem, in a small Persian province. In time new empires will come to this land, and that Temple will stand at the centre of a struggle for the way of life of this people. That is where the next chapter begins.",
-     "hl":["jerusalem","judah"],"focus":{"c":[35.2,31.7],"k":6}}},
-  {"year":-63,"label":"63 BC","title":"Rome arrives"},
+  {"year":-167,"label":"167 BC","title":"The Maccabees","era":"data/eras/167bc.json","file":"data/stories/jews/167bc.json",
+   "years":"c. 332–140s BC","summary":"Alexander takes the Persian empire. Judaea passes from the Ptolemies to the Seleucids. A crisis in 167 BC, told in the books of the Maccabees, leads to a revolt in the hills, the rededication of the Second Temple, and the rise of a Hasmonean house. In time, Rome will come."},
+  {"year":-63,"label":"63 BC","title":"Rome arrives",
+   "summary":"Coming soon. A Roman general will stand in Jerusalem, and this Hasmonean house will lose its independence.",
+   "soon":{"title":"Rome arrives","text":"Next chapter coming soon. In time a Roman general will stand in Jerusalem, and the Hasmonean house will lose its independence. That is where the next chapter begins.",
+     "hl":["jerusalem"],"focus":{"c":[35.2,31.7],"k":6}}},
   {"year":70,"label":"AD 70","title":"The Second Temple destroyed"},
   {"year":135,"label":"AD 135","title":"Bar Kokhba revolt ends"},
   {"year":638,"label":"AD 638","title":"Arab conquest of Jerusalem"},
@@ -523,3 +525,80 @@ STOP538 = {
 }
 STOP538["quick"] = {"title":"Chapter 8 in brief", "ambient":"desert", "beats":NAR538.clean(NAR538.QUICK)}
 STOP538["recap"] = {"title": "The story so far", "ambient": "desert", "beats": _RECAP.RECAPS[538]}
+
+STOP167 = {
+ "story":"jews","year":-167,"label":"167 BC","title":"The Maccabees",
+ "keyObjects":["jerusalem","modein","bethzur","bethhoron","emmaus","paneas","antioch","alexandria","joppa","akko","samaria","tyre"],
+ "transitionIn":{"text":"167 BC. The Second Temple has stood for generations in a small province. New empires have come, and a crisis is about to break over the way of life of this people. To see how it began, the chapter goes back to Alexander.",
+   "title":"167 BC: The Maccabees","ambient":"desert","beats":NAR167.clean(NAR167.INTRO_BEATS)},
+ "transitionOut":{"to":-63,"text":"Next: a Roman general in Jerusalem, and the end of Hasmonean independence."},
+ "events":[
+  {"id":"alexander332","kicker":"A new world","title":"Alexander and the new world","date":"332–323 BC","cert":A,
+   "text":"In 332 BC Alexander of Macedon takes the Persian empire. The Greek historian Arrian records his long sieges of Tyre and of Gaza, on the road to Egypt. The story that he visited Jerusalem and honoured the Temple is told by Josephus, writing centuries later; it is not in the Greek historians of Alexander. When Alexander dies in 323 BC, his generals divide the lands.",
+   "why":"The sieges of Tyre and Gaza are in a Greek historian of Alexander. The visit to Jerusalem is a later Jewish tradition.",
+   "claims":[["In 332 BC Alexander takes Tyre and Gaza on his way to Egypt.",A,["arrian"]],
+             ["Josephus says Alexander visited Jerusalem and honoured the Temple.",T,["josephusant"]],
+             ["The Greek historians of Alexander do not tell that visit.",A,["arrian","grabbe2008"]]],
+   "src":["arrian","josephusant","grabbe2008"],"objects":["tyre","gaza","jerusalem","alexandria"],"focus":{"c":[34.6,32.2],"k":3.5},"hl":["tyre","gaza"]},
+  {"id":"paneas200","kicker":"Two kingdoms","title":"From Ptolemy to Seleucus","date":"c. 200 BC","cert":A,
+   "text":"Judaea first lies under the Ptolemies, who rule from Alexandria in Egypt. In about 200 BC, after a battle at Paneas under Mount Hermon, recorded by Polybius, the land passes to the Seleucid kings, who rule from Antioch in Syria. For a time, Jewish life in Jerusalem goes on: a high priest, the Second Temple, a small people under a distant king.",
+   "why":"The change of empire is in a Greek historian who knew this world. The daily life of the province is reconstructed from later Jewish books and from the pattern of Hellenistic rule.",
+   "claims":[["In the third century BC Judaea lies under the Ptolemies, ruling from Alexandria.",A,["tcherikover1959","grabbe2008"]],
+             ["After the battle of Paneas, c. 200 BC, the land passes from the Ptolemies to the Seleucids.",A,["polybius","tcherikover1959"]]],
+   "src":["polybius","tcherikover1959","grabbe2008"],"objects":["paneas","alexandria","antioch","jerusalem"],"focus":{"c":[35.7,33.25],"k":6},"hl":["paneas"]},
+  {"id":"jasonmenelaus","kicker":"Inside Jerusalem","title":"Jason, Menelaus, and a Greek Jerusalem","date":"From 175 BC","cert":D,
+   "text":"The second book of the Maccabees says that in 175 BC a man called Jason, of the priestly house, obtains the high priesthood from Antiochus and seeks to make Jerusalem more like a Greek city, with a gymnasium. He is later displaced, in that account, by Menelaus, who is not of the old high-priestly line. How far this was a culture war, and how far a fight among priestly families for power and tax, scholars do not agree.",
+   "why":"A struggle over the high priesthood in these years is widely accepted. The details, and what they meant, follow later Jewish books and are read in more than one way.",
+   "claims":[["2 Maccabees says Jason obtains the high priesthood in 175 BC and promotes Greek ways in Jerusalem.",T,["maccabees"]],
+             ["2 Maccabees says Menelaus, not of the old high-priestly line, displaces Jason.",T,["maccabees"]],
+             ["Scholars disagree on whether the conflict was mainly cultural, or a struggle among priestly families for power and revenue.",D,["bickerman1979","tcherikover1959","hengel1974","honigman2014"]]],
+   "src":["maccabees","bickerman1979","tcherikover1959","hengel1974","honigman2014","schwartz2008"],"objects":["jerusalem"],"focus":{"c":[35.235,31.777],"k":8},"hl":["jerusalem"]},
+  {"id":"heliodorus","kicker":"A royal letter on stone","title":"The Heliodorus stele","date":"Years before the revolt","cert":A,
+   "text":"A royal letter on stone, first published in 2007 and with further fragments later found at Maresha in the southern lowlands, shows Seleucid officials already watching over temples and revenues in this region, in the years before the revolt. It does not mention a persecution. Antiochus IV, called Epiphanes, is a real king: his coins, and the historian Polybius, show him campaigning in Egypt.",
+   "why":"The stele is independent evidence of royal oversight of sacred funds. It is not evidence of the later crisis itself.",
+   "claims":[["The Heliodorus stele shows Seleucid oversight of temples and revenues in the region, in the years before the revolt.",A,["cotton2007"]],
+             ["Antiochus IV is attested on coins and in Polybius, including campaigns in Egypt.",A,["polybius"]]],
+   "src":["cotton2007","polybius"],"objects":["jerusalem"],"focus":{"c":[34.89,31.63],"k":7},"hl":["jerusalem"]},
+  {"id":"crisis167","kicker":"The remembered crisis","title":"The crisis of 167","date":"167 BC","cert":D,
+   "text":"In 167 BC, in the usual reckoning, the books of the Maccabees say a persecution begins in Judaea: the law is forbidden, and an alien altar is set upon the altar of the Lord. The book of Daniel and Josephus tell related stories. No royal edict of persecution has been found on stone. Some scholars read a royal attack on Jewish law; others read a civil conflict in Jerusalem, later told as a persecution from outside.",
+   "why":"Several Jewish books close to the time remember a crisis. The inner motives of the king, and the exact acts, are harder to fix, and modern historians do not agree on the balance between royal policy and conflict inside the city.",
+   "claims":[["1 and 2 Maccabees date a persecution in Judaea to 167 BC, in the usual reckoning.",T,["maccabees","schwartz2008"]],
+             ["2 Maccabees and Daniel describe a desolating sacrilege and an alien altar on the Temple altar.",T,["maccabees","bible"]],
+             ["No royal edict of persecution from 167 BC has been found on stone.",A,["honigman2014","grabbe2008"]],
+             ["Whether 167 BC was mainly a royal persecution or a civil conflict later told as one is disputed.",D,["bickerman1979","tcherikover1959","honigman2014","schwartz2008"]]],
+   "src":["maccabees","bible","josephusant","bickerman1979","honigman2014","schwartz2008","grabbe2008"],"objects":["jerusalem"],"focus":{"c":[35.235,31.777],"k":9},"hl":["jerusalem"]},
+  {"id":"revoltmodein","kicker":"The hills","title":"The revolt in the hills","date":"From 167 BC","cert":D,
+   "text":"The first book of the Maccabees says the revolt begins at Modein, when a priest called Mattathias refuses a royal command and flees to the hills with his sons. His son Judah, later called Maccabee, becomes the military leader in that tradition. The book tells of fights at Beth-horon and Emmaus. The identification of Modein is not certain, and the troop numbers are often thought to be inflated. A hill war in this landscape is real enough.",
+   "why":"The early battles are told only in later Jewish books. The landscape of a hill war is clear; the heroic numbers and some of the places are not.",
+   "claims":[["1 Maccabees says the revolt begins at Modein, when Mattathias refuses a royal command.",T,["maccabees"]],
+             ["The site of Modein is disputed.",D,["goldstein1976","barkochva1989"]],
+             ["Troop numbers and the heroic shape of the early battles in 1 Maccabees are disputed; a hill war in this landscape is plausible.",D,["barkochva1989","goldstein1976"]]],
+   "src":["maccabees","goldstein1976","barkochva1989"],"objects":["modein","bethhoron","emmaus","jerusalem"],"focus":{"c":[35.05,31.88],"k":8},"hl":["modein","bethhoron"]},
+  {"id":"temple164","kicker":"The Temple","title":"The Temple rededicated","date":"164 BC (usual reckoning)","cert":T,
+   "text":"In 164 BC, in the usual reckoning, the first book says Jerusalem is retaken, the altar is rebuilt, and the Temple is dedicated again, for eight days. That memory will become the festival of Dedication, later called Hanukkah. The later festival is real; the exact calendar of the first dedication is a traditional reckoning. No certain stone of that restoration has been identified on the mount.",
+   "why":"The dedication is told in 1 Maccabees and remembered in a living festival. Archaeology has not identified the first restored altar.",
+   "claims":[["1 Maccabees dates a rededication of the Temple, for eight days, to 164 BC in the usual reckoning.",T,["maccabees","schwartz2008"]],
+             ["The festival of Dedication (Hanukkah) remembers this story; the exact calendar of the first dedication is a traditional reckoning.",T,["maccabees","schwartz2008"]],
+             ["No certain remains of the 164 BC restoration have been identified on the Temple mount.",A,["stern2001"]]],
+   "src":["maccabees","schwartz2008","stern2001"],"objects":["jerusalem"],"focus":{"c":[35.235,31.777],"k":10},"hl":["jerusalem"]},
+  {"id":"hasmoneanhouse","kicker":"A ruling house","title":"A Hasmonean house","date":"From the 150s–140s BC","cert":A,
+   "text":"Judah falls in battle, in this tradition, and his brothers Jonathan and Simon take up the lead. In time they are recognised as high priest, and a family from the western hills becomes the ruling house, later called Hasmonean. The first book claims that in Simon's days the yoke of the nations is lifted, and that this house takes the port of Joppa. Later coins will mark the house; the first coins that name it come after these opening years. A reported treaty with Rome is not confirmed by a Roman record of the same years.",
+   "why":"That a Hasmonean house came to rule is not in serious doubt. The first book's claim of independence, the early coins, and the Roman treaty are each read with care.",
+   "claims":[["1 Maccabees and Josephus say Jonathan, then Simon, are recognised as high priest, and that their house later called Hasmonean rules.",T,["maccabees","josephusant"]],
+             ["1 Maccabees claims that in Simon's days, usually 142 BC, the yoke of the nations is lifted.",T,["maccabees","goldstein1976"]],
+             ["Hasmonean coins appear after the opening years of the revolt, not at its very beginning.",A,["tcherikover1959"]],
+             ["1 Maccabees describes a treaty with Rome; it is not confirmed by a Roman record of those years, and its form is disputed.",D,["maccabees","goldstein1976"]]],
+   "src":["maccabees","josephusant","goldstein1976","tcherikover1959"],"objects":["jerusalem","modein","joppa"],"focus":{"c":[35.1,31.85],"k":5.5},"hl":["jerusalem","modein","joppa"]},
+ ],
+ "explore":{
+  "key":["jerusalem","modein","bethzur","bethhoron","emmaus","paneas","antioch","alexandria","joppa","akko","samaria","tyre"],
+  "text":"Open each key place or people on the map to read its fact box. Unexplored ones glow; explored ones get a check. Your progress is saved on this device."},
+ "play":{
+  "to":-63, "title":"From c. 332 BC to the 140s BC",
+  "intro":"Plays full screen like a short narrated film, with subtitles (CC). Pause, step back or forward, or change speed at any time. Stop whenever you like: it remembers your chapter.",
+  "zoneObjects":{"philistia":"philistines","ammon":"ammon","moab":"moab","edom":"edom","judah":"judah","assyria":"assyria","prov":"assyria","samerina":"assyria","babylon":"babylon_s","egypt":"egypt"},
+  "ambient":"desert",
+  "beats":NAR167.clean(NAR167.PLAY)}
+}
+STOP167["quick"] = {"title":"Chapter 9 in brief", "ambient":"desert", "beats":NAR167.clean(NAR167.QUICK)}
+STOP167["recap"] = {"title": "The story so far", "ambient":"desert", "beats": _RECAP.RECAPS[167]}

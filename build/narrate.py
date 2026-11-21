@@ -11,7 +11,7 @@ make_data.py uses ms as the line's real length and refuses lines whose text no l
 import hashlib, json, os, subprocess, sys, time, urllib.request
 sys.path.insert(0, os.path.dirname(__file__))
 import recap as R
-import narration_jews_1207 as N, narration_jews_1150 as N1150, narration_jews_1000 as N1000, narration_jews_930 as N930, narration_jews_722 as N722, narration_jews_701 as N701, narration_jews_586 as N586, narration_jews_538 as N538
+import narration_jews_1207 as N, narration_jews_1150 as N1150, narration_jews_1000 as N1000, narration_jews_930 as N930, narration_jews_722 as N722, narration_jews_701 as N701, narration_jews_586 as N586, narration_jews_538 as N538, narration_jews_167 as N167
 VOICE = "VC6vCXhVaI8BZefRtXZV"; MODEL = "eleven_multilingual_v2"; FMT = "mp3_22050_32"
 SETTINGS = {"stability": 0.32, "similarity_boost": 0.75, "style": 0.47, "use_speaker_boost": True, "speed": 1.0}
 OUT = "assets/narration"; IDX = f"{OUT}/index.json"
@@ -24,7 +24,8 @@ REELS = {"jews-1207-in": (N, N.INTRO_BEATS), "jews-1207-play": (N, N.PLAY), "jew
          "jews-701-in": (N701, N701.INTRO_BEATS), "jews-701-play": (N701, N701.PLAY), "jews-701-quick": (N701, N701.QUICK),
          "jews-586-in": (N586, N586.INTRO_BEATS), "jews-586-play": (N586, N586.PLAY), "jews-586-quick": (N586, N586.QUICK),
          "jews-538-in": (N538, N538.INTRO_BEATS), "jews-538-play": (N538, N538.PLAY), "jews-538-quick": (N538, N538.QUICK),
-         **{f"jews-{y}-recap": (R, R.RECAPS[y]) for y in (1150, 1000, 930, 722, 701, 586, 538)}}
+         "jews-167-in": (N167, N167.INTRO_BEATS), "jews-167-play": (N167, N167.PLAY), "jews-167-quick": (N167, N167.QUICK),
+         **{f"jews-{y}-recap": (R, R.RECAPS[y]) for y in (1150, 1000, 930, 722, 701, 586, 538, 167)}}
 def sha(t): return hashlib.sha1(t.encode()).hexdigest()[:12]
 def ms(fp):
     r = subprocess.run(["ffprobe","-v","error","-show_entries","format=duration","-of","csv=p=0",fp], capture_output=True, text=True, check=True)

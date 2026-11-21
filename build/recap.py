@@ -1,7 +1,7 @@
-"""'The story so far': a short recap before Chapters 2-8 (reel jews-<year>-recap, recorded with build/narrate.py).
+"""'The story so far': a short recap before Chapters 2-9 (reel jews-<year>-recap, recorded with build/narrate.py).
 
 Very high level, no details: one or two lines per earlier chapter, so the recap grows with the book
-(about 20 s before Chapter 2, about a minute and a half before Chapter 6, a little longer before Chapter 7, and longer still before Chapter 8). Newly written lines (not the chapters' own),
+(about 20 s before Chapter 2, about a minute and a half before Chapter 6, a little longer before Chapter 7, and longer still before Chapter 8, and longer again before Chapter 9). Newly written lines (not the chapters' own),
 labelled and sourced like every other line; tradition stays tradition. Map moves only (no years, no borders),
 so the map underneath stays the one the chapter starts on. It plays before the chapter's opening film or its
 quick version, has its own Skip, and can be switched off (the ⚙ setting, or the checkbox on the Quick/Full card).
@@ -69,14 +69,26 @@ CH7 = [B("Then Babylon takes Jerusalem and burns the city. Many are taken east; 
        B("The land is not empty, and a generation later a Persian king will take Babylon itself.",
          A, ["barstad1996", "abc7"], vis=[fo([40.0, 33.0], 1.8)])]
 
+CH8 = [B("Then a Persian king takes Babylon, without a battle in the Babylonian chronicle, and some of Judah's people come home.",
+         A, ["abc7", "stern2001"], vis=[fo([40.0, 33.0], 1.8)],
+         claims=[["A Persian king takes Babylon without a battle, in the Babylonian chronicle.", A, ["abc7"]],
+                 ["Some of Judah's people come home.", A, ["stern2001"]]]),
+       B("The land becomes Yehud, a small Persian province, not a restored kingdom of David. A temple stands again in Jerusalem.",
+         A, ["stern2001", "grabbe2004", "bible"], vis=[fo([35.2, 31.7], 6.0)],
+         claims=[["Yehud is a small Persian province, not a restored kingdom of David.", A, ["stern2001", "grabbe2004"]],
+                 ["A temple stands again in Jerusalem, in the biblical account of a Second Temple.", T, ["bible"]]]),
+       B("Jewish life now exists in two places: in Yehud, and among families who stay in the east. In time, new empires will come to this land.",
+         A, ["stern2001", "alstola2020"], vis=[fo([40.0, 33.0], 1.8)],
+         claims=[["Jewish life continues both in Yehud and among families who stay in the east.", A, ["stern2001", "alstola2020"]]])]
+
 def recap(n_done):
     """the recap before chapter n_done + 1"""
-    beats = [OPEN()] + [b for blk in [CH1, CH2, CH3, CH4, CH5, CH6, CH7][:n_done] for b in blk]
+    beats = [OPEN()] + [b for blk in [CH1, CH2, CH3, CH4, CH5, CH6, CH7, CH8][:n_done] for b in blk]
     import copy; beats = copy.deepcopy(beats)
     beats[0]["chapter"] = "The story so far"; beats[0]["ambient"] = "desert"
     beats[-1]["pauseAfter"] = 1200
     return beats
-RECAPS = {1150: recap(1), 1000: recap(2), 930: recap(3), 722: recap(4), 701: recap(5), 586: recap(6), 538: recap(7)}
+RECAPS = {1150: recap(1), 1000: recap(2), 930: recap(3), 722: recap(4), 701: recap(5), 586: recap(6), 538: recap(7), 167: recap(8)}
 speech = lambda b: b["steps"][-1]["text"]
 for bs in RECAPS.values():
     for b in bs:

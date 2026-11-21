@@ -2,7 +2,7 @@
 // the map in between; at the end of the chapter (Full and Quick) the choice 'Stay with the story' / 'Explore the map'.
 // Explore = the map as the chapter left it (end-of-Play zones), the Explore checklist, and Continue to the next
 // chapter (which opens the next chapter's Quick/Full card). Stay with the story opens that card directly; after
-// Chapter 8 it goes to the 167 BC 'coming soon' page. The opening films have no choice and no 'explore' line.
+// Chapter 9 it goes to the 63 BC 'coming soon' page. The opening films have no choice and no 'explore' line.
 // Usage: node build/test-chapterend.js [url] [noshots]; SHOTS=dir for screenshots (default /workspace).
 const { chromium } = require('playwright');
 const fs = require('fs'), path = require('path');
@@ -15,7 +15,7 @@ const ROOT = path.join(__dirname, '..');
   const ok = (n, c) => notes.push((c ? 'PASS ' : 'FAIL ') + n);
   const J = f => JSON.parse(fs.readFileSync(path.join(ROOT, f), 'utf8'));
   const cap = b => b.steps.find(x => x.type === 'caption');
-  const YS = ['1207', '1150', '1000', '930', '722', '701', '586', '538'];
+  const YS = ['1207', '1150', '1000', '930', '722', '701', '586', '538', '167'];
   for (const [n, y] of YS.map((y, i) => [i + 1, y])){
     const d = J(`data/stories/jews/${y}bc.json`), I = d.transitionIn.beats;
     ok(`Ch${n} opening film: no choice, no 'explore' or 'press Play' line`, I.every(b => !b.choice && !/explore|press play|stay with the story/i.test(cap(b).text)));
@@ -32,7 +32,7 @@ const ROOT = path.join(__dirname, '..');
   const toEnd = async () => { await p.evaluate(() => { __app.speed = 8; __app.seek(__app.play.n - 1); }); for (let i = 0; i < 80 && !(await p.evaluate(() => __app.ended)); i++) await p.waitForTimeout(400); await p.waitForTimeout(600); };
   try {
     await p.goto(url, {waitUntil: 'networkidle'}); await p.waitForTimeout(1200);
-    for (let k = 0; k < 8; k++){
+    for (let k = 0; k < 9; k++){
       const n = k + 1, quick = k === 1 || k === 3 || k === 5;
       await p.evaluate(k => __app.go(k), k); await p.waitForTimeout(1500);
       await p.tap('#gostory'); await p.waitForTimeout(400);
@@ -58,14 +58,14 @@ const ROOT = path.join(__dirname, '..');
         s = await st();
         const z2 = await p.evaluate(() => [...document.querySelectorAll('.zlabel')].map(t => t.textContent).sort().join('|'));
         ok(`Ch${n} Explore keeps the end-of-chapter map ${JSON.stringify({xend: s.xend, film: s.reel})}`, !s.reel && s.xend === k && z2 === zonesEnd && s.mode === 'stop');
-        ok(`Ch${n} Explore step: checklist and Continue`, await p.evaluate(n => /end of Chapter/.test(document.getElementById('evbody').textContent) && document.querySelectorAll('#evbody .checklist li').length > 3 && !!document.getElementById('xpnext') && (n < 8 ? /Continue to Chapter/ : /coming soon/).test(document.getElementById('xpnext').textContent), n));
+        ok(`Ch${n} Explore step: checklist and Continue`, await p.evaluate(n => /end of Chapter/.test(document.getElementById('evbody').textContent) && document.querySelectorAll('#evbody .checklist li').length > 3 && !!document.getElementById('xpnext') && (n < 9 ? /Continue to Chapter/ : /coming soon/).test(document.getElementById('xpnext').textContent), n));
         if (k === 0 && shots) await p.screenshot({path: `${D}/chapter-end-explore-phone.png`});
         await p.tap('#xpnext'); await p.waitForTimeout(700);
       } else {
         await p.tap('#choicego'); await p.waitForTimeout(700);
       }
       s = await st();
-      if (n < 8){
+      if (n < 9){
         ok(`Ch${n} → Chapter ${n + 1}'s Quick/Full card`, s.lp && await p.evaluate(m => document.getElementById('lenpick').textContent.includes('Chapter ' + m) && !!document.getElementById('lprecap'), n + 1));
         if (n === 1){ await p.tap('#lpx'); await p.waitForTimeout(300); ok('✕ on the card keeps the page', !(await st()).lp); continue; }
         await p.tap('#lpfull'); await p.waitForTimeout(2200); s = await st();
@@ -73,7 +73,7 @@ const ROOT = path.join(__dirname, '..');
         await p.evaluate(() => __app.playStop(false)); await p.waitForTimeout(1000);
       } else {
         await p.waitForTimeout(1500); s = await st();
-        ok(`Ch8 → 167 BC coming soon ${JSON.stringify([s.mode, s.cur])}`, s.mode === 'soon' && !s.reel);
+        ok(`Ch9 → 63 BC coming soon ${JSON.stringify([s.mode, s.cur])}`, s.mode === 'soon' && !s.reel);
       }
     }
     // ✕ at the end choice explores too; deep link ?ch=3 opens the chapter page
