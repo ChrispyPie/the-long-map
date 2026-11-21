@@ -4,6 +4,7 @@ import narration_jews_1000 as NAR1000
 import narration_jews_930 as NAR930
 import narration_jews_722 as NAR722
 import narration_jews_701 as NAR701
+import narration_jews_586 as NAR586
 A,D,T = "attested","disputed","tradition"
 STORY = {
  "id":"jews","title":"Story of the Jews","site":"The Long Map",
@@ -26,11 +27,12 @@ STORY = {
    "years":"c. 841–722 BC","summary":"Aram presses on Israel, then Assyria returns to stay. Jeroboam II's Israel prospers and Amos and Hosea speak out, until Tiglath-pileser III takes Galilee and Samaria falls. Its people are carried off, and Judah stands alone."},
   {"year":-701,"label":"701 BC","title":"Sennacherib at Jerusalem","era":"data/eras/701bc.json","file":"data/stories/jews/701bc.json",
    "years":"c. 715–701 BC","summary":"Hezekiah rules Judah, Ashdod's revolt fails, and when Sargon dies the west rises. Sennacherib marches, takes Lachish and shuts Hezekiah up in Jerusalem 'like a bird in a cage'. The Bible and Assyria tell two different endings, and Judah survives, smaller."},
-  {"year":-586,"label":"586 BC","title":"The First Temple destroyed","summary":"Coming soon. Babylon replaces Assyria, and Nebuchadnezzar comes to Jerusalem.",
-   # reached at the end of the 701 BC Play (Chapter 6 ends with Sennacherib's death in 681 BC and a teaser for Babylon)
-   "soon":{"title":"The First Temple destroyed","text":"Next chapter coming soon. Jerusalem has been spared, and Judah lives on as a vassal of Assyria. But Assyria will fall, and a new power, Babylon, will rise in its place. Its king Nebuchadnezzar will come to Jerusalem, and in 586 BC the Temple of Solomon will burn. That is where the next chapter begins.",
-     "hl":["jerusalem","babylon","nineveh","judah"],"focus":{"c":[39.5,33.0],"k":1.9}}},
-  {"year":-538,"label":"538 BC","title":"Return under Persia"},
+  {"year":-586,"label":"586 BC","title":"The First Temple destroyed","era":"data/eras/586bc.json","file":"data/stories/jews/586bc.json",
+   "years":"c. 687–586 BC","summary":"Assyria falls and Babylon rises. Josiah is killed at Megiddo, Nebuchadnezzar takes Jerusalem in 597 BC, and in 586 or 587 BC the city is burned. The Temple is destroyed, many are taken to Babylon, and a remnant remains in the land."},
+  {"year":-538,"label":"538 BC","title":"Return under Persia",
+   "summary":"Coming soon. Babylon falls, and a Persian king lets the exiles go home.",
+   "soon":{"title":"Return under Persia","text":"Next chapter coming soon. Jerusalem has fallen, the Temple is gone, and many of Judah's people live in Babylon. A generation later Babylon itself will fall, and Cyrus of Persia will let the exiles go home. They will return to Zion, and in time a Second Temple will be built. That is where the next chapter begins.",
+     "hl":["jerusalem","babylon","judah"],"focus":{"c":[40.0,33.0],"k":1.8}}},
   {"year":-516,"label":"516 BC","title":"The Second Temple"},
   {"year":-167,"label":"167 BC","title":"The Maccabees"},
   {"year":-63,"label":"63 BC","title":"Rome arrives"},
@@ -389,3 +391,68 @@ STOP701 = {
 }
 STOP701["quick"] = {"title":"Chapter 6 in brief", "ambient":"desert", "beats":NAR701.clean(NAR701.QUICK)}
 STOP701["recap"] = {"title": "The story so far", "ambient": "desert", "beats": _RECAP.RECAPS[701]}
+
+# ---------- 586 BC: The First Temple destroyed (Chapter 7: opening film + Play c. 687 to 586 BC; build/narration_jews_586.py) ----------
+# The map is the end state of the Chapter 6 Play (data/eras/586bc.json, make_data.py): a smaller Judah, the lowlands
+# given to Ashdod, Ekron and Gaza, Assyrian provinces still in the north. The Play takes Assyria down, Babylon up,
+# and ends on a teaser for Persia (538 BC).
+STOP586 = {
+ "story":"jews","year":-586,"label":"586 BC","title":"The First Temple destroyed",
+ "keyObjects":["judah","jerusalem","lachish","azekah","mizpah","megiddo","carchemish","babylon","nineveh","riblah","arad","ketefhinnom"],
+ "transitionIn":{"text":"586 BC. A Babylonian army is at Jerusalem, and the Temple is about to fall. To see how it came to this, the chapter goes back to the years after Sennacherib, when Judah lived as a vassal of Assyria.",
+   "title":"586 BC: The First Temple destroyed","ambient":"desert","beats":NAR586.clean(NAR586.INTRO_BEATS)},
+ "transitionOut":{"to":-538,"text":"Next: Cyrus of Persia, the fall of Babylon, the Cyrus Cylinder, the return to Zion, and the building of the Second Temple."},
+ "events":[
+  {"id":"manassehvassal","kicker":"Assyria's side","title":"Manasseh, a vassal of Assyria","date":"c. 687–642 BC","cert":A,
+   "text":"Hezekiah's son Manasseh ruled Judah for many years as a vassal of Assyria. His name, 'Manasseh of Judah', is written on the inscriptions of Esarhaddon and of Ashurbanipal, among the western kings who brought them tribute. In the lowlands, towns Sennacherib had ruined began to live again.",
+   "why":"The Bible paints Manasseh as the worst of Judah's kings, who rebuilt the high places and shed innocent blood. Chronicles adds a story, not in Kings, that he was taken in chains to Babylon and there repented. The inscriptions show a long, quiet vassalage.",
+   "claims":[["Manasseh of Judah named among Esarhaddon's and Ashurbanipal's western vassals.",A,["leichty2011","novotny2018"]],["Lowland towns destroyed in 701 BC were partly reoccupied under Manasseh.",A,["finknaaman2004"]],["He rebuilt the high places and shed innocent blood: 2 Kings 21.",T,["bible"]],["Taken to Babylon, he repented: 2 Chronicles 33. Kings says nothing of this.",T,["bible"]]],
+   "src":["leichty2011","novotny2018","finknaaman2004","bible"],"objects":["jerusalem","judah","assyria"],"focus":{"c":[38.0,33.2],"k":2.0},"hl":["jerusalem","nineveh"]},
+  {"id":"ketef","kicker":"Archaeology","title":"A blessing on silver","date":"Late 7th or early 6th century BC","cert":A,
+   "text":"In a family tomb at Ketef Hinnom, just outside Jerusalem, archaeologists found two tiny silver scrolls, rolled up as amulets. Scratched into the silver is a blessing: 'The Lord bless you and keep you.' It is the oldest known text of a passage that still stands in the Hebrew Bible, the priestly blessing of Numbers 6.",
+   "why":"The tomb belongs to the last generations before the city fell. The words were already being worn as a charm, close to the body, in Josiah's or Zedekiah's day.",
+   "claims":[["Two silver amulets from a tomb at Ketef Hinnom.",A,["barkay2004"]],["They carry the priestly blessing of Numbers 6:24–26, the oldest known biblical text.",A,["barkay2004","bible"]]],
+   "src":["barkay2004","bible"],"objects":["ketefhinnom","jerusalem"],"focus":{"c":[35.226,31.768],"k":18},"hl":["ketefhinnom","jerusalem"]},
+  {"id":"josiahreform","kicker":"Jewish tradition","title":"Josiah and the book of the law","date":"Tradition: 622 BC","cert":T,
+   "text":"The Book of Kings says that in Josiah's eighteenth year a book of the law was found in the Temple. The king tore his clothes and began a reform: the high places were pulled down, worship was gathered to Jerusalem, and a great Passover was kept. At Arad, in the south, a small temple in the fortress was carefully taken apart and buried.",
+   "why":"How much of the story of the lost book is memory, and how much is a later telling, is debated. Some link the buried shrine at Arad with Josiah; others date that burial earlier, to Hezekiah's time.",
+   "claims":[["The finding of the book and Josiah's reform: 2 Kings 22–23.",T,["bible"]],["The shrine at Arad was dismantled and buried.",A,["herzog2010"]],["Whether the burial belongs to Josiah's reform, or earlier, is debated.",D,["herzog2010","naaman1991"]],["How much of the lost-book story is history is debated.",D,["naaman1991"]]],
+   "src":["bible","herzog2010","naaman1991"],"objects":["jerusalem","arad","judah"],"focus":{"c":[35.0,31.5],"k":6},"hl":["jerusalem","arad"]},
+  {"id":"carchemish605","kicker":"Babylon's side","title":"Nineveh falls, and Carchemish","date":"612–605 BC","cert":A,
+   "text":"In 612 BC the Babylonians and the Medes took Nineveh, the great Assyrian capital, and burned it. Pharaoh Neco marched north to help the last Assyrians. In 605 BC, at Carchemish on the Euphrates, Nebuchadnezzar broke the Egyptian army. A Babylonian chronicle records the battle. The west, including Judah, passed into Babylon's hand. The next year Ashkelon was taken and burned.",
+   "why":"The Bible says Josiah went out to meet Neco at Megiddo and was killed. Neco's campaign is known from Egyptian and Greek writers; Josiah's death is told only in the Bible.",
+   "claims":[["Nineveh fell in 612 BC to the Babylonians and the Medes.",A,["wiseman1956","grayson1975"]],["Nebuchadnezzar defeated Egypt at Carchemish in 605 BC.",A,["wiseman1956","grayson1975"]],["Ashkelon was destroyed in 604 BC.",A,["wiseman1956","stager1996"]],["Josiah's death at Megiddo: 2 Kings 23:29.",T,["bible"]],["Neco's march is known from Egyptian and Greek writers.",A,["herodotusneco","kitchen1996"]]],
+   "src":["wiseman1956","grayson1975","stager1996","bible","herodotusneco","kitchen1996"],"objects":["nineveh","carchemish","megiddo","ashkelon","egypt","babylon"],"focus":{"c":[38.0,35.5],"k":2.2},"hl":["nineveh","carchemish","megiddo"]},
+  {"id":"chronicle597","kicker":"Two witnesses","title":"The first exile, 597 BC","date":"16 March 597 BC","cert":A,
+   "text":"A Babylonian chronicle says that in Nebuchadnezzar's seventh year he encamped against 'the city of Judah', and on the second day of Adar he took the city and seized its king. He appointed a king of his own choosing and took a heavy tribute to Babylon. The Bible names the young king Jehoiachin, says he had ruled three months, and that the officers, the craftsmen and the king himself were taken east. Zedekiah, his uncle, was put on the throne.",
+   "why":"This is one of the closest agreements between a biblical narrative and a cuneiform chronicle in the whole story. Ezekiel, the book that bears his name says, was among those taken, and would prophesy by a canal in Babylonia.",
+   "claims":[["The Chronicle: capture of the city of Judah and its king, 2 Adar, year 7 (16 March 597 BC).",A,["wiseman1956","grayson1975"]],["Jehoiachin, the craftsmen and the officers taken; Zedekiah made king: 2 Kings 24:12–17.",T,["bible"]],["Ezekiel among the exiles: Ezekiel 1:1–3.",T,["bible"]]],
+   "src":["wiseman1956","grayson1975","bible"],"objects":["jerusalem","babylon"],"focus":{"c":[40.0,33.0],"k":1.9},"hl":["jerusalem","babylon"]},
+  {"id":"lachishletters","kicker":"A letter in the gate","title":"The Lachish letters","date":"c. 589–586 BC","cert":A,
+   "text":"Lachish, rebuilt after Sennacherib's siege, was again Judah's strong town in the lowlands when Babylon came. In its gatehouse excavators found letters written in ink on broken pottery. One officer writes to his lord: 'we are watching for the fire signals of Lachish, according to the signs you gave, for we cannot see Azekah.'",
+   "why":"The usual reading is that Azekah had already fallen, and that these are the last days of Judah's defence in the lowlands. The city itself, Level II, ended in a great fire in the same campaign that destroyed Jerusalem.",
+   "claims":[["The ostraca from the gate of Lachish Level II.",A,["torczyner1938","ahituv2008","ussishkin2004"]],["Letter IV: 'we cannot see Azekah'.",A,["torczyner1938","ahituv2008"]],["That Azekah had already fallen is the usual inference.",D,["torczyner1938"]],["Level II was destroyed by fire in the Babylonian campaign.",A,["ussishkin2004"]]],
+   "src":["torczyner1938","ahituv2008","ussishkin2004"],"objects":["lachish","azekah"],"focus":{"c":[34.89,31.63],"k":12},"hl":["lachish","azekah"]},
+  {"id":"cityburned","kicker":"Two accounts","title":"Jerusalem burned, and the Temple","date":"586 or 587 BC","cert":D,
+   "text":"In 586 BC, or, as some scholars reckon, 587 BC, Jerusalem fell. In the City of David and on the western hill, archaeologists have found rooms blackened by a great fire, arrowheads of a Babylonian type, and a layer of ash. The Bible says that in the fifth month the house of the Lord was burned, and the king's house, and every great house, and the walls were pulled down. Of the Temple itself, no burnt stone has been found that we can point to and say: this was Solomon's house.",
+   "why":"The destruction of the city is attested in the ground. The burning of the Temple is told in the Bible, and in a memory that never let it go. The exact year depends on how the kings' reigns are counted.",
+   "claims":[["The city was destroyed in a great fire at the end of the Iron Age.",A,["shiloh1984","lipschits2005"]],["The exact year, 586 or 587 BC, is disputed.",D,["galil1996","cogan1988"]],["The Temple, the palaces and the walls were burned: 2 Kings 25:8–10.",T,["bible"]],["No identified remains of the Temple itself from the fire.",A,["lipschits2005"]]],
+   "src":["shiloh1984","lipschits2005","galil1996","cogan1988","bible"],"objects":["jerusalem"],"focus":{"c":[35.235,31.777],"k":16},"hl":["jerusalem"]},
+  {"id":"yaukin","kicker":"In exile","title":"Yaukin, king of Judah, at the emperor's table","date":"c. 592–569 BC and after","cert":A,
+   "text":"In Babylon, unbaked clay tablets list rations of oil for 'Yaukin, king of the land of Judah' and for his five sons, years after Jerusalem had fallen. A king of Judah was still being fed at the emperor's table, in exile. Other tablets, from a town in the Babylonian countryside called Al-Yahudu, 'the city of Judah', name Judean families farming and paying taxes a generation on.",
+   "why":"The Bible gives more than one number for those taken to Babylon, and the numbers do not agree. The tablets show a real community in exile, and a king who had lost his city but not his title. Over those who remained, the Bible says, the Babylonians appointed Gedaliah at Mizpah. Archaeology finds life going on in Benjamin; the land was not empty.",
+   "claims":[["The ration tablets name Ya'u-kīnu, king of the land of Judah, and his sons.",A,["weidner1939","alstola2020"]],["Judean families at Āl-Yāḫūdu in rural Babylonia.",A,["pearce2014","alstola2020"]],["The Bible's numbers for the exiles do not agree: 2 Kings 24 and Jeremiah 52.",D,["bible"]],["Gedaliah at Mizpah: 2 Kings 25:22–24.",T,["bible"]],["Life continued in Benjamin under Babylonian rule.",A,["barstad1996","lipschits2005"]]],
+   "src":["weidner1939","alstola2020","pearce2014","bible","barstad1996","lipschits2005"],"objects":["babylon","alyahudu","mizpah","jerusalem"],"focus":{"c":[44.4,32.5],"k":4},"hl":["babylon","alyahudu"]},
+ ],
+ "explore":{
+  "key":["judah","jerusalem","lachish","azekah","mizpah","megiddo","carchemish","babylon","nineveh","riblah","arad","ketefhinnom"],
+  "text":"Open each key place or people on the map to read its fact box. Unexplored ones glow; explored ones get a check. Your progress is saved on this device."},
+ "play":{
+  "to":-538, "title":"From c. 687 BC to 586 BC",
+  "intro":"Plays full screen like a short narrated film, with subtitles (CC). Pause, step back or forward, or change speed at any time. Stop whenever you like: it remembers your chapter.",
+  "zoneObjects":{"philistia":"philistines","ammon":"ammon","moab":"moab","edom":"edom","judah":"judah","assyria":"assyria","prov":"assyria","samerina":"assyria","babylon":"babylon_s","egypt":"egypt"},
+  "ambient":"desert",
+  "beats":NAR586.clean(NAR586.PLAY)}
+}
+STOP586["quick"] = {"title":"Chapter 7 in brief", "ambient":"desert", "beats":NAR586.clean(NAR586.QUICK)}
+STOP586["recap"] = {"title": "The story so far", "ambient": "desert", "beats": _RECAP.RECAPS[586]}

@@ -1,7 +1,7 @@
-"""'The story so far': a short recap before Chapters 2-6 (reel jews-<year>-recap, recorded with build/narrate.py).
+"""'The story so far': a short recap before Chapters 2-7 (reel jews-<year>-recap, recorded with build/narrate.py).
 
 Very high level, no details: one or two lines per earlier chapter, so the recap grows with the book
-(about 20 s before Chapter 2, about a minute before Chapter 5, about a minute and a half before Chapter 6). Newly written lines (not the chapters' own),
+(about 20 s before Chapter 2, about a minute and a half before Chapter 6, a little longer before Chapter 7). Newly written lines (not the chapters' own),
 labelled and sourced like every other line; tradition stays tradition. Map moves only (no years, no borders),
 so the map underneath stays the one the chapter starts on. It plays before the chapter's opening film or its
 quick version, has its own Skip, and can be switched off (the ⚙ setting, or the checkbox on the Quick/Full card).
@@ -48,14 +48,24 @@ CH5 = [B("Under Jeroboam the Second, Israel grows rich, and the prophets Amos an
        B("Many of Israel's people are carried off to Assyria. In the south, Judah survives, as a vassal of the empire.",
          A, ["younger1998", "frame2021"], vis=[fo([35.2, 31.7], 6.0)])]
 
+
+CH6 = [B("Then Hezekiah of Judah prepares for war, and Sennacherib of Assyria takes Lachish and shuts the king up in Jerusalem like a bird in a cage.",
+         A, ["grayson2012", "ussishkin2004"], vis=[fo([35.1, 31.6], 6.0)]),
+       B("The Bible and the Assyrian annals tell two different endings. Jerusalem is not taken, and Judah survives, smaller.",
+         D, ["grayson2012", "bible", "grabbe2003"],
+         claims=[["The Bible and the Assyrian annals tell two different endings.", D, ["grayson2012", "bible", "grabbe2003"]],
+                 ["Jerusalem is not taken, and Judah survives, smaller.", A, ["grayson2012", "finknaaman2004"]]]),
+       B("Sennacherib is later killed by his own son. The city has been spared.",
+         A, ["grayson1975"], vis=[fo([35.235, 31.777], 8)])]
+
 def recap(n_done):
     """the recap before chapter n_done + 1"""
-    beats = [OPEN()] + [b for blk in [CH1, CH2, CH3, CH4, CH5][:n_done] for b in blk]
+    beats = [OPEN()] + [b for blk in [CH1, CH2, CH3, CH4, CH5, CH6][:n_done] for b in blk]
     import copy; beats = copy.deepcopy(beats)
     beats[0]["chapter"] = "The story so far"; beats[0]["ambient"] = "desert"
     beats[-1]["pauseAfter"] = 1200
     return beats
-RECAPS = {1150: recap(1), 1000: recap(2), 930: recap(3), 722: recap(4), 701: recap(5)}
+RECAPS = {1150: recap(1), 1000: recap(2), 930: recap(3), 722: recap(4), 701: recap(5), 586: recap(6)}
 speech = lambda b: b["steps"][-1]["text"]
 for bs in RECAPS.values():
     for b in bs:

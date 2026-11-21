@@ -249,3 +249,34 @@ later('ekron', -701, "Large Philistine city on the edge of the coastal plain. In
 later('ashdod', -701, "Philistine city on the coast. In 712–711 BC its king Yamani rebelled against Sargon II and fled to Kush; in 701 BC its king Mitinti brought tribute to Sennacherib and was given part of Judah's land.",
   ['frame2021','frame1999','grayson2012'], people="Philistines",
   facts=[("Shebitku of Kush sent Yamani back to Assyria in chains.",A,['frame1999']),("Isaiah walks barefoot as a sign against trusting Egypt and Kush (Isaiah 20).",T,['bible'])])
+
+# ---------- 586 BC (Chapter 7) ----------
+o("ketefhinnom","site","Ketef Hinnom",{"at":[35.226,31.768]},3,"A family tomb just outside Jerusalem, on the slope west of the Hinnom Valley. In 1979 two tiny silver scrolls were found here, rolled up as amulets, with the priestly blessing scratched into the silver.",["barkay2004"],people="Judahites",since=-586,
+  facts=[("The scrolls are the oldest known text of the blessing in Numbers 6:24–26.",A,["barkay2004"]),("The tomb belongs to the late 7th or early 6th century BC.",A,["barkay2004"])])
+o("arad","city","Arad",{"at":[35.146,31.281]},3,"A Judahite fortress in the south, today Tel Arad. Inside it stood a small temple with a courtyard, a hall and a holy of holies, later carefully taken apart and buried.",["herzog2010"],people="Judahites",since=-586,
+  facts=[("The shrine was dismantled and buried, not burnt.",A,["herzog2010"]),("Some link the burial with Josiah's reform; others date it earlier, to Hezekiah's time.",D,["herzog2010","naaman1991"])])
+o("mizpah","city","Mizpah",{"at":[35.217,31.885]},2,"A town of Benjamin north of Jerusalem, today Tell en-Nasbeh. The Bible says the Babylonians made it the seat of Gedaliah, the governor they appointed after Jerusalem fell.",["bible","lipschits2005"],people="Judahites",since=-586,
+  facts=[("Gedaliah son of Ahikam sat at Mizpah (2 Kings 25:22–24).",T,["bible"]),("The site flourishes in the Babylonian period, which fits a centre of government there.",A,["lipschits2005"])])
+o("riblah","city","Riblah",{"at":[36.52,34.43]},3,"A town on the Orontes, in the land of Hamath, used as a headquarters by Pharaoh Neco and then by Nebuchadnezzar. The Bible says Zedekiah was judged here after the fall of Jerusalem.",["bible","wiseman1956"],cert=T,people=None,since=-586,
+  facts=[("Zedekiah was brought to the king of Babylon at Riblah; his sons were killed and he was blinded (2 Kings 25:6–7).",T,["bible"])])
+o("alyahudu","site","Al-Yahudu",{"at":[45.15,32.15]},3,"A town in the Babylonian countryside whose name means 'the city of Judah'. Cuneiform tablets name Judean families living here in the 6th and 5th centuries BC, farming and paying taxes a generation after the exile.",["pearce2014","alstola2020"],people="Judean exiles",since=-586,cert=A,
+  facts=[("The tablets belong to a larger archive of Judean and West Semitic families in rural Babylonia.",A,["pearce2014","alstola2020"]),("The exact site of the town is not known; the dot is placed in the alluvial countryside near Nippur.",D,["pearce2014"])])
+
+later('jerusalem', -586, "Capital of Judah until the Babylonian conquest. In 597 BC the Babylonian Chronicle records that Nebuchadnezzar took the city and seized its king. In 586 or 587 BC the city was taken again and burnt. Archaeologists have found the fire in the City of David and on the western hill. The Bible says the Temple was burned then; no stone of the Temple itself has been identified.",
+  ['wiseman1956','shiloh1984','lipschits2005','bible'], people="Judahites; then a remnant in the land and exiles in Babylonia",
+  facts=[("The Chronicle: capture of 'the city of Judah' and its king, 2 Adar, year 7 (16 March 597 BC).",A,['wiseman1956']),("Burnt rooms, ash and Babylonian-type arrowheads in the City of David.",A,['shiloh1984','lipschits2005']),("The burning of the Temple: 2 Kings 25:9. No identified Temple remains of the fire.",T,['bible'])])
+later('lachish', -586, "Rebuilt after Sennacherib's siege of 701 BC, Lachish was Judah's strong town in the lowlands when Babylon came. Letters written in ink on pottery were found in its gate, including one that watches for the fire signals of Lachish because Azekah can no longer be seen. Level II ended in a great fire, in the same campaign that destroyed Jerusalem.",
+  ['torczyner1938','ahituv2008','ussishkin2004'], people="Judahites",
+  facts=[("The Lachish letters are from the last days of Level II.",A,['torczyner1938','ahituv2008','ussishkin2004']),("Letter IV: 'we cannot see Azekah'.",A,['torczyner1938','ahituv2008']),("Level II was destroyed by fire, dated to the Babylonian campaign of 586/587 BC.",A,['ussishkin2004'])])
+later('babylon', -586, "Capital of the Neo-Babylonian empire under Nabopolassar and his son Nebuchadnezzar II. From here the campaigns of 605, 597 and 586 BC were launched. Clay tablets from the city list rations of oil for 'Yaukin, king of the land of Judah' and his sons, years after Jerusalem had fallen.",
+  ['wiseman1956','weidner1939','alstola2020'], people="Babylonians; Judean exiles",
+  facts=[("The Nebuchadnezzar Chronicle records Carchemish, Ashkelon and the 597 capture of Jerusalem.",A,['wiseman1956']),("The Jehoiachin ration tablets name Ya'u-kīnu, king of Judah.",A,['weidner1939','alstola2020'])])
+later('nineveh', -586, "The great capital Sennacherib had built. In 612 BC it was taken and burned by the Babylonians and the Medes, an event recorded in a Babylonian chronicle. The last Assyrian resistance then moved west, to the Euphrates.",
+  ['wiseman1956','grayson1975'], people="Assyrians (until 612 BC)",
+  facts=[("Nineveh fell in 612 BC to the Babylonians and the Medes.",A,['wiseman1956','grayson1975'])])
+later('megiddo', -586, "The fortress at the pass from the coast into the Jezreel Valley, on the road north. The Bible says King Josiah of Judah was killed here in 609 BC, going out to meet Pharaoh Neco as Neco marched north to help the last Assyrians. Neco's campaign is known from Egyptian and Greek writers; Josiah's death is told only in the Bible.",
+  ['bible','herodotusneco','kitchen1996'], people=None,
+  facts=[("Josiah's death at Megiddo: 2 Kings 23:29.",T,['bible']),("Neco's march north is mentioned by Herodotus and in Egyptian evidence.",A,['herodotusneco','kitchen1996'])])
+later('ashkelon', -586, "Philistine port on the coast. A Babylonian chronicle and the excavations of Lawrence Stager show that it was taken and burned by Nebuchadnezzar in Kislev 604 BC, the year after Carchemish.",
+  ['wiseman1956','stager1996'], people="Philistines",
+  facts=[("The chronicle records a campaign to the Hatti-country in year 1; Ashkelon's destruction is dated to Kislev 604 BC.",A,['wiseman1956','stager1996'])])

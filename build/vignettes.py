@@ -285,6 +285,39 @@ VIGNETTES = {
             {"line": "Jerusalem had been spared", "src": D + "c6-spared.webp", "alt": "A walled hill city of stone houses at sunset, dark storm clouds gathering on the far horizon", "caption": "Jerusalem spared (impression)", "fx": "clouds"},
         ],
     },
+    "jews-586": {
+        "intro": [
+            {"line": "Now it is five eighty six BC", "src": D + "c7-siege-camp.webp", "alt": "A large army camp of tents and campfires on hills around a walled city on a ridge, at dusk", "caption": "Babylon at the gates (impression)", "fx": "smoke"},
+            {"line": "On the map, a smaller Judah", "src": D + "c7-small-judah.webp", "alt": "Terraced limestone hills with olive trees and a small stone town, wide lowlands fading in the distance", "caption": "A smaller Judah (impression)", "fx": "clouds"},
+        ],
+        "play": [
+            {"line": "His name, Manasseh of Judah", "src": D + "c7-tribute.webp", "alt": "A small caravan of pack animals with jars and ivory, on a long road toward a distant walled city by a river", "caption": "Tribute for Assyria (impression)", "fx": "dust"},
+            {"line": "Just outside Jerusalem, in a family tomb", "src": D + "c7-tomb.webp", "alt": "A rock-cut tomb chamber with stone benches, a small silver scroll lying in the earth, a lamp", "caption": "The tomb at Ketef Hinnom (impression)"},
+            {"line": "Scratched into the silver is a blessing", "src": D + "c7-scrolls.webp", "alt": "Two tiny unrolled silver strips with faint scratches, in an open palm, warm lamplight", "caption": "The silver scrolls (impression)"},
+            {"line": "The Bible says that in his eighteenth year", "src": D + "c7-law-book.webp", "alt": "A scroll being opened by lamplight inside a stone temple chamber, dust in the air", "caption": "A book in the Temple (story)"},
+            {"line": "At Arad, in the south", "src": D + "c7-arad.webp", "alt": "Inside a small fortress shrine, workers carefully lifting stone altars and stacking them, no fire", "caption": "The shrine at Arad (impression)", "fx": "dust"},
+            {"line": "In six twelve BC, the Babylonians", "src": D + "c7-nineveh-fall.webp", "alt": "A great city on a river burning, walls broken, smoke over palaces and a temple tower", "caption": "Nineveh falls (impression)", "fx": ["smoke", "fire"]},
+            {"line": "Pharaoh Neco marches north", "src": D + "c7-megiddo.webp", "alt": "Two forces meeting at a mountain pass, chariots and a hill fortress above the road", "caption": "The pass at Megiddo (story)", "fx": "dust"},
+            {"line": "In six oh five BC, at Carchemish", "src": D + "c7-carchemish.webp", "alt": "A battle by a wide river under a fortress, chariots in the shallows, banners in the dust", "caption": "Carchemish (impression)", "fx": "dust"},
+            {"line": "In the next year the Babylonian army takes Ashkelon", "src": D + "c7-ashkelon-fire.webp", "alt": "A coastal city burning, smoke over walls and ships in a harbour, evening light", "caption": "Ashkelon burns (impression)", "fx": ["smoke", "fire"]},
+            {"line": "In five ninety seven BC, in the seventh year", "src": D + "c7-597.webp", "alt": "A column of people and pack animals leaving a city gate, soldiers alongside, hills behind", "caption": "The first exile (impression)", "fx": "dust"},
+            {"line": "Imagine the road down from the hills", "src": D + "c7-road.webp", "alt": "A young man in a simple robe on a mule, looking back at a hill city as the road descends east", "caption": "Leaving Jerusalem (impression)", "fx": "dust"},
+            {"line": "At Lachish, rebuilt after Sennacherib's siege", "src": D + "c7-ostraca.webp", "alt": "Ink letters on broken pottery lying on a stone bench in a gatehouse, an oil lamp beside them", "caption": "Letters in the gate (impression)"},
+            {"line": "One officer writes to his lord", "src": D + "c7-signals.webp", "alt": "Watchmen on a city wall at night looking toward a distant dark hill, no fire there", "caption": "We cannot see Azekah (impression)", "fx": "clouds"},
+            {"line": "Imagine a night on the wall at Lachish", "src": D + "c7-night-wall.webp", "alt": "A lone watchman on a fortress wall at night, empty dark hills, a cold wind, no signal fire", "caption": "A signal that does not come (impression)", "fx": "clouds"},
+            {"line": "In five eighty six BC, or, as some scholars reckon", "src": D + "c7-fall.webp", "alt": "A hill city with a breach in its wall, fire in the houses, smoke rising at dawn", "caption": "Jerusalem falls (impression)", "fx": ["smoke", "fire"]},
+            {"line": "In the City of David, and in houses", "src": D + "c7-ash.webp", "alt": "A burnt stone room, collapsed roof beams, a layer of ash and a few arrowheads on the floor", "caption": "The burnt rooms (impression)"},
+            {"line": "Imagine the smoke over the ridge", "src": D + "c7-smoke-ridge.webp", "alt": "A bare rocky ridge under a column of smoke, an empty platform of stone, the city below in ruin", "caption": "The mount empty of its house (impression)", "fx": "smoke"},
+            {"line": "In Babylon, unbaked clay tablets list rations", "src": D + "c7-rations.webp", "alt": "Clay tablets and small jars of oil on a storeroom shelf in a mudbrick palace, a scribe's stylus", "caption": "Rations for a king (impression)"},
+            {"line": "Other tablets, found in the Babylonian countryside", "src": D + "c7-alyahudu.webp", "alt": "Families working irrigation canals and fields on a flat plain, mudbrick houses, a wide river far off", "caption": "The city of Judah, in exile (impression)", "fx": "waves"},
+            {"line": "Over those who remained in the land", "src": D + "c7-mizpah.webp", "alt": "A modest walled town on a hill, the ruins of a larger city on the southern horizon", "caption": "Gedaliah at Mizpah (story)", "fx": "clouds"},
+            {"line": "A clay seal impression reading belonging to Berekyahu", "src": D + "c7-bulla.webp", "alt": "A small round clay seal impression in an open palm, faint marks, no readable letters", "caption": "A scribe's seal? (impression)"},
+            {"line": "Did the land lie empty", "src": D + "c7-benjamin.webp", "alt": "People harvesting grain and drawing water at a well in rolling hills, a small village, not a desert", "caption": "Life in Benjamin (impression)"},
+            {"line": "Imagine a pot of oil measured out", "src": D + "c7-oil.webp", "alt": "A storekeeper pours oil from a jar into a smaller pot in a lamp-lit Babylonian storeroom", "caption": "A measure of oil (impression)"},
+            {"line": "By the rivers of Babylon, a later psalm says", "src": D + "c7-rivers.webp", "alt": "People sitting under willows by a wide quiet river at evening, a great city on the far bank", "caption": "By the rivers (story)", "fx": "waves"},
+            {"line": "A generation later, Babylon itself will fall", "src": D + "c7-horizon.webp", "alt": "Dawn over a great river city, a distant column of riders under a pale sky, the walls still standing", "caption": "A new power in the east (impression)", "fx": "clouds"},
+        ],
+    },
 }
 
 
@@ -311,5 +344,5 @@ def _auto_quick(prefix, M):
         hit = [v for where in ("intro", "play") for v in reels.get(where, []) if orig.startswith(v["line"])]
         if hit: out.append(dict(hit[0], line=M.speech(b)))
     reels["quick"] = out
-import narration_jews_1000 as _n1000, narration_jews_930 as _n930, narration_jews_722 as _n722, narration_jews_701 as _n701
-_auto_quick("jews-1000", _n1000); _auto_quick("jews-930", _n930); _auto_quick("jews-722", _n722); _auto_quick("jews-701", _n701)
+import narration_jews_1000 as _n1000, narration_jews_930 as _n930, narration_jews_722 as _n722, narration_jews_701 as _n701, narration_jews_586 as _n586
+_auto_quick("jews-1000", _n1000); _auto_quick("jews-930", _n930); _auto_quick("jews-722", _n722); _auto_quick("jews-701", _n701); _auto_quick("jews-586", _n586)
