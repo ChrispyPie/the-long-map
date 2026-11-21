@@ -496,7 +496,7 @@ function showStep(i, fly = true){
     h = `<div class="kicker">${esc(e.kicker)} · ${esc(e.date)}</div><h2>${esc(e.title)} ${badge(e.cert)}</h2>` +
         `<p class="lead">${esc(e.text)}</p>` +
         `<div class="why"><div class="sub">What it meant for Israel</div><p>${esc(e.why)}</p></div>` +
-        (e.pic ? `<img class="shot" alt="" src="${esc(e.pic.src)}"><p class="cap">${esc(e.pic.cap)}</p>` : '') +
+        (e.pic ? `<img class="shot" alt="${esc(e.pic.cap || e.pic.alt || '')}" src="${esc(e.pic.src)}"><p class="cap">${esc(e.pic.cap)}</p>` : '') +
         `<div class="sub">The evidence</div><ul class="claims">` + e.claims.map(c => `<li>${badge(c[1])} ${esc(c[0])}</li>`).join('') + '</ul>' +
         `<div class="sub">On the map</div>${chips(e.objects)}` +
         `<details class="src"><summary>Sources (${e.src.length})</summary>${srcList(e.src)}</details>`;
@@ -1541,6 +1541,18 @@ addEventListener('keydown', e => {
   else if (e.key === ' ' && !(e.target.closest && e.target.closest('button'))){ e.preventDefault(); playPause(); }
   else if (e.key === 'ArrowRight') $('capnext').click();
   else if (e.key === 'ArrowLeft') $('capprev').click();
+});
+addEventListener('keydown', e => {
+  if (e.altKey || e.ctrlKey || e.metaKey) return;
+  if (e.target && e.target.closest && e.target.closest('input, textarea, select, [contenteditable="true"]')) return;
+  const onMap = document.activeElement === $('vp') || document.activeElement === $('map') || (e.target && e.target.closest && e.target.closest('#vp') && !e.target.closest('button, a, input'));
+  if (!onMap || (CINE && PLAY)) return;
+  if (e.key === '+' || e.key === '='){ e.preventDefault(); svg.transition().duration(180).call(zoom.scaleBy, 1.4); }
+  else if (e.key === '-' || e.key === '_'){ e.preventDefault(); svg.transition().duration(180).call(zoom.scaleBy, 1/1.4); }
+  else if (e.key === 'ArrowUp'){ e.preventDefault(); svg.transition().duration(150).call(zoom.translateBy, 0, 80); }
+  else if (e.key === 'ArrowDown'){ e.preventDefault(); svg.transition().duration(150).call(zoom.translateBy, 0, -80); }
+  else if (e.key === 'ArrowLeft'){ e.preventDefault(); svg.transition().duration(150).call(zoom.translateBy, 80, 0); }
+  else if (e.key === 'ArrowRight'){ e.preventDefault(); svg.transition().duration(150).call(zoom.translateBy, -80, 0); }
 });
 // leaving browser fullscreen (e.g. the Esc key) also ends the film
 document.addEventListener('fullscreenchange', () => {
