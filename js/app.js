@@ -690,7 +690,7 @@ function setSkipIntro(on){
   document.querySelectorAll('input[data-skipintro]').forEach(c => { c.checked = SKIPI; });
   if (MODE === 'stop' && !PLAY && step === 0 && STOP && !$('evbody').contains(document.activeElement)) showStep(0, false);
 }
-// "The story so far" (STOP.recap, Chapters 2-5): a short recap of the book so far, played before a chapter's
+// "The story so far" (STOP.recap, Chapter 2 onward): a short recap of the book so far, played before a chapter's
 // opening film or its quick version when the chapter is started from the beginning. It has its own Skip, a
 // switch to turn recaps off (default on, remembered; the same switch is on the Quick/Full card, in the film's ⚙
 // menu and in the book). Line links, resume and the book's scene taps never play it.
@@ -1840,7 +1840,7 @@ function bkPageHtml(i){
         `<div class="body" id="bkacc${x.k}"${open ? '' : ' hidden'}>${bkSceneList(x)}</div></li>`; }).join('');
     const io = BK.exp.has('intro');
     return `<div class="bkpg idx"><div class="k">Index</div><h2>${esc(STORY.book || 'Book One')}: ${esc(STORY.title)}</h2>` +
-      `<p class="yrs">Tap a chapter to see its scenes, or turn to its page.</p>` + `<label class="skipi"><input type="checkbox" data-skipintro${SKIPI ? ' checked' : ''}> Skip chapter intros <small>start at the first scene</small></label><label class="skipi"><input type="checkbox" data-recaps${RECAPS ? ' checked' : ''}> Play 'The story so far' <small>a short recap before Chapters 2–5</small></label>` + `<ul class="ix">` +
+      `<p class="yrs">Tap a chapter to see its scenes, or turn to its page.</p>` + `<label class="skipi"><input type="checkbox" data-skipintro${SKIPI ? ' checked' : ''}> Skip chapter intros <small>start at the first scene</small></label><label class="skipi"><input type="checkbox" data-recaps${RECAPS ? ' checked' : ''}> Play 'The story so far' <small>a short recap before later chapters</small></label>` + `<ul class="ix">` +
       `<li class="bkintro"><div class="row"><button type="button" class="acc" data-act="acc" data-x="intro" aria-expanded="${io}" aria-controls="bkaccintro"><span class="cn" aria-hidden="true">✦</span><span class="ct">${esc(STORY.book || 'Book One')} intro<small>What this book is, before Chapter 1</small></span><span class="ar" aria-hidden="true">▾</span></button></div>` +
       `<div class="body" id="bkaccintro"${io ? '' : ' hidden'}><p>${esc(STORY.intro)}</p><p>${esc(STORY.perspective || '')}</p><button type="button" data-act="about">About The Long Map ›</button></div></li>` +
       rows + `</ul></div>`;
