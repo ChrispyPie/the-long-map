@@ -77,7 +77,7 @@ const ROOT = path.join(__dirname, '..');
     await shot('endchoice');
     await p.tap('#choicego'); await p.waitForTimeout(800);
     s = await p.evaluate(() => ({mode: __app.mode, pill: document.getElementById('pill').textContent, lp: __app.lenPick, txt: (document.getElementById('lenpick') || {}).textContent}));
-    ok(name + ' Stay with the story after Chapter 8 → Chapter 9 chooser ' + JSON.stringify(s), /167/.test(s.pill) && (s.lp || /Chapter 9/.test(s.txt || '')));
+    ok(name + ' Stay with the story after Chapter 8 → Chapter 9 chooser ' + JSON.stringify(s), s.lp && /Chapter 9/.test(s.txt || '') && /167/.test(s.txt || ''));
     await shot('end538');
     ok(name + ' Chapter 8 counted as watched', await p.evaluate(() => __app.parts()[7].done));
   } catch (e) { ok(name + ' ran: ' + e.message.split('\n')[0], false); }

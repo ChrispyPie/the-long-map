@@ -32,8 +32,9 @@ const ROOT = path.join(__dirname, '..');
   const toEnd = async () => { await p.evaluate(() => { __app.speed = 8; __app.seek(__app.play.n - 1); }); for (let i = 0; i < 80 && !(await p.evaluate(() => __app.ended)); i++) await p.waitForTimeout(400); await p.waitForTimeout(600); };
   try {
     await p.goto(url, {waitUntil: 'networkidle'}); await p.waitForTimeout(1200);
-    for (let k = 0; k < 9; k++){
-      const n = k + 1, quick = k === 1 || k === 3 || k === 5;
+    const LIVE = [0, 1, 2, 3, 4, 5, 6, 7, 9]; // stop indexes; 516 BC is title-only between 538 and 167
+    for (let pi = 0; pi < LIVE.length; pi++){
+      const k = LIVE[pi], n = pi + 1, quick = pi === 1 || pi === 3 || pi === 5;
       await p.evaluate(k => __app.go(k), k); await p.waitForTimeout(1500);
       await p.tap('#gostory'); await p.waitForTimeout(400);
       ok(`Ch${n} Play Chapter asks Quick or Full`, await p.evaluate(() => __app.lenPick));
@@ -49,7 +50,7 @@ const ROOT = path.join(__dirname, '..');
       }
       await toEnd(); s = await st();
       ok(`Ch${n} ends on the choice ${JSON.stringify(s.choice)}`, s.ended && /End of Chapter \d/.test(s.choice || '') && /Stay with the story/.test(s.choice) && /Explore the map/.test(s.choice) && s.cur === k);
-      ok(`Ch${n} counted as watched`, await p.evaluate(k => __app.parts()[k].done, k));
+      ok(`Ch${n} counted as watched`, await p.evaluate(pi => __app.parts()[pi].done, pi));
       if (k === 2 && shots){ await p.waitForTimeout(800); await p.screenshot({path: `${D}/chapter-end-choice-phone.png`}); }
       if (k % 2 === 0){
         // Explore: the map as the chapter left it, the checklist, Continue → the next chapter's card
@@ -69,7 +70,7 @@ const ROOT = path.join(__dirname, '..');
         ok(`Ch${n} → Chapter ${n + 1}'s Quick/Full card`, s.lp && await p.evaluate(m => document.getElementById('lenpick').textContent.includes('Chapter ' + m) && !!document.getElementById('lprecap'), n + 1));
         if (n === 1){ await p.tap('#lpx'); await p.waitForTimeout(300); ok('✕ on the card keeps the page', !(await st()).lp); continue; }
         await p.tap('#lpfull'); await p.waitForTimeout(2200); s = await st();
-        ok(`Ch${n} → Chapter ${n + 1} starts ${JSON.stringify([s.reel, s.cur])}`, s.reel === 'intro' && s.cur === k + 1);
+        ok(`Ch${n} → Chapter ${n + 1} starts ${JSON.stringify([s.reel, s.cur])}`, s.reel === 'intro' && s.cur === LIVE[pi + 1]);
         await p.evaluate(() => __app.playStop(false)); await p.waitForTimeout(1000);
       } else {
         await p.waitForTimeout(1500); s = await st();

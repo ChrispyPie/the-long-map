@@ -46,7 +46,7 @@ const ROOT = path.join(__dirname, '..');
     p.on('pageerror', e => errs.push('pageerror: ' + e.message));
     const shot = async n => { if (shots) await p.screenshot({path: D + '/ch9_' + n + '.png'}); };
     await p.goto(url, {waitUntil: 'networkidle'}); await p.waitForTimeout(1500);
-    await p.evaluate(() => __app.go(8)); await p.waitForTimeout(1600);
+    await p.evaluate(() => __app.go(9)); await p.waitForTimeout(1600);
     let s = await p.evaluate(() => ({mode: __app.mode, pill: document.getElementById('pill').textContent, parts: __app.parts().length}));
     ok(name + ' timeline to 167 BC: live stop, Chapter 9 ' + JSON.stringify(s), s.mode === 'stop' && /167/.test(s.pill) && s.parts === 9);
     await shot('intro');
