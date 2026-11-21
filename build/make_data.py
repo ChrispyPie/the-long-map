@@ -14,7 +14,9 @@ Outputs:
   data/eras/722bc.json           the map as Chapter 4 ended (841 BC): the c. 930 BC layer + dashed Aram-Damascus
   data/stories/jews/722bc.json   the 722 BC stop ("Chapter 5"): opening film, fact boxes, explore keys and Play 841 to 720 BC
   data/eras/701bc.json           the map as Chapter 5 ended (720 BC): Israel and Aram gone, Assyrian provinces, Damascus and Samerina
-  data/stories/jews/701bc.json   the 701 BC stop ("Chapter 6"): opening film, fact boxes, explore keys and Play c. 715 to 701 BC
+  data/stories/jews/701bc.json   the 701 BC stop
+  data/eras/586bc.json           the map as Chapter 6 ended: a smaller Judah, lowlands given to the Philistine cities
+  data/stories/jews/586bc.json   the 586 BC stop ("Chapter 7"): opening film, fact boxes, explore keys and Play c. 687 to 586 BC ("Chapter 6"): opening film, fact boxes, explore keys and Play c. 715 to 701 BC
 """
 import json, os, sys
 sys.path.insert(0, os.path.dirname(__file__))
@@ -206,13 +208,29 @@ z701 = {k: v for k, v in z722.items() if k not in ("israel","aram")}; z701.updat
 l701 = {k: v for k, v in l722.items() if k not in ("israel","aram")}; l701.update({z: v[2] for z, v in ASSY_PARTS.items()})
 zl701 = {k: v for k, v in zl722.items() if k not in ("israel","aram")}; zl701.update({z: v[3] for z, v in ASSY_PARTS.items()})
 era701 = {"year":-701,"label":"701 BC","zones":{"type":"FeatureCollection","features":f701},"zoneObjects":z701,"labelAt":l701,"zoneLabels":zl701,"note":NOTE}
-stop = story_jews.STOP; stop1150 = story_jews.STOP1150; stop1000 = story_jews.STOP1000; stop930 = story_jews.STOP930; stop722 = story_jews.STOP722; stop701 = story_jews.STOP701
+
+# 586 BC stop: the map as the Chapter 6 Play left it in 701 BC: a smaller Judah (the lowlands given to Ashdod,
+# Ekron and Gaza), Assyrian provinces still in the north. The Chapter 7 Play then takes Assyria down and Babylon up.
+import narration_jews_701 as N701
+JUDAH_AFTER, SHEPH = N701.JUDAH_AFTER, N701.SHEPH
+f586 = []
+for f in f701:
+    f = dict(f); f["properties"] = dict(f["properties"]); f["geometry"] = dict(f["geometry"])
+    if f["properties"]["zone"] == "judah":
+        f["geometry"] = {"type":"Polygon","coordinates":[JUDAH_AFTER]}
+        f["properties"]["part"] = "Kingdom of Judah after 701 BC, the lowlands lost (borders uncertain)"
+    f586.append(f)
+f586.append({"type":"Feature","properties":{"zone":"philistia","certainty":"unsure","part":"Judah's lowlands given to Ashdod, Ekron and Gaza after 701 BC (extent uncertain)"},"geometry":{"type":"Polygon","coordinates":[SHEPH]}})
+z586 = dict(z701); l586 = dict(l701, judah=[35.2,31.55]); zl586 = dict(zl701)
+era586 = {"year":-586,"label":"586 BC","zones":{"type":"FeatureCollection","features":f586},"zoneObjects":z586,"labelAt":l586,"zoneLabels":zl586,"note":NOTE}
+stop = story_jews.STOP; stop1150 = story_jews.STOP1150; stop1000 = story_jews.STOP1000; stop930 = story_jews.STOP930; stop722 = story_jews.STOP722; stop701 = story_jews.STOP701; stop586 = story_jews.STOP586
 check_stop(stop, era, "jews-1207")
 check_stop(stop1150, era1150, "jews-1150")
 check_stop(stop1000, era1000, "jews-1000")
 check_stop(stop930, era930, "jews-930")
 check_stop(stop722, era722, "jews-722")
 check_stop(stop701, era701, "jews-701")
+check_stop(stop586, era586, "jews-586")
 def w(p, d):
     os.makedirs(os.path.dirname(p), exist_ok=True)
     json.dump(d, open(p,"w"), ensure_ascii=False, separators=(",",":"))
@@ -225,6 +243,7 @@ w("data/eras/1000bc.json", era1000)
 w("data/eras/930bc.json", era930)
 w("data/eras/722bc.json", era722)
 w("data/eras/701bc.json", era701)
+w("data/eras/586bc.json", era586)
 w("data/stories/jews/story.json", story_jews.STORY)
 w("data/stories/jews/1207bc.json", stop)
 w("data/stories/jews/1150bc.json", stop1150)
@@ -232,7 +251,8 @@ w("data/stories/jews/1000bc.json", stop1000)
 w("data/stories/jews/930bc.json", stop930)
 w("data/stories/jews/722bc.json", stop722)
 w("data/stories/jews/701bc.json", stop701)
-for st in (stop, stop1150, stop1000, stop930, stop722, stop701):
+w("data/stories/jews/586bc.json", stop586)
+for st in (stop, stop1150, stop1000, stop930, stop722, stop701, stop586):
     play, tin = st["play"], st["transitionIn"]
     print(st["label"], "events", len(st["events"]), "play beats", len(play["beats"]), "words", play["words"], "voice min", round(sum(b.get("audioMs", b["duration"])+b["pauseAfter"] for b in play["beats"])/60000, 1),
           "opening beats", len(tin["beats"]) if isinstance(tin, dict) else 0, "explore keys", len(st["explore"]["key"]))
