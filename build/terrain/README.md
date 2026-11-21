@@ -16,8 +16,8 @@ rendered with a 1-px bleed (514 px) so neighbours overlap and no seam shows.
 | 4 | 8 | Egypt (to Thebes/Aswan), Levant, Mesopotamia, Anatolia | 143 |
 | 5 | 9 | Egypt to the Euphrates, Nile valley and Delta, Anatolia | 286 |
 | 6 | 10 | the Levant, Nile Delta, central Anatolia / Hattusa | 572 |
-| 7 | 11 | Israel / Judah, Philistia, Transjordan | 1144 |
-| 8 | 12 | the hill country: Samaria to Hebron, Lachish, the Dead Sea | 2288 |
+| 7 | 11 | Israel / Judah; Nile Delta, Goshen, Giza / Memphis; Hattusa, Troy, and key Syrian sites (Ugarit, Kadesh, Carchemish, Damascus, Byblos, Emar, Hamath, Qarqar, Ain Dara). Not Mesopotamia. | 1144 |
+| 8 | 12 | the hill country (Samaria to Hebron, Lachish, the Dead Sea); close-ups of the same Egypt / Anatolia / Syria sites | 2288 |
 
 To give a new region (e.g. Europe or Central Asia for a later book) detail, add its lon/lat box to the levels it
 needs in `pyramid.py` and re-run the three steps below; the site picks the tiles up from the manifest.

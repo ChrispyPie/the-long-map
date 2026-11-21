@@ -27,8 +27,33 @@ LEVELS = {
     6: (10, [[32.6, 28.2, 38.8, 35.2],                # Levant (the old 'levant' image)
             [29.8, 29.8, 32.8, 31.8],                 # Nile Delta close-up
             [32.5, 38.5, 36.5, 41.2]]),               # central Anatolia / Hattusa
-    7: (11, [[34.0, 29.6, 36.6, 33.6]]),              # Israel / Judah, Philistia, Transjordan
-    8: (12, [[34.6, 31.0, 35.75, 32.7]]),             # the hill country, Jerusalem to Samaria, Lachish, the Dead Sea
+    7: (11, [[34.0, 29.6, 36.6, 33.6],                # Israel / Judah, Philistia, Transjordan
+            [30.8, 29.65, 32.35, 31.40],              # Memphis, Giza, Nile Delta, Goshen, Pi-Ramesses, Tanis
+            [34.25, 39.75, 35.05, 40.30],             # Hattusa
+            [25.95, 39.75, 26.55, 40.20],             # Troy
+            [35.50, 35.35, 36.10, 35.85],             # Ugarit
+            [37.70, 36.55, 38.35, 37.10],             # Carchemish
+            [36.20, 34.30, 36.85, 34.85],             # Kadesh
+            [35.35, 33.85, 35.95, 34.40],             # Byblos
+            [37.80, 35.75, 38.40, 36.25],             # Emar
+            [36.45, 34.90, 37.05, 35.40],             # Hamath
+            [36.05, 35.50, 36.65, 36.00],             # Qarqar
+            [36.55, 36.20, 37.15, 36.75],             # Ain Dara
+            [35.95, 33.20, 36.65, 33.85]]),           # Damascus (east edge of the Israel box)
+    8: (12, [[34.6, 31.0, 35.75, 32.7],                # the hill country, Jerusalem to Samaria, Lachish, the Dead Sea
+            [30.95, 29.72, 31.45, 30.15],             # Giza and Memphis
+            [31.50, 30.55, 32.15, 31.20],             # eastern Delta, Goshen, Pi-Ramesses, Tanis
+            [34.40, 39.88, 34.90, 40.18],             # Hattusa
+            [26.05, 39.85, 26.45, 40.10],             # Troy
+            [35.60, 35.45, 35.95, 35.75],             # Ugarit
+            [37.85, 36.68, 38.20, 36.98],             # Carchemish
+            [36.35, 34.40, 36.70, 34.72],             # Kadesh
+            [35.50, 33.98, 35.80, 34.28],             # Byblos
+            [37.95, 35.85, 38.25, 36.15],             # Emar
+            [36.55, 34.98, 36.95, 35.28],             # Hamath
+            [36.15, 35.58, 36.50, 35.90],             # Qarqar
+            [36.70, 36.32, 37.00, 36.62],             # Ain Dara
+            [36.10, 33.35, 36.50, 33.70]]),           # Damascus
 }
 
 _y0, _y1 = math.radians(PAR[0]), math.radians(PAR[1])
