@@ -94,7 +94,7 @@ const shots = process.argv[3] || null;
       await tap('#capsrc'); await p.waitForTimeout(300); await tap('#srcx'); await p.waitForTimeout(300);
       ok(name + ' paused before: still paused after closing', (await st()).paused === true && !(await st()).open);
       // 7) long lists scroll; optional description, links and pictures show
-      await p.evaluate(async () => { const j = await (await fetch('data/sources.json')).json(); __app.srcOpen(['kitchen4', ...Object.keys(j)]); }); await p.waitForTimeout(400);
+      await p.evaluate(async () => { const j = await (await fetch('data/sources.json')).json(); await __app.srcOpen(['kitchen4', ...Object.keys(j)]); }); await p.waitForTimeout(400);
       const sc = await p.evaluate(() => { const e = document.getElementById('srcbody'); const h = e.scrollHeight, c = e.clientHeight; e.scrollTop = 400; return {h, c, t: e.scrollTop, ov: getComputedStyle(e).overflowY}; });
       ok(`${name} long list scrolls (${sc.h} > ${sc.c}, scrolled ${sc.t})`, sc.h > sc.c && sc.t > 0 && sc.ov === 'auto');
       const sb2 = await R('#srcbox'), xb2 = await R('#srcx');
