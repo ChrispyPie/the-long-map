@@ -7,6 +7,6 @@
  "regions": [
   {"id": "near-east", "name": "Near East", "bbox": [-12, 2, 88, 58], "vector": "data/base.topo.json", "load": "start"},
   {"id": "world", "name": "Europe, North Africa, Central Asia", "bbox": [-20, -2, 95, 66], "vector": "data/world/outer.topo.json", "load": "view",
-   "source": "Natural Earth 50m land, lakes, rivers (public domain), outside the Near East box; build/world/build.sh"}
+   "source": "Natural Earth 50m land, lakes, rivers (public domain): land outside the Near East box, rivers and lakes across the world bounds minus the base layer; build/world/build.sh"}
  ]
 }
