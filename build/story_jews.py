@@ -51,7 +51,7 @@ STOP = {
  "transitionOut":{"to":-1150,"text":"Next: the hill villages grow over the following generations. In Jewish memory this is the time of the Judges, when the tribes lived without a king."},
  "events":[
   {"id":"kadesh","kicker":"Background","title":"A land between empires","date":"1274 BC","cert":A,
-   "text":"At Kadesh in Syria, Ramesses II of Egypt fought the Hittite king Muwatalli II in one of the largest chariot battles of the ancient world. Both kings claimed victory. Afterwards the frontier settled: the Hittites kept Syria, and Egypt kept Canaan.",
+   "text":"At Kadesh in Syria, Ramesses II of Egypt fought the Hittite king Muwatalli II in one of the largest chariot battles of the ancient world. Both kings claimed victory. In the years that followed, the frontier settled: the Hittites kept Syria, and Egypt kept Canaan.",
    "why":"The land where Israel would soon appear lay on Egypt's side of this line. Again and again in Jewish history, life in this narrow land would be shaped by the great powers on either side.",
    "claims":[["Battle of Kadesh, year 5 of Ramesses II (1274 BC in the usual chronology).",A,["bryce","kuhrt"]],["Ramesses' own account of personal triumph is royal propaganda. Most historians see a stalemate.",D,["bryce","vdm"]]],
    "src":["bryce","kuhrt","vdm"],"objects":["kadesh","orontes","hatti","egypt","piramesses"],"focus":{"c":[36.0,33.8],"k":2.6},"hl":["kadesh","orontes"]},
