@@ -280,3 +280,34 @@ later('megiddo', -586, "The fortress at the pass from the coast into the Jezreel
 later('ashkelon', -586, "Philistine port on the coast. A Babylonian chronicle and the excavations of Lawrence Stager show that it was taken and burned by Nebuchadnezzar in Kislev 604 BC, the year after Carchemish.",
   ['wiseman1956','stager1996'], people="Philistines",
   facts=[("The chronicle records a campaign to the Hatti-country in year 1; Ashkelon's destruction is dated to Kislev 604 BC.",A,['wiseman1956','stager1996'])])
+
+# ---------- 538 BC (Chapter 8): Persia, return, Second Temple ----------
+o("pasargadae","city","Pasargadae",{"at":[53.17,30.20]},2,"The royal residence of Cyrus in the Persian highlands, in Fars, with his tomb and palaces in a garden setting. It is the first great seat of the Achaemenid kings, before Darius founded Persepolis.",["briant2002","kuhrt2007"],people="Persians",since=-538,cert=A,
+  facts=[("Pasargadae was Cyrus's royal residence in Fars; his tomb stands there.",A,["briant2002","kuhrt2007"])])
+o("ecbatana","city","Ecbatana",{"at":[48.68,34.80]},2,"Capital of the Medes, later a summer residence of the Persian kings, at today's Hamadan in the Zagros. The book of Ezra says a scroll of Cyrus's decree was found here in the reign of Darius; that find is told only in Ezra.",["briant2002","bible"],people="Medes, then Persians",since=-538,cert=A,
+  facts=[("Ecbatana was the Median capital, later a Persian royal residence.",A,["briant2002"]),("Ezra 6 says a scroll of Cyrus's decree was found here.",T,["bible"])])
+o("persepolis","city","Persepolis",{"at":[52.89,29.93]},2,"A new ceremonial capital founded by Darius I in Fars, with great palaces and reliefs of subject peoples bringing gifts. Yehud was a small corner of this empire.",["briant2002","kuhrt2007"],people="Persians",since=-538,cert=A)
+o("opis","city","Opis",{"at":[44.70,33.20]},3,"A town on the Tigris north of Babylon. The Nabonidus Chronicle says Cyrus fought the army of Akkad here in 539 BC, and that the people of Akkad retreated, shortly before Babylon itself was entered.",["abc7","briant2002"],people=None,since=-538,cert=A)
+o("sippar","city","Sippar",{"at":[44.25,33.06]},3,"An ancient cult city of the sun god Shamash, on the Euphrates north of Babylon. The Nabonidus Chronicle says it was taken by Cyrus without a battle, just before the entry into Babylon in 539 BC.",["abc7"],people=None,since=-538,cert=A)
+o("sardis","city","Sardis",{"at":[28.04,38.49]},2,"Capital of Lydia in western Anatolia. Greek tradition, told by Herodotus, says Cyrus took it and captured King Croesus, bringing the Aegean seaboard into the Persian empire.",["herodotuscyrus","briant2002"],people="Lydians",since=-538,cert=T,
+  facts=[("Herodotus tells of Cyrus's capture of Croesus and Sardis.",T,["herodotuscyrus"]),("Lydia became part of the Persian empire.",A,["briant2002"])])
+o("teima","city","Teima",{"at":[38.61,27.63]},3,"An oasis in north-western Arabia. The Nabonidus Chronicle says that Nabonidus, the last king of Babylon, spent years here, and that the New Year festival in Babylon was not held.",["abc7","kuhrt2007"],people=None,since=-538,cert=A)
+o("behistun","site","Behistun",{"at":[47.44,34.39]},2,"A cliff in the Zagros, above the road from Babylon to Ecbatana. Darius I had a great inscription cut here in Old Persian, Elamite and Babylonian, telling how he took the throne and put down revolts.",["behistun","kuhrt2007"],people=None,since=-538,cert=A)
+later('babylon', -538, "The great city on the Euphrates, taken by Cyrus of Persia in 539 BC, according to the Nabonidus Chronicle, without a battle. The Cyrus Cylinder, found here, presents Cyrus as a king chosen by Marduk who sent captive people home and restored temples. Judean families went on living in the countryside around it.",
+  ['abc7','cylinder','pearce2014'], people="Babylonians, under Persia; Judean exiles",
+  facts=[("Babylon was entered in Tashritu 539 BC without a battle, according to the Nabonidus Chronicle.",A,['abc7']),("The Cyrus Cylinder was found here.",A,['cylinder','finkel2013'])])
+later('jerusalem', -538, "The reduced city to which some Judean families returned under Persian rule. The Bible says an altar was built, and later, in the sixth year of Darius (usually 516 BC), a Second Temple was dedicated. No certain stone of that first Second Temple has been identified. The city was the centre of a small Persian province called Yehud.",
+  ['bible','stern2001','lipschits2005'], people="Judeans, in the province of Yehud",
+  facts=[("Jerusalem in the early Persian period was a much reduced city.",A,['lipschits2005','stern2001']),("The dedication of a Second Temple in the sixth year of Darius: Ezra 6.",T,['bible']),("No certain remains of that first phase of the Temple have been identified.",A,['stern2001','lipschits2005'])])
+later('alyahudu', -538, "A town in the Babylonian countryside whose name means 'the city of Judah'. Cuneiform tablets name Judean families still farming and paying taxes here under Persian rule, decades after some of their kin had returned to Zion. The exile did not simply end.",
+  ['pearce2014','alstola2020'], people="Judean exiles, under Persia",
+  facts=[("The Al-Yahudu tablets continue into the Persian period.",A,['pearce2014','alstola2020'])])
+later('mizpah', -538, "A town of Benjamin north of Jerusalem, which had been a Babylonian administrative centre after 586 BC. In the early Persian period, life in Benjamin continued, as Yehud took shape as a small province around Jerusalem.",
+  ['lipschits2005','stern2001'], people="Judahites, then Yehud",
+  facts=[("Life continued in Benjamin into the Persian period.",A,['lipschits2005','barstad1996'])])
+later('susa', -538, "The old lowland capital of Elam, which became one of the great residences of the Persian kings, alongside Ecbatana, Babylon and, later, Persepolis.",
+  ['briant2002','potts'], people="Elamites, under Persia")
+later('anshan', -538, "The highland Elamite city (Tal-i Malyan in Fars) from which Cyrus's family took the title 'king of Anshan' before the rise of the Persian empire.",
+  ['cylinder','potts','briant2002'], people="Elamites, then Persians",
+  facts=[("Cyrus is called king of Anshan in his own inscriptions.",A,['cylinder','kuhrt2007'])])
+

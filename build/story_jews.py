@@ -5,6 +5,7 @@ import narration_jews_930 as NAR930
 import narration_jews_722 as NAR722
 import narration_jews_701 as NAR701
 import narration_jews_586 as NAR586
+import narration_jews_538 as NAR538
 A,D,T = "attested","disputed","tradition"
 STORY = {
  "id":"jews","title":"Story of the Jews","site":"The Long Map",
@@ -29,12 +30,13 @@ STORY = {
    "years":"c. 715–701 BC","summary":"Hezekiah rules Judah, Ashdod's revolt fails, and when Sargon dies the west rises. Sennacherib marches, takes Lachish and shuts Hezekiah up in Jerusalem 'like a bird in a cage'. The Bible and Assyria tell two different endings, and Judah survives, smaller."},
   {"year":-586,"label":"586 BC","title":"The First Temple destroyed","era":"data/eras/586bc.json","file":"data/stories/jews/586bc.json",
    "years":"c. 687–586 BC","summary":"Assyria falls and Babylon rises. Josiah is killed at Megiddo, Nebuchadnezzar takes Jerusalem in 597 BC, and in 586 or 587 BC the city is burned. The Temple is destroyed, many are taken to Babylon, and a remnant remains in the land."},
-  {"year":-538,"label":"538 BC","title":"Return under Persia",
-   "summary":"Coming soon. Babylon falls, and a Persian king lets the exiles go home.",
-   "soon":{"title":"Return under Persia","text":"Next chapter coming soon. Jerusalem has fallen, the Temple is gone, and many of Judah's people live in Babylon. A generation later Babylon itself will fall, and Cyrus of Persia will let the exiles go home. They will return to Zion, and in time a Second Temple will be built. That is where the next chapter begins.",
-     "hl":["jerusalem","babylon","judah"],"focus":{"c":[40.0,33.0],"k":1.8}}},
+  {"year":-538,"label":"538 BC","title":"Return under Persia","era":"data/eras/538bc.json","file":"data/stories/jews/538bc.json",
+   "years":"c. 556–516 BC","summary":"Cyrus takes Babylon in 539 BC. The Cyrus Cylinder records a policy of return; the Bible tells a specific decree for Jerusalem. Some Judean families come home to a small Persian province called Yehud, and in 516 BC, the Bible says, a Second Temple is dedicated."},
   {"year":-516,"label":"516 BC","title":"The Second Temple"},
-  {"year":-167,"label":"167 BC","title":"The Maccabees"},
+  {"year":-167,"label":"167 BC","title":"The Maccabees",
+   "summary":"Coming soon. Under new empires the Second Temple will stand at the centre of a later struggle.",
+   "soon":{"title":"The Maccabees","text":"Next chapter coming soon. A Second Temple stands again in Jerusalem, in a small Persian province. In time new empires will come to this land, and that Temple will stand at the centre of a struggle for the way of life of this people. That is where the next chapter begins.",
+     "hl":["jerusalem","judah"],"focus":{"c":[35.2,31.7],"k":6}}},
   {"year":-63,"label":"63 BC","title":"Rome arrives"},
   {"year":70,"label":"AD 70","title":"The Second Temple destroyed"},
   {"year":135,"label":"AD 135","title":"Bar Kokhba revolt ends"},
@@ -456,3 +458,68 @@ STOP586 = {
 }
 STOP586["quick"] = {"title":"Chapter 7 in brief", "ambient":"desert", "beats":NAR586.clean(NAR586.QUICK)}
 STOP586["recap"] = {"title": "The story so far", "ambient": "desert", "beats": _RECAP.RECAPS[586]}
+
+# ---------- 538 BC: Return under Persia (Chapter 8: opening film + Play c. 556 to 516 BC; build/narration_jews_538.py) ----------
+# The map is the end state of the Chapter 7 Play: a Benjamin remnant ("THOSE WHO REMAINED"). The Play takes
+# Babylon from Nabonidus to Cyrus, shows the Cylinder and the biblical decree side by side, follows a modest
+# return, and ends on the dedication of the Second Temple and a teaser for a later struggle over it (167 BC).
+STOP538 = {
+ "story":"jews","year":-538,"label":"538 BC","title":"Return under Persia",
+ "keyObjects":["judah","jerusalem","mizpah","babylon","alyahudu","pasargadae","opis","sippar","ecbatana","behistun","persepolis","sardis"],
+ "transitionIn":{"text":"539 BC. A Persian king is moving on Babylon, and the city that took Jerusalem is about to fall in its turn. To see how some of the exiles came home, and how a Second Temple was built, the chapter goes back to the last kings of Babylon.",
+   "title":"538 BC: Return under Persia","ambient":"desert","beats":NAR538.clean(NAR538.INTRO_BEATS)},
+ "transitionOut":{"to":-167,"text":"Next: new empires in this land, and a struggle over the Second Temple."},
+ "events":[
+  {"id":"babylon539","kicker":"Babylon's side","title":"Babylon falls, 539 BC","date":"Tashritu 539 BC","cert":A,
+   "text":"The Nabonidus Chronicle says that in 539 BC Cyrus fought the army of Akkad at Opis on the Tigris, took Sippar without a battle, and that in the month of Tashritu Ugbaru and the Persian army entered Babylon, also without a battle. Cyrus himself entered a few days later, and peace was imposed. Herodotus, a century later, tells a different tale: that Cyrus diverted the river and came in by a dry bed.",
+   "why":"The chronicle is close to the event and does not mention a diverted river. The two accounts of how the city fell do not agree.",
+   "claims":[["The chronicle: battle at Opis, Sippar taken, Babylon entered in Tashritu 539 BC without a battle.",A,["abc7","briant2002"]],["Herodotus says Cyrus diverted the river and took the city by a dry bed.",T,["herodotusbabylon"]],["The two accounts do not agree.",D,["abc7","herodotusbabylon"]]],
+   "src":["abc7","briant2002","herodotusbabylon"],"objects":["babylon","opis","sippar"],"focus":{"c":[44.4,32.8],"k":4.5},"hl":["babylon","opis"]},
+  {"id":"cylinder","kicker":"A Persian inscription","title":"The Cyrus Cylinder","date":"c. 539–530 BC","cert":A,
+   "text":"A clay cylinder found in Babylon, now in the British Museum, is inscribed in the name of Cyrus. He speaks as a Babylonian king, says that Marduk chose him and took him into the city without a fight, and that he returned gods to their cities and let displaced people go home and rebuild their temples. The cylinder does not name Judah, Jerusalem, or the god of Israel.",
+   "why":"It is a real court inscription, written in the traditional language of Babylonian kingship, for the cults of Mesopotamia. What it does not say matters as much as what it does.",
+   "claims":[["The Cyrus Cylinder is a real inscription from the court of Cyrus, found in Babylon.",A,["cylinder","finkel2013"]],["It records a policy of returning cult images and displaced people.",A,["cylinder","kuhrt1983"]],["It does not name Judah, Jerusalem, or the god of Israel.",A,["cylinder","kuhrt1983","finkel2013"]]],
+   "src":["cylinder","finkel2013","kuhrt1983"],"objects":["babylon"],"focus":{"c":[44.42,32.54],"k":14},"hl":["babylon"]},
+  {"id":"ezradecree","kicker":"Two voices","title":"The decree in Ezra","date":"Tradition: first year of Cyrus","cert":D,
+   "text":"The book of Ezra, and the end of Chronicles, say that Cyrus issued a decree: the Lord, the god of heaven, had given him all the kingdoms of the earth and had charged him to build a house in Jerusalem. Some scholars read this as a later memory of the general policy on the cylinder, written in the language of Judah. Others think a specific permission for Jerusalem may have been given, and is now lost.",
+   "why":"The cylinder is attested. The decree in Ezra is a biblical tradition. How the two relate is the open question.",
+   "claims":[["Ezra 1 and 2 Chronicles 36 tell of a decree of Cyrus for a house in Jerusalem.",T,["bible"]],["Whether that decree is a later memory of a general policy, or a lost specific permission, is disputed.",D,["grabbe2004","bedford2001","kuhrt1983"]]],
+   "src":["bible","grabbe2004","bedford2001","kuhrt1983","cylinder"],"objects":["babylon","jerusalem"],"focus":{"c":[40.0,33.0],"k":1.8},"hl":["babylon","jerusalem"]},
+  {"id":"returnyehud","kicker":"A modest homecoming","title":"The return, and a small province","date":"From 538 BC","cert":D,
+   "text":"The Bible says that in the first year of Cyrus, families of Judah and Benjamin rose up to go, and that Sheshbazzar brought back the Temple vessels. It gives a great number of those who returned. Archaeology does not show a sudden flood of people in Judah at this time. The land becomes a small Persian province, later called Yehud, under a governor, paying tax to the great king.",
+   "why":"A return happened; its scale is the disagreement. Many families also stayed in Babylonia, as the Al-Yahudu tablets show for decades under Persian rule.",
+   "claims":[["Ezra describes a return led in part by Sheshbazzar, with a large listed number.",T,["bible"]],["Archaeology shows a small, poor Persian province, not a sudden flood of people.",A,["stern2001","lipschits2005","grabbe2004"]],["The size of the first return is disputed.",D,["bible","grabbe2004","lipschits2005"]],["Judean families stayed in Babylonia under Persian rule.",A,["pearce2014","alstola2020"]]],
+   "src":["bible","stern2001","lipschits2005","grabbe2004","pearce2014","alstola2020"],"objects":["jerusalem","alyahudu","babylon","mizpah"],"focus":{"c":[40.0,33.0],"k":1.8},"hl":["jerusalem","alyahudu"]},
+  {"id":"sheshzerub","kicker":"Jewish tradition","title":"Sheshbazzar and Zerubbabel","date":"Early Persian period","cert":D,
+   "text":"The Bible names two leaders in these years: Sheshbazzar, who is said to have laid a foundation, and Zerubbabel, a grandson of King Jehoiachin, with the priest Jeshua. How the two men relate, and whether both belong to the first years of Cyrus, is disputed. Ezra says neighbours offered to help, were refused, and then worked to stop the building, and that the work ceased for years.",
+   "why":"The quarrel may remember real tension between returnees and those who had remained, or between Jerusalem and Samaria. Scholars do not agree how much of Ezra 4 is of this time.",
+   "claims":[["Ezra names Sheshbazzar and Zerubbabel, a grandson of Jehoiachin, with the priest Jeshua.",T,["bible"]],["How the two leaders relate is disputed.",D,["grabbe2004","bedford2001"]],["Ezra 4 tells of opposition and a halt; how much is of this time is disputed.",D,["grabbe2004","bedford2001","lipschits2005"]]],
+   "src":["bible","grabbe2004","bedford2001","lipschits2005"],"objects":["jerusalem"],"focus":{"c":[35.235,31.777],"k":12},"hl":["jerusalem"]},
+  {"id":"behistun","kicker":"The empire","title":"Darius at Behistun","date":"c. 522–520 BC","cert":A,
+   "text":"Cyrus dies on campaign; his son Cambyses takes Egypt. After a crisis Darius, of another branch of the royal house, takes the throne and cuts a great trilingual inscription on the rock at Behistun, telling how he put down revolts across the empire. Yehud is a small corner of this world, which now stretches from the Aegean to the highlands of Iran.",
+   "why":"The details of Cyrus's death are told in more than one way. The Behistun inscription is Darius's own account of how he came to rule.",
+   "claims":[["Cyrus dies on campaign; Cambyses takes Egypt.",A,["briant2002"]],["The details of Cyrus's death are told in more than one way.",D,["briant2002","herodotuscyrus"]],["Darius cuts a trilingual inscription at Behistun after taking the throne.",A,["behistun","kuhrt2007","briant2002"]]],
+   "src":["behistun","kuhrt2007","briant2002","herodotuscyrus"],"objects":["behistun","pasargadae","persepolis"],"focus":{"c":[47.44,34.39],"k":6},"hl":["behistun"]},
+  {"id":"secondtemple","kicker":"Jewish tradition","title":"The Second Temple","date":"Tradition: 516 BC, year 6 of Darius","cert":T,
+   "text":"The books of Haggai and Zechariah present themselves as words spoken in the second year of Darius, urging Zerubbabel and the high priest to finish the house of the Lord. Many scholars accept that setting; it is not independently confirmed on a Persian inscription. Ezra says the work resumes, that a scroll is found at Ecbatana, and that in the sixth year of Darius, usually 516 BC, the house is finished and dedicated with joy. No certain stone of that first Second Temple has been identified.",
+   "why":"The dedication is a biblical tradition. The mount would later be rebuilt on a far greater scale under Herod, and what lies under it is not open to us.",
+   "claims":[["Haggai and Zechariah present themselves as words in the second year of Darius.",T,["bible"]],["Whether that date is historical is not independently confirmed on a Persian inscription.",D,["grabbe2004","bedford2001"]],["Ezra 6 says the house was finished in the sixth year of Darius and dedicated.",T,["bible"]],["No certain remains of that first phase have been identified.",A,["stern2001","lipschits2005"]]],
+   "src":["bible","grabbe2004","bedford2001","stern2001","lipschits2005"],"objects":["jerusalem","ecbatana"],"focus":{"c":[35.235,31.777],"k":16},"hl":["jerusalem"]},
+  {"id":"lifeintwoplaces","kicker":"A people in two lands","title":"Life in two places","date":"From the late 6th century BC","cert":A,
+   "text":"Yehud is a small Persian province, with a governor, a priest and a tax, not a restored kingdom of David. Coins and seals from a little later name the province and its governors; they do not restore a king. In Babylonia, Judean families still live by the canals, and will for generations. The exile did not simply end. It became a life in two places.",
+   "why":"The Bible remembers a return after seventy years. Seventy years is a round number, counted in more than one way, and archaeology does not show an empty land for seventy years.",
+   "claims":[["Yehud is a small Persian province, not a restored kingdom.",A,["stern2001","grabbe2004"]],["Judean families continued in Babylonia under Persia.",A,["pearce2014","alstola2020"]],["Seventy years is a biblical round number; the land was not empty for seventy years.",D,["bible","barstad1996","lipschits2005"]]],
+   "src":["stern2001","grabbe2004","pearce2014","alstola2020","bible","barstad1996","lipschits2005"],"objects":["jerusalem","alyahudu","babylon"],"focus":{"c":[40.0,33.0],"k":1.8},"hl":["jerusalem","alyahudu"]},
+ ],
+ "explore":{
+  "key":["judah","jerusalem","mizpah","babylon","alyahudu","pasargadae","opis","sippar","ecbatana","behistun","persepolis","sardis"],
+  "text":"Open each key place or people on the map to read its fact box. Unexplored ones glow; explored ones get a check. Your progress is saved on this device."},
+ "play":{
+  "to":-167, "title":"From c. 556 BC to 516 BC",
+  "intro":"Plays full screen like a short narrated film, with subtitles (CC). Pause, step back or forward, or change speed at any time. Stop whenever you like: it remembers your chapter.",
+  "zoneObjects":{"philistia":"philistines","ammon":"ammon","moab":"moab","edom":"edom","judah":"judah","assyria":"assyria","prov":"assyria","samerina":"assyria","babylon":"babylon_s","egypt":"egypt"},
+  "ambient":"desert",
+  "beats":NAR538.clean(NAR538.PLAY)}
+}
+STOP538["quick"] = {"title":"Chapter 8 in brief", "ambient":"desert", "beats":NAR538.clean(NAR538.QUICK)}
+STOP538["recap"] = {"title": "The story so far", "ambient": "desert", "beats": _RECAP.RECAPS[538]}
