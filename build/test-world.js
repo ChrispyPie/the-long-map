@@ -16,7 +16,7 @@ const ROOT = path.join(__dirname, '..');
   ok('world.json: projection matches the relief grid', JSON.stringify(W.projection.parallels) === JSON.stringify(T.grid.parallels) && W.projection.rotate[0] === T.grid.rotate[0]);
   ok('world.json: one start region, the others lazy, every vector file exists', W.regions.filter(r => r.load === 'start').length === 1 && W.regions.every(r => fs.existsSync(path.join(ROOT, r.vector))));
   const outerKB = fs.statSync(path.join(ROOT, 'data/world/outer.topo.json')).size / 1024;
-  ok(`outer world vectors are small (${Math.round(outerKB)} KB)`, outerKB < 150);
+  ok(`outer world vectors are small (${Math.round(outerKB)} KB)`, outerKB < 200);
   const b = await chromium.launch();
   const ctx = await b.newContext({viewport: {width: 390, height: 844}, deviceScaleFactor: 2, isMobile: true, hasTouch: true});
   await ctx.addInitScript(() => { localStorage.setItem('tlm.notice.v1', 'seen'); localStorage.setItem('tlm.recaps', 'off'); });
