@@ -1550,6 +1550,14 @@ document.addEventListener('fullscreenchange', () => {
   if (SP.open && CINE && CINE.fsOn){ CINE.fsOn = false; srcClose(); return; }
   if (CINE && CINE.fsOn && !CINE.out && PLAY){ CINE.fsOn = false; playStop(false); }
 });
+// On a phone the map key starts closed so it does not cover the land; tap to open or close it.
+const legToggle = () => {
+  const L = $('legend'), b = $('legbtn'); if (!L || !b) return;
+  const on = L.classList.toggle('open');
+  b.setAttribute('aria-expanded', String(on));
+};
+if ($('legbtn')) $('legbtn').onclick = e => { e.stopPropagation(); legToggle(); };
+
 $('cappp').onclick = e => { e.stopPropagation(); playPause(); };
 $('capnext').onclick = e => { e.stopPropagation(); if (PLAY) seek(PLAY.i + 1 < PLAY.beats.length ? PLAY.i + 1 : PLAY.i) ; };
 $('capprev').onclick = e => { e.stopPropagation(); if (PLAY) seek(PLAY.i - 1); };
